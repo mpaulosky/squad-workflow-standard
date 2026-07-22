@@ -1,0 +1,439 @@
+name: Test Suite
+
+# NOTE: All test projects now use 'dotnet test' consistently.
+# This was updated to fix issues with direct executable execution that was
+# causing "No such file or directory" errors in CI.
+
+permissions:
+  issues: write
+  checks: write
+  contents: read
+  pull-requests: write
+
+on:
+  workflow_call:
+  push:
+    branches:
+      - main
+      - squad/**
+  pull_request:
+    branches:
+      - "**"
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: "The reason for running the workflow"
+        required: true
+        default: "Manual test run"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  Auth0__Domain: ${{ secrets.AUTH0_DOMAIN }}
+  Auth0__ClientId: ${{ secrets.AUTH0_CLIENT_ID }}
+  Auth0__ClientSecret: ${{ secrets.AUTH0_CLIENT_SECRET }}
+  MongoDB__ConnectionString: ${{ secrets.MONGODB_CONNECTION_STRING }}
+
+jobs:
+  build:
+    name: Build Solution
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v6
+        with:
+          path: ${{ github.workspace }}/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/Directory.Packages.props') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build solution
+        run: dotnet build ArticlesSite.slnx --configuration Release --no-restore
+
+      - name: Cache build artifacts
+        uses: actions/cache@v6
+        with:
+          path: |
+            **/bin/Release/
+            **/obj/
+          key: ${{ runner.os }}-build-${{ hashFiles('**/*.csproj', '**/Directory.Packages.props', 'global.json') }}
+          restore-keys: |
+            ${{ runner.os }}-build-
+
+  test-shared-unit:
+    name: "Shared.Tests.Unit"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: build
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v6
+        with:
+          path: ${{ github.workspace }}/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/Directory.Packages.props') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Run Shared Unit Tests
+        run: |
+          dotnet test tests/Shared.Tests.Unit \
+            --configuration Release \
+            --collect:"XPlat Code Coverage" \
+            --logger "trx;LogFileName=shared-unit.trx" \
+            --results-directory test-results \
+            --verbosity minimal
+
+      - name: Upload Shared Unit Test Results
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: shared-unit-test-results
+          path: test-results
+
+  test-web-unit:
+    name: "Web.Tests.Unit"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: build
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v6
+        with:
+          path: ${{ github.workspace }}/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/Directory.Packages.props') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Run Web Unit Tests
+        run: |
+          dotnet test tests/Web.Tests.Unit \
+            --configuration Release \
+            --collect:"XPlat Code Coverage" \
+            --logger "trx;LogFileName=web-unit.trx" \
+            --results-directory test-results \
+            --verbosity minimal
+
+      - name: Upload Web Unit Test Results
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: web-unit-test-results
+          path: test-results
+
+  test-architecture:
+    name: "Architecture.Tests"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: build
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v6
+        with:
+          path: ${{ github.workspace }}/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/Directory.Packages.props') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build Architecture Tests
+        run: dotnet build tests/Architecture.Tests --configuration Release --no-restore
+
+      - name: Run Architecture Tests
+        id: arch-tests
+        run: |
+          mkdir -p test-results
+          if [ ! -d "tests/Architecture.Tests" ]; then
+            echo "::notice::Architecture test project not found at tests/Architecture.Tests - skipping"
+            exit 0
+          fi
+
+          # Run tests using dotnet test
+          dotnet test tests/Architecture.Tests \
+            --configuration Release \
+            --no-build \
+            --logger "trx;LogFileName=architecture.trx" \
+            --results-directory "$GITHUB_WORKSPACE/test-results" \
+            --collect:"XPlat Code Coverage" \
+            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
+          exit_code=$?
+
+          if [ $exit_code -ne 0 ]; then
+            echo "::error::Architecture tests failed"
+          fi
+          exit $exit_code
+
+      - name: Upload Architecture Test Results
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: architecture-test-results
+          path: test-results
+
+  test-integration:
+    name: "Web.Tests.Integration"
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: build
+
+    env:
+      MONGODB_CONNECTION_STRING: "mongodb://localhost:27017/articlessite-test?directConnection=true"
+
+    steps:
+      - name: Start MongoDB Replica Set
+        run: |
+          docker run -d --name mongodb -p 27017:27017 mongo:7.0 mongod --replSet rs0
+          # Wait for MongoDB to be ready
+          for i in {1..30}; do
+            if docker exec mongodb mongosh --quiet --eval "db.runCommand({ ping: 1 })" 2>/dev/null; then
+              echo "MongoDB is accepting connections"
+              break
+            fi
+            echo "Waiting for MongoDB... attempt $i"
+            sleep 2
+          done
+          # Initialize single-node replica set (required for EF Core MongoDB transactions)
+          docker exec mongodb mongosh --quiet --eval "rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'localhost:27017'}]})"
+          # Wait for replica set to elect primary
+          for i in {1..30}; do
+            if docker exec mongodb mongosh --quiet --eval "rs.isMaster().ismaster" 2>/dev/null | grep -q true; then
+              echo "Replica set primary is ready"
+              break
+            fi
+            echo "Waiting for primary... attempt $i"
+            sleep 2
+          done
+
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v6
+        with:
+          path: ${{ github.workspace }}/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/Directory.Packages.props') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build Integration Tests
+        run: dotnet build tests/Web.Tests.Integration --configuration Release --no-restore
+
+      - name: Run Integration Tests
+        id: integration-tests
+        run: |
+          mkdir -p test-results
+          if [ ! -d "tests/Web.Tests.Integration" ]; then
+            echo "::notice::Integration test project not found at tests/Web.Tests.Integration - skipping"
+            exit 0
+          fi
+
+          # Run tests using dotnet test
+          dotnet test tests/Web.Tests.Integration \
+            --configuration Release \
+            --no-build \
+            --verbosity normal \
+            --logger "console;verbosity=detailed" \
+            --logger "trx;LogFileName=integration.trx" \
+            --results-directory "$GITHUB_WORKSPACE/test-results" \
+            --collect:"XPlat Code Coverage" \
+            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
+          exit_code=$?
+
+          if [ $exit_code -ne 0 ]; then
+            echo "::error::Integration tests failed"
+          fi
+          exit $exit_code
+
+      - name: Upload Integration Test Results
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: integration-test-results
+          path: test-results
+
+  coverage:
+    name: Coverage Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs:
+      - test-shared-unit
+      - test-web-unit
+      - test-architecture
+      - test-integration
+    if: always()
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Download coverage reports
+        uses: actions/download-artifact@v8
+        with:
+          path: coverage-reports
+
+      - name: Install ReportGenerator
+        run: dotnet tool install -g dotnet-reportgenerator-globaltool
+
+      - name: Generate coverage report
+        run: |
+          reportgenerator \
+            -reports:"coverage-reports/**/**/coverage.cobertura.xml" \
+            -targetdir:"./coverage-output" \
+            -reporttypes:"Html;Cobertura;JsonSummary" \
+            -verbosity:verbose || echo "::warning::No coverage files found"
+
+      - name: Check coverage threshold
+        run: |
+          if [ -f "./coverage-output/Summary.json" ]; then
+            coverage=$(jq -r '.lineCoverage' ./coverage-output/Summary.json 2>/dev/null || echo "0")
+            echo "Line Coverage: $coverage%"
+            if (( $(echo "$coverage < 80" | bc -l) )); then
+              echo "::warning::Code coverage is below 80% threshold: $coverage%"
+            fi
+          else
+            echo "::notice::Coverage report not available"
+          fi
+
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: coverage-reports
+          path: coverage-output
+
+      - name: Publish to Codecov
+        uses: codecov/codecov-action@v7
+        if: always()
+        with:
+          fail_ci_if_error: false
+          files: ./coverage-output/Cobertura.xml
+          verbose: false
+
+  report:
+    name: Test Report Summary
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs:
+      - build
+      - test-shared-unit
+      - test-web-unit
+      - test-architecture
+      - test-integration
+    if: always()
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Download all test results
+        uses: actions/download-artifact@v8
+        with:
+          path: all-test-results
+
+      - name: Publish test results
+        uses: EnricoMi/publish-unit-test-result-action@v2.24.0
+        if: always()
+        with:
+          files: |
+            all-test-results/**/*.trx
+            all-test-results/**/*-nunit.xml
+          check_name: Test Results Summary
+          compare_to_earlier_commit: true
+
+      - name: Generate job summary
+        if: always()
+        run: |
+          echo "## Test Execution Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Job Status" >> $GITHUB_STEP_SUMMARY
+          echo "- **Build:** ${{ needs.build.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Shared.Tests.Unit:** ${{ needs.test-shared-unit.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Web.Tests.Unit:** ${{ needs.test-web-unit.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Architecture.Tests:** ${{ needs.test-architecture.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Web.Tests.Integration:** ${{ needs.test-integration.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "- Test results and coverage reports available in Actions artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "- Coverage report: \`coverage-reports\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Set overall status
+          build_status="${{ needs.build.result }}"
+          shared_unit_status="${{ needs.test-shared-unit.result }}"
+          web_unit_status="${{ needs.test-web-unit.result }}"
+          arch_status="${{ needs.test-architecture.result }}"
+          integration_status="${{ needs.test-integration.result }}"
+
+          if [[ "$build_status" == "failure" || "$shared_unit_status" == "failure" || "$web_unit_status" == "failure" || \
+                "$arch_status" == "failure" || "$integration_status" == "failure" ]]; then
+            echo "❌ **Overall Status:** FAILED" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ **Overall Status:** PASSED" >> $GITHUB_STEP_SUMMARY
+          fi
