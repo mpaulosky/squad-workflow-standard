@@ -94,7 +94,7 @@ If any gate fails, fix and rerun before pushing.
 
 1. Confirm canonical source files are current in ArticlesSite.
 2. Record current state in each pilot repo:
-   - `scripts/squad/check-git-gh-standard.sh /absolute/path/to/target-repo`
+   - `~/github/squad-workflow-standard/scripts/squad/check-git-gh-standard.sh /absolute/path/to/target-repo`
 3. Announce pilot start date, owner, and freeze window for process changes.
 
 ### Phase 1: Pilot scope
@@ -136,9 +136,9 @@ Trigger rollback on pilot fail or post-rollout Sev1/Sev2 workflow regression.
 
 1. Pin to the last known good standard version in source control.
 2. Re-sync affected repos from that version using:
-   - `scripts/squad/sync-git-gh-standard.sh /absolute/path/to/target-repo`
+   - `~/github/squad-workflow-standard/scripts/squad/sync-git-gh-standard.sh /absolute/path/to/target-repo`
 3. Re-run:
-   - `scripts/squad/check-git-gh-standard.sh /absolute/path/to/target-repo`
+   - `~/github/squad-workflow-standard/scripts/squad/check-git-gh-standard.sh /absolute/path/to/target-repo`
 4. Open a corrective issue before retrying rollout.
 
 ## Drift and upgrade posture
@@ -163,5 +163,5 @@ They must keep the canonical binding and hard-gate language intact.
 Validation command:
 
 ```bash
-scripts/squad/check-git-gh-standard.sh /absolute/path/to/target-repo
+~/github/squad-workflow-standard/scripts/squad/check-git-gh-standard.sh /absolute/path/to/target-repo
 ```
