@@ -1,0 +1,105 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "verify-release-run",
+			"type": "shell",
+			"command": "bash",
+			"args": [
+				"-lc",
+				"gh api repos/mpaulosky/squad-workflow-standard/actions/runs/30048598368 --jq '{url: .html_url, status: .status, conclusion: .conclusion, head_branch: .head_branch, created_at: .created_at, updated_at: .updated_at}'"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "verify-release-run-2",
+			"type": "shell",
+			"command": "bash",
+			"args": [
+				"--noprofile",
+				"--norc",
+				"-lc",
+				"gh api repos/mpaulosky/squad-workflow-standard/actions/runs/30048598368 --jq '.html_url, .status, (.conclusion // \"null\"), .head_branch, .created_at, .updated_at'"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "verify-release-run-3",
+			"type": "shell",
+			"command": "gh",
+			"args": [
+				"api",
+				"repos/mpaulosky/squad-workflow-standard/actions/runs/30048598368",
+				"--jq",
+				".html_url, .status, (.conclusion // \"null\"), .head_branch, .created_at, .updated_at"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "watch-release-run",
+			"type": "shell",
+			"command": "gh",
+			"args": [
+				"run",
+				"watch",
+				"30048598368",
+				"--repo",
+				"mpaulosky/squad-workflow-standard",
+				"--exit-status"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "extract-tag-from-run",
+			"type": "shell",
+			"command": "bash",
+			"args": [
+				"-lc",
+				"gh run view 30048598368 --repo mpaulosky/squad-workflow-standard --log | rg -n \"version=|tag=|Version:|Tag v|Release v\""
+			],
+			"isBackground": false
+		},
+		{
+			"label": "verify-release-url",
+			"type": "shell",
+			"command": "gh",
+			"args": [
+				"release",
+				"view",
+				"v0.0.1-38",
+				"--repo",
+				"mpaulosky/squad-workflow-standard",
+				"--json",
+				"url,tagName,name,isLatest,publishedAt"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "verify-release-url-2",
+			"type": "shell",
+			"command": "gh",
+			"args": [
+				"release",
+				"view",
+				"v0.0.1-38",
+				"--repo",
+				"mpaulosky/squad-workflow-standard",
+				"--json",
+				"url,tagName,name,publishedAt"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "verify-tag-ref",
+			"type": "shell",
+			"command": "git",
+			"args": [
+				"ls-remote",
+				"--tags",
+				"https://github.com/mpaulosky/squad-workflow-standard.git",
+				"v0.0.1-38"
+			],
+			"isBackground": false
+		}
+	]
+}
