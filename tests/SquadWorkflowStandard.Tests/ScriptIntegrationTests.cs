@@ -206,6 +206,25 @@ public sealed class ScriptIntegrationTests
     }
 
     [Fact]
+    public void SquadPathsGuardWorkflow_ShouldBeBranchAwareForMainProtectionAndDevRetention()
+    {
+        var sourceWorkflowPath = Path.Combine(RepositoryPaths.Root, "source", "workflows", "squad-paths-guard.yml");
+        var generatedWorkflowPath = Path.Combine(RepositoryPaths.Root, ".github", "workflows", "squad-paths-guard.yml");
+
+        var sourceWorkflow = File.ReadAllText(sourceWorkflowPath);
+        var generatedWorkflow = File.ReadAllText(generatedWorkflowPath);
+
+        generatedWorkflow.Should().Be(sourceWorkflow);
+        sourceWorkflow.Should().Contain("context.payload.pull_request.base.ref");
+        sourceWorkflow.Should().Contain("baseBranch === 'main'");
+        sourceWorkflow.Should().Contain("baseBranch === 'dev'");
+        sourceWorkflow.Should().Contain("main: block new or modified .squad/ and team-docs/ paths, but allow removals.");
+        sourceWorkflow.Should().Contain("dev: keep .squad/ retained by blocking removals only.");
+        sourceWorkflow.Should().Contain("The following files must NOT be merged into `main`.");
+        sourceWorkflow.Should().Contain("The following `.squad/` files must NOT be removed from `dev`.");
+    }
+
+    [Fact]
     public void SyncAndCheckScripts_ShouldRecognizeGitWorktreeTarget()
     {
         using var worktree = GitWorktreeScope.Create(RepositoryPaths.Root);
