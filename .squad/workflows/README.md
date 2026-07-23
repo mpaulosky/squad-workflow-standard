@@ -1,4 +1,4 @@
-## Squad Workflow Standards Distribution
+# Squad Workflow Standards Distribution
 
 This directory hosts the canonical git + `gh` process standard for squad
 issue work.
@@ -27,6 +27,12 @@ issue work.
    ```
 
 4. Resolve any failing checks before opening issue-work PRs.
+
+Hook enforcement is part of sync/check:
+
+- `sync-git-gh-standard.sh` sets `core.hooksPath=.github/hooks` and marks
+  hook files executable.
+- `check-git-gh-standard.sh` fails if hook activation or executability drifts.
 
 ## Retrofit (existing squad repo)
 
@@ -99,8 +105,8 @@ If pilot fails or post-rollout critical regression occurs:
 
 ### Detect-and-prompt policy
 
-When `check-git-gh-standard.sh` detects version drift, it must stop green status and
-prompt the operator with three actions:
+When `check-git-gh-standard.sh` detects version drift, it must stop green
+status and prompt the operator with three actions:
 
 1. Update now (`sync-git-gh-standard.sh`)
 2. Defer and rerun the check before the next gated issue workflow

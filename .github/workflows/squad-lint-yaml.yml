@@ -1,0 +1,38 @@
+name: Lint YAML
+# Validates all workflow and config YAML files
+
+on:
+  push:
+    branches-ignore: [main]
+    paths: ['**.yml', '**.yaml']
+  pull_request:
+    branches-ignore: [main]
+    paths: ['**.yml', '**.yaml']
+
+permissions:
+  contents: read
+
+jobs:
+  yamllint:
+    name: yamllint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Run yamllint
+        uses: ibiqlik/action-yamllint@v3
+        with:
+          file_or_dir: .
+          config_data: |
+            extends: default
+            ignore: |
+              .squad/
+            rules:
+              line-length:
+                max: 200
+                allow-non-breakable-inline-mappings: true
+              truthy:
+                allowed-values: ['true', 'false', 'on']
+              brackets:
+                min-spaces-inside: 0
+                max-spaces-inside: 1

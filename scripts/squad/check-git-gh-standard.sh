@@ -50,7 +50,7 @@ fi
 
 SOURCE_REPO="${SOURCE_REPO_OVERRIDE:-${SQUAD_STANDARD_SOURCE_REPO:-$SCRIPT_REPO}}"
 
-if [[ ! -d "$TARGET_REPO/.git" ]]; then
+if ! git -C "$TARGET_REPO" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   echo "Target repo is not a git repository: $TARGET_REPO"
   exit 1
 fi
@@ -62,6 +62,7 @@ fi
 
 WORKFLOW_STANDARD="$SOURCE_REPO/source/.squad/workflows/git-gh-process-standard.md"
 WORKFLOW_BASELINE_MANIFEST="$SOURCE_REPO/source/.squad/workflows/workflow-baseline-manifest.txt"
+HOOK_BASELINE_MANIFEST="$SOURCE_REPO/source/.squad/workflows/hook-baseline-manifest.txt"
 
 if [[ ! -f "$WORKFLOW_STANDARD" ]]; then
   echo "ERROR: Canonical workflow standard not found: $WORKFLOW_STANDARD"
@@ -164,6 +165,16 @@ assert_file_contains \
   "Standard version: \`${CANONICAL_VERSION}\`" \
   ".squad/skills/git-workflow-standard/SKILL.md must match canonical standard version"
 
+CONFIGURED_HOOKS_PATH="$(git -C "$TARGET_REPO" config --get core.hooksPath 2>/dev/null || true)"
+NORMALIZED_HOOKS_PATH="${CONFIGURED_HOOKS_PATH#./}"
+if [[ -z "$CONFIGURED_HOOKS_PATH" ]]; then
+  HAS_FAILURE=1
+  echo "ADAPTER CHECK FAILED: git core.hooksPath is not configured"
+elif [[ "$NORMALIZED_HOOKS_PATH" != ".github/hooks" ]]; then
+  HAS_FAILURE=1
+  echo "ADAPTER CHECK FAILED: git core.hooksPath must be '.github/hooks' (found: $CONFIGURED_HOOKS_PATH)"
+fi
+
 if [[ -f "$WORKFLOW_BASELINE_MANIFEST" ]]; then
   TARGET_WORKFLOW_BASELINE_MANIFEST="$TARGET_REPO/.squad/workflows/workflow-baseline-manifest.txt"
   if [[ ! -f "$TARGET_WORKFLOW_BASELINE_MANIFEST" ]]; then
@@ -201,6 +212,50 @@ if [[ -f "$WORKFLOW_BASELINE_MANIFEST" ]]; then
       echo "ADAPTER CHECK FAILED: workflow drift detected for $workflow_file"
     fi
   done < "$WORKFLOW_BASELINE_MANIFEST"
+fi
+
+if [[ -f "$HOOK_BASELINE_MANIFEST" ]]; then
+  TARGET_HOOK_BASELINE_MANIFEST="$TARGET_REPO/.squad/workflows/hook-baseline-manifest.txt"
+  if [[ ! -f "$TARGET_HOOK_BASELINE_MANIFEST" ]]; then
+    HAS_FAILURE=1
+    echo "ADAPTER CHECK FAILED: missing file $TARGET_HOOK_BASELINE_MANIFEST"
+  elif ! cmp -s "$HOOK_BASELINE_MANIFEST" "$TARGET_HOOK_BASELINE_MANIFEST"; then
+    HAS_FAILURE=1
+    echo "ADAPTER CHECK FAILED: hook baseline manifest drift detected"
+  fi
+
+  while IFS= read -r hook_file || [[ -n "$hook_file" ]]; do
+    hook_file="$(printf '%s' "$hook_file" | tr -d '\r')"
+
+    if [[ -z "$hook_file" || "${hook_file:0:1}" == "#" ]]; then
+      continue
+    fi
+
+    source_hook="$SOURCE_REPO/source/hooks/$hook_file"
+    target_hook="$TARGET_REPO/.github/hooks/$hook_file"
+
+    if [[ ! -f "$source_hook" ]]; then
+      HAS_FAILURE=1
+      echo "ADAPTER CHECK FAILED: missing canonical hook $source_hook"
+      continue
+    fi
+
+    if [[ ! -f "$target_hook" ]]; then
+      HAS_FAILURE=1
+      echo "ADAPTER CHECK FAILED: missing target hook $target_hook"
+      continue
+    fi
+
+    if ! cmp -s "$source_hook" "$target_hook"; then
+      HAS_FAILURE=1
+      echo "ADAPTER CHECK FAILED: hook drift detected for $hook_file"
+    fi
+
+    if [[ ! -x "$target_hook" ]]; then
+      HAS_FAILURE=1
+      echo "ADAPTER CHECK FAILED: hook is not executable $target_hook"
+    fi
+  done < "$HOOK_BASELINE_MANIFEST"
 fi
 
 if [[ "$HAS_FAILURE" -eq 0 ]]; then

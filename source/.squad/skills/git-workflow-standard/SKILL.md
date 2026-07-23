@@ -6,13 +6,16 @@ confidence: "high"
 source: "team-decision"
 ---
 
+# Git workflow standard
+
 ## Context
 
 Use this as the authoritative execution pattern for issue-driven work.
 
 Source of truth:
+
 - `.squad/workflows/git-gh-process-standard.md`
-- Standard version: `2026.07.1`
+- Standard version: `2026.07.2`
 
 ## Rules
 
@@ -41,7 +44,9 @@ gh pr create --base main --title "{title}" --body "Closes #{issue-number}" --dra
 
 ```bash
 git fetch origin main
-git worktree add ../{repo-name}-{issue-number} -b squad/{issue-number}-{kebab-slug} origin/main
+git worktree add ../{repo-name}-{issue-number} \
+  -b squad/{issue-number}-{kebab-slug} \
+  origin/main
 cd ../{repo-name}-{issue-number}
 git push -u origin squad/{issue-number}-{kebab-slug}
 gh pr create --base main --title "{title}" --body "Closes #{issue-number}" --draft
