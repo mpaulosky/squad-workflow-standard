@@ -66,7 +66,8 @@ internal static class RepositoryPaths
         var current = new DirectoryInfo(AppContext.BaseDirectory);
         while (current is not null)
         {
-            if (Directory.Exists(Path.Combine(current.FullName, ".git")) &&
+            var gitPath = Path.Combine(current.FullName, ".git");
+            if ((Directory.Exists(gitPath) || File.Exists(gitPath)) &&
                 File.Exists(Path.Combine(current.FullName, "README.md")) &&
                 Directory.Exists(Path.Combine(current.FullName, "scripts")))
             {
@@ -77,6 +78,35 @@ internal static class RepositoryPaths
         }
 
         throw new DirectoryNotFoundException("Unable to locate repository root for tests.");
+    }
+}
+
+internal sealed class GitWorktreeScope : IDisposable
+{
+    private GitWorktreeScope(string repoRoot, string worktreePath)
+    {
+        RepoRoot = repoRoot;
+        WorktreePath = worktreePath;
+    }
+
+    public string RepoRoot { get; }
+    public string WorktreePath { get; }
+
+    public static GitWorktreeScope Create(string repoRoot)
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"squad-worktree-{Guid.NewGuid():N}");
+        var addResult = ProcessRunner.Run("git", ["worktree", "add", "--detach", path, "HEAD"], repoRoot);
+        addResult.ExitCode.Should().Be(0, addResult.CombinedOutput);
+        return new GitWorktreeScope(repoRoot, path);
+    }
+
+    public void Dispose()
+    {
+        if (Directory.Exists(WorktreePath))
+        {
+            var removeResult = ProcessRunner.Run("git", ["worktree", "remove", "--force", WorktreePath], RepoRoot);
+            removeResult.ExitCode.Should().Be(0, removeResult.CombinedOutput);
+        }
     }
 }
 

@@ -22,7 +22,8 @@ static string? FindRepoRoot(string start)
     var current = new DirectoryInfo(Path.GetFullPath(start));
     while (current is not null)
     {
-        if (Directory.Exists(Path.Combine(current.FullName, ".git")))
+        var gitPath = Path.Combine(current.FullName, ".git");
+        if (Directory.Exists(gitPath) || File.Exists(gitPath))
         {
             return current.FullName;
         }

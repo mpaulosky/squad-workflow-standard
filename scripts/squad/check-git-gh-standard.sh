@@ -50,7 +50,7 @@ fi
 
 SOURCE_REPO="${SOURCE_REPO_OVERRIDE:-${SQUAD_STANDARD_SOURCE_REPO:-$SCRIPT_REPO}}"
 
-if [[ ! -d "$TARGET_REPO/.git" ]]; then
+if ! git -C "$TARGET_REPO" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   echo "Target repo is not a git repository: $TARGET_REPO"
   exit 1
 fi

@@ -77,4 +77,19 @@ public sealed class CliIntegrationTests
         checkResult.ExitCode.Should().Be(0, checkResult.CombinedOutput);
         checkResult.StdOut.Should().Contain("STATUS: OK");
     }
+
+    [Fact]
+    public void Cli_ShouldLocateRepoRoot_WhenRunFromGitWorktree()
+    {
+        using var worktree = GitWorktreeScope.Create(RepositoryPaths.Root);
+
+        var cliProject = RepositoryPaths.CliProjectPath;
+        var result = ProcessRunner.Run(
+            "dotnet",
+            ["run", "--project", cliProject, "--", "check-git-gh-standard"],
+            workingDirectory: worktree.WorktreePath);
+
+        result.CombinedOutput.Should().NotContain("Unable to locate repository root (.git)");
+        result.StdOut.Should().Contain("Usage:");
+    }
 }

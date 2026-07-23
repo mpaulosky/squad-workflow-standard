@@ -87,7 +87,8 @@ if ([string]::IsNullOrWhiteSpace($targetRepo)) {
 
 $sourceRepo = if ($sourceRepoOverride) { $sourceRepoOverride } elseif ($env:SQUAD_STANDARD_SOURCE_REPO) { $env:SQUAD_STANDARD_SOURCE_REPO } else { $scriptRepo }
 
-if (-not (Test-Path -LiteralPath (Join-Path $targetRepo ".git") -PathType Container)) {
+& git -C $targetRepo rev-parse --is-inside-work-tree 2>$null | Out-Null
+if ($LASTEXITCODE -ne 0) {
     Write-Host "Target repo is not a git repository: $targetRepo"
     exit 1
 }

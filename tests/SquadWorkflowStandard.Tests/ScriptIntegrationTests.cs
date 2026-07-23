@@ -145,4 +145,20 @@ public sealed class ScriptIntegrationTests
         result.StdOut.Should().Contain("ADAPTER CHECK FAILED");
         result.StdOut.Should().Contain("STATUS: ENFORCEMENT INCOMPLETE");
     }
+
+    [Fact]
+    public void SyncAndCheckScripts_ShouldRecognizeGitWorktreeTarget()
+    {
+        using var worktree = GitWorktreeScope.Create(RepositoryPaths.Root);
+
+        var syncScript = RepositoryPaths.SyncScriptPath;
+        var checkScript = RepositoryPaths.CheckScriptPath;
+        var repoRoot = RepositoryPaths.Root;
+
+        var syncResult = ProcessRunner.Run("bash", [syncScript, worktree.WorktreePath, "--source-repo", repoRoot]);
+        var checkResult = ProcessRunner.Run("bash", [checkScript, worktree.WorktreePath, "--source-repo", repoRoot]);
+
+        syncResult.ExitCode.Should().Be(0, syncResult.CombinedOutput);
+        checkResult.CombinedOutput.Should().NotContain("Target repo is not a git repository");
+    }
 }
