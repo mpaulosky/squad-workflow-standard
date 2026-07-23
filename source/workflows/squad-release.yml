@@ -8,6 +8,7 @@ on:
       - 'docs/**'
       - '**/*.md'
       - '.squad/**'
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -33,7 +34,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v6
         with:
-          global-json-file: Global.json
+          global-json-file: global.json
 
       - name: Install GitVersion
         uses: gittools/actions/gitversion/setup@v4.7.0
@@ -91,16 +92,11 @@ jobs:
         run: |
           set -euo pipefail
 
-          projects=(
-            tests/Architecture.Tests/Architecture.Tests.csproj
-            tests/AppHost.Tests/AppHost.Tests.csproj
-            tests/Integration.Tests/Integration.Tests.csproj
-            tests/IssueTracker.CoreBusiness.Tests.Unit/IssueTracker.CoreBusiness.Tests.Unit.csproj
-            tests/IssueTracker.PlugIns.Tests.Unit/IssueTracker.PlugIns.Tests.Unit.csproj
-            tests/IssueTracker.Services.Tests.Unit/IssueTracker.Services.Tests.Unit.csproj
-            tests/IssueTracker.UI.Tests.Unit/IssueTracker.UI.Tests.Unit.csproj
-            tests/ServiceDefaults.Tests/ServiceDefaults.Tests.csproj
-          )
+          mapfile -t projects < <(find tests -type f -name '*.csproj' | sort)
+          if [[ ${#projects[@]} -eq 0 ]]; then
+            echo "::error::No test projects (*.csproj) found under tests/."
+            exit 1
+          fi
 
           for project in "${projects[@]}"; do
             echo "=== Running ${project} ==="
