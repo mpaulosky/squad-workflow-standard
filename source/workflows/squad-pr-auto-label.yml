@@ -30,7 +30,7 @@ jobs:
             const labelNames = currentLabels.map(l => l.name);
 
             // Check if already has squad labels
-            const hasSquadLabel = labelNames.some(name => 
+            const hasSquadLabel = labelNames.some(name =>
               name === 'squad' || name.startsWith('squad:')
             );
 

@@ -8,3 +8,10 @@
 .squad/.cache/
 # Squad: SubSquad activation file (local to this machine)
 .squad-workstream
+
+# .NET build output
+**/bin/
+**/obj/
+
+# IDE user files
+*.DotSettings.user
