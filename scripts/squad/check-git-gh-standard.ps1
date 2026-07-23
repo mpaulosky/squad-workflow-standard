@@ -160,6 +160,23 @@ Assert-FileContains -File (Join-Path $targetRepo ".squad/templates/issue-lifecyc
 Assert-FileContains -File (Join-Path $targetRepo ".squad/templates/issue-lifecycle.md") -Expected 'Default branch policy: branch from `main`, PR to `main`' -Message ".squad/templates/issue-lifecycle.md must enforce main-first branch + PR policy"
 Assert-FileContains -File (Join-Path $targetRepo ".squad/skills/git-workflow-standard/SKILL.md") -Expected ('Standard version: `{0}`' -f $canonicalVersion) -Message ".squad/skills/git-workflow-standard/SKILL.md must match canonical standard version"
 
+$configuredHooksPath = (& git -C $targetRepo config --get core.hooksPath 2>$null)
+$normalizedHooksPath = $configuredHooksPath
+if ($normalizedHooksPath) {
+    $normalizedHooksPath = $normalizedHooksPath.Trim()
+    if ($normalizedHooksPath.StartsWith("./")) {
+        $normalizedHooksPath = $normalizedHooksPath.Substring(2)
+    }
+}
+
+if ([string]::IsNullOrWhiteSpace($configuredHooksPath)) {
+    $script:hasFailure = $true
+    Write-Host "ADAPTER CHECK FAILED: git core.hooksPath is not configured"
+} elseif ($normalizedHooksPath -ne ".github/hooks") {
+    $script:hasFailure = $true
+    Write-Host "ADAPTER CHECK FAILED: git core.hooksPath must be '.github/hooks' (found: $configuredHooksPath)"
+}
+
 if (Test-Path -LiteralPath $workflowBaselineManifest -PathType Leaf) {
     $targetWorkflowBaselineManifest = Join-Path $targetRepo ".squad/workflows/workflow-baseline-manifest.txt"
     if (-not (Test-Path -LiteralPath $targetWorkflowBaselineManifest -PathType Leaf)) {
@@ -232,6 +249,14 @@ if (Test-Path -LiteralPath $hookBaselineManifest -PathType Leaf) {
         if (-not (Test-FilesEqual -PathA $sourceHook -PathB $targetHook)) {
             $script:hasFailure = $true
             Write-Host "ADAPTER CHECK FAILED: hook drift detected for $hookFile"
+        }
+
+        if (-not $IsWindows) {
+            $mode = (Get-Item -LiteralPath $targetHook).Mode
+            if (-not $mode.Contains("x")) {
+                $script:hasFailure = $true
+                Write-Host "ADAPTER CHECK FAILED: hook is not executable $targetHook"
+            }
         }
     }
 }

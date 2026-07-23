@@ -159,9 +159,15 @@ if (Test-Path -LiteralPath $hookBaselineManifest -PathType Leaf) {
         }
 
         Copy-IfDistinct -SourceFile $sourceHook -TargetFile $targetHook
+        if (-not $IsWindows) {
+            & chmod +x $targetHook
+        }
         $syncedHookCount++
     }
 }
+
+# Enforce hooks activation in the target repo.
+& git -C $targetRepo config core.hooksPath ".github/hooks"
 
 $version = "unknown"
 $versionLine = (Get-Content -LiteralPath $workflowStandard | Where-Object { $_ -match '^Standard-Version:' } | Select-Object -First 1)

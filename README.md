@@ -54,6 +54,8 @@ The canonical pack consists of:
 
 It also syncs all workflow files listed in `workflow-baseline-manifest.txt`.
 It also syncs all hook files listed in `hook-baseline-manifest.txt`.
+It sets `core.hooksPath=.github/hooks` in the target repo and ensures the synced
+hooks are executable.
 
 ### 3. Drift + enforcement validation
 
@@ -62,6 +64,8 @@ It also syncs all hook files listed in `hook-baseline-manifest.txt`.
 - local standard version matches canonical `Standard-Version`
 - required adapter files exist and contain required hard-gate bindings
 - baseline workflow files match canonical copies
+- required hook activation is present (`core.hooksPath=.github/hooks`)
+- required hook files are executable
 
 Exit codes are automation-safe:
 

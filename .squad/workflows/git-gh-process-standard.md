@@ -1,6 +1,6 @@
 # Git + GH Process Standard
 
-Standard-Version: 2026.07.1
+Standard-Version: 2026.07.2
 Owner: Squad process governance
 
 ## Purpose
@@ -63,7 +63,9 @@ From the primary clone:
 
 ```bash
 git fetch origin main
-git worktree add ../{repo-name}-{issue-number} -b squad/{issue-number}-{kebab-slug} origin/main
+git worktree add ../{repo-name}-{issue-number} \
+  -b squad/{issue-number}-{kebab-slug} \
+  origin/main
 ```
 
 Inside the worktree:
@@ -87,6 +89,12 @@ git push origin --delete squad/{issue-number}-{kebab-slug}
 
 Run required tests/validation configured by the repo before push.
 If any gate fails, fix and rerun before pushing.
+
+## Required hook activation
+
+- Repositories must set `git config core.hooksPath .github/hooks`.
+- Required hooks are `pre-commit`, `pre-push`, and `post-checkout`.
+- Hook files in `.github/hooks/` must remain executable.
 
 ## Phased rollout plan (mandatory adoption)
 

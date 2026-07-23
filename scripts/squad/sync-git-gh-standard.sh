@@ -80,6 +80,13 @@ copy_if_distinct() {
   cp "$source_file" "$target_file"
 }
 
+ensure_hook_is_executable() {
+  local hook_path="$1"
+  if [[ -f "$hook_path" ]]; then
+    chmod +x "$hook_path"
+  fi
+}
+
 WORKFLOW_STANDARD="$SOURCE_REPO/source/.squad/workflows/git-gh-process-standard.md"
 WORKFLOW_README="$SOURCE_REPO/source/.squad/workflows/README.md"
 WORKFLOW_SKILL="$SOURCE_REPO/source/.squad/skills/git-workflow-standard/SKILL.md"
@@ -154,9 +161,13 @@ if [[ -f "$HOOK_BASELINE_MANIFEST" ]]; then
     fi
 
     copy_if_distinct "$source_hook" "$target_hook"
+    ensure_hook_is_executable "$target_hook"
     SYNCED_HOOK_COUNT=$((SYNCED_HOOK_COUNT + 1))
   done < "$HOOK_BASELINE_MANIFEST"
 fi
+
+# Enforce hooks activation in the target repo.
+git -C "$TARGET_REPO" config core.hooksPath .github/hooks
 
 VERSION="$(grep -E '^Standard-Version:' "$WORKFLOW_STANDARD" | awk '{print $2}')"
 echo "${VERSION:-unknown}" > "$TARGET_REPO/.squad/workflows/.git-gh-standard-version"

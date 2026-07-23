@@ -32,6 +32,12 @@ issue work.
 
 4. Resolve any failing checks before opening issue-work PRs.
 
+Hook enforcement is part of sync/check:
+
+- `sync-git-gh-standard.sh` sets `core.hooksPath=.github/hooks` and marks
+  hook files executable.
+- `check-git-gh-standard.sh` fails if hook activation or executability drifts.
+
 ## Retrofit (existing squad repo)
 
 1. From this source repo, sync the latest standard pack:

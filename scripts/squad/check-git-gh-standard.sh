@@ -165,6 +165,16 @@ assert_file_contains \
   "Standard version: \`${CANONICAL_VERSION}\`" \
   ".squad/skills/git-workflow-standard/SKILL.md must match canonical standard version"
 
+CONFIGURED_HOOKS_PATH="$(git -C "$TARGET_REPO" config --get core.hooksPath 2>/dev/null || true)"
+NORMALIZED_HOOKS_PATH="${CONFIGURED_HOOKS_PATH#./}"
+if [[ -z "$CONFIGURED_HOOKS_PATH" ]]; then
+  HAS_FAILURE=1
+  echo "ADAPTER CHECK FAILED: git core.hooksPath is not configured"
+elif [[ "$NORMALIZED_HOOKS_PATH" != ".github/hooks" ]]; then
+  HAS_FAILURE=1
+  echo "ADAPTER CHECK FAILED: git core.hooksPath must be '.github/hooks' (found: $CONFIGURED_HOOKS_PATH)"
+fi
+
 if [[ -f "$WORKFLOW_BASELINE_MANIFEST" ]]; then
   TARGET_WORKFLOW_BASELINE_MANIFEST="$TARGET_REPO/.squad/workflows/workflow-baseline-manifest.txt"
   if [[ ! -f "$TARGET_WORKFLOW_BASELINE_MANIFEST" ]]; then
@@ -239,6 +249,11 @@ if [[ -f "$HOOK_BASELINE_MANIFEST" ]]; then
     if ! cmp -s "$source_hook" "$target_hook"; then
       HAS_FAILURE=1
       echo "ADAPTER CHECK FAILED: hook drift detected for $hook_file"
+    fi
+
+    if [[ ! -x "$target_hook" ]]; then
+      HAS_FAILURE=1
+      echo "ADAPTER CHECK FAILED: hook is not executable $target_hook"
     fi
   done < "$HOOK_BASELINE_MANIFEST"
 fi
