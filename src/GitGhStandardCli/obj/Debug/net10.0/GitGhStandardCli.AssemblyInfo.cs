@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("GitGhStandardCli")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+12d80c392968a02c3815aac2e460e064038e2648")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c089f70ff959bd5066524d890b5d8264457a0841")]
 [assembly: System.Reflection.AssemblyProductAttribute("GitGhStandardCli")]
 [assembly: System.Reflection.AssemblyTitleAttribute("GitGhStandardCli")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
