@@ -17,13 +17,13 @@ issue work.
 2. From this source repo, install/update the standard pack:
 
    ```bash
-   scripts/squad/sync-git-gh-standard.sh /absolute/path/to/target-repo
+   ~/github/squad-workflow-standard/scripts/squad/sync-git-gh-standard.sh /absolute/path/to/target-repo
    ```
 
 3. Validate required enforcement wiring:
 
    ```bash
-   scripts/squad/check-git-gh-standard.sh /absolute/path/to/target-repo
+   ~/github/squad-workflow-standard/scripts/squad/check-git-gh-standard.sh /absolute/path/to/target-repo
    ```
 
 4. Resolve any failing checks before opening issue-work PRs.
@@ -33,13 +33,13 @@ issue work.
 1. From this source repo, sync the latest standard pack:
 
    ```bash
-   scripts/squad/sync-git-gh-standard.sh /absolute/path/to/target-repo
+   ~/github/squad-workflow-standard/scripts/squad/sync-git-gh-standard.sh /absolute/path/to/target-repo
    ```
 
 2. Run deterministic drift checks:
 
    ```bash
-   scripts/squad/check-git-gh-standard.sh /absolute/path/to/target-repo
+   ~/github/squad-workflow-standard/scripts/squad/check-git-gh-standard.sh /absolute/path/to/target-repo
    ```
 
 3. If drift is reported, reconcile:
@@ -86,13 +86,13 @@ If pilot fails or post-rollout critical regression occurs:
 2. Re-run sync to each affected repo:
 
    ```bash
-   scripts/squad/sync-git-gh-standard.sh /absolute/path/to/target-repo
+   ~/github/squad-workflow-standard/scripts/squad/sync-git-gh-standard.sh /absolute/path/to/target-repo
    ```
 
 3. Validate recovery:
 
    ```bash
-   scripts/squad/check-git-gh-standard.sh /absolute/path/to/target-repo
+   ~/github/squad-workflow-standard/scripts/squad/check-git-gh-standard.sh /absolute/path/to/target-repo
    ```
 
 4. Log corrective issue and re-run pilot gate before reattempting rollout.

@@ -60,8 +60,8 @@ if [[ ! -d "$SOURCE_REPO" ]]; then
   exit 2
 fi
 
-WORKFLOW_STANDARD="$SOURCE_REPO/.squad/workflows/git-gh-process-standard.md"
-WORKFLOW_BASELINE_MANIFEST="$SOURCE_REPO/.squad/workflows/workflow-baseline-manifest.txt"
+WORKFLOW_STANDARD="$SOURCE_REPO/source/.squad/workflows/git-gh-process-standard.md"
+WORKFLOW_BASELINE_MANIFEST="$SOURCE_REPO/source/.squad/workflows/workflow-baseline-manifest.txt"
 
 if [[ ! -f "$WORKFLOW_STANDARD" ]]; then
   echo "ERROR: Canonical workflow standard not found: $WORKFLOW_STANDARD"
@@ -97,7 +97,7 @@ if [[ "${LOCAL_VERSION}" != "${CANONICAL_VERSION}" ]]; then
   if [[ -f "$TARGET_REPO/.squad/workflows/git-gh-process-standard.md" ]]; then
     echo "  3) View diff: diff -u \\"
     echo "       $TARGET_REPO/.squad/workflows/git-gh-process-standard.md \\"
-    echo "       $SOURCE_REPO/.squad/workflows/git-gh-process-standard.md"
+    echo "       $SOURCE_REPO/source/.squad/workflows/git-gh-process-standard.md"
   else
     echo "  3) View diff: local canonical file missing; sync first"
   fi
@@ -181,7 +181,7 @@ if [[ -f "$WORKFLOW_BASELINE_MANIFEST" ]]; then
       continue
     fi
 
-    source_workflow="$SOURCE_REPO/.github/workflows/$workflow_file"
+    source_workflow="$SOURCE_REPO/source/workflows/$workflow_file"
     target_workflow="$TARGET_REPO/.github/workflows/$workflow_file"
 
     if [[ ! -f "$source_workflow" ]]; then

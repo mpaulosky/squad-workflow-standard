@@ -79,10 +79,10 @@ copy_if_distinct() {
   cp "$source_file" "$target_file"
 }
 
-WORKFLOW_STANDARD="$SOURCE_REPO/.squad/workflows/git-gh-process-standard.md"
-WORKFLOW_README="$SOURCE_REPO/.squad/workflows/README.md"
-WORKFLOW_SKILL="$SOURCE_REPO/.squad/skills/git-workflow-standard/SKILL.md"
-WORKFLOW_BASELINE_MANIFEST="$SOURCE_REPO/.squad/workflows/workflow-baseline-manifest.txt"
+WORKFLOW_STANDARD="$SOURCE_REPO/source/.squad/workflows/git-gh-process-standard.md"
+WORKFLOW_README="$SOURCE_REPO/source/.squad/workflows/README.md"
+WORKFLOW_SKILL="$SOURCE_REPO/source/.squad/skills/git-workflow-standard/SKILL.md"
+WORKFLOW_BASELINE_MANIFEST="$SOURCE_REPO/source/.squad/workflows/workflow-baseline-manifest.txt"
 
 for required_file in "$WORKFLOW_STANDARD" "$WORKFLOW_README" "$WORKFLOW_SKILL"; do
   if [[ ! -f "$required_file" ]]; then
@@ -117,7 +117,7 @@ if [[ -f "$WORKFLOW_BASELINE_MANIFEST" ]]; then
       continue
     fi
 
-    source_workflow="$SOURCE_REPO/.github/workflows/$workflow_file"
+    source_workflow="$SOURCE_REPO/source/workflows/$workflow_file"
     target_workflow="$TARGET_REPO/.github/workflows/$workflow_file"
 
     if [[ ! -f "$source_workflow" ]]; then
