@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/GitGhStandardCli/GitGhStandardCli.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/SquadWorkflowStandard.Tests/SquadWorkflowStandard.Tests.csproj" />
+  </Folder>
+</Solution>
