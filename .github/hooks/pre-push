@@ -64,14 +64,14 @@ rules:
 EOF
 
   if command -v yamllint >/dev/null 2>&1; then
-    yamllint -s -c "$YAML_CONFIG_FILE" "${CHANGED_YAML[@]}"
+    yamllint -c "$YAML_CONFIG_FILE" "${CHANGED_YAML[@]}"
   elif command -v docker >/dev/null 2>&1; then
     docker run --rm \
       -v "$ROOT:/work" \
       -v "$YAML_CONFIG_FILE:/tmp/yamllint.yml:ro" \
       -w /work \
       cytopia/yamllint:latest \
-      -s -c /tmp/yamllint.yml "${CHANGED_YAML[@]}"
+      -c /tmp/yamllint.yml "${CHANGED_YAML[@]}"
   else
     echo -e "${RED}❌ yamllint is not available.${RESET}"
     rm -f "$YAML_CONFIG_FILE"

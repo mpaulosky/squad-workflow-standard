@@ -17,8 +17,8 @@ on:
         description: "Solution name without .slnx"
         required: false
         type: string
-        default: "ProjectName"
-  
+        default: "squad-workflow-standard"
+
   push:
     branches-ignore: [main]
     paths-ignore:
@@ -38,7 +38,7 @@ on:
       project_name:
         description: "Solution name without .slnx"
         required: false
-        default: "ProjectName"
+        default: "squad-workflow-standard"
       reason:
         description: "The reason for running the workflow"
         required: true
@@ -49,10 +49,22 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  SOLUTION_NAME: ${{ inputs.project_name || 'ProjectName' }}.slnx
+  SOLUTION_NAME: ${{ inputs.project_name || 'squad-workflow-standard' }}.slnx
   NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
   DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+  # Aspire parameter bindings for E2E.Tests (Parameters:auth0MgmtClientId/Secret)
+  Auth0__Domain: ${{ secrets.AUTH0_DOMAIN }}
+  Auth0__ClientId: ${{ secrets.AUTH0_CLIENT_ID }}
+  Auth0__ClientSecret: ${{ secrets.AUTH0_CLIENT_SECRET }}
+  Auth0Management__ClientId: ${{ secrets.AUTH0_MANAGEMENT_CLIENT_ID }}
+  Auth0Management__ClientSecret: ${{ secrets.AUTH0_MANAGEMENT_CLIENT_SECRET }}
+  Auth0Management__Domain: ${{ secrets.AUTH0_DOMAIN }}
+  Auth0Management__Audience: https://${{ secrets.AUTH0_DOMAIN }}/api/v2/
+  Parameters__auth0MgmtClientId: ${{ secrets.AUTH0_MANAGEMENT_CLIENT_ID }}
+  Parameters__auth0MgmtClientSecret: ${{ secrets.AUTH0_MANAGEMENT_CLIENT_SECRET }}
+  #MongoDB__ConnectionString: ${{ secrets.MONGODB_CONNECTION_STRING }}
 
 jobs:
   build:
@@ -96,8 +108,8 @@ jobs:
             ${{ runner.os }}-build-
 
 
-  test-squadWorkflowStandard:
-    name: "Standard Workflow Tests"
+  test-domain:
+    name: "Domain Tests"
     runs-on: ubuntu-latest
     timeout-minutes: 10
     needs: build
@@ -122,20 +134,245 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore
 
-      - name: Run SquadWorkflowStandard Tests
+      - name: Run Domain Tests
         run: |
-          dotnet test tests/SquadWorkflowStandard.Tests \
+          dotnet test tests/Domain.Tests \
             --configuration Release \
             --collect:"XPlat Code Coverage" \
-            --logger "trx;LogFileName=squadWorkflowStandard.trx" \
+            --logger "trx;LogFileName=domain.trx" \
             --results-directory test-results \
             --verbosity minimal
 
-      - name: Upload SquadWorkflowStandard Test Results
+      - name: Upload Domain Test Results
         uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: squadWorkflowStandard-test-results
+          name: domain-test-results
+          path: test-results
+
+  test-unit:
+    name: "Unit Tests"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: build
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v6
+        with:
+          path: ${{ github.workspace }}/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/Directory.Packages.props') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Run Unit Tests
+        run: |
+          dotnet test tests/Unit.Tests \
+            --configuration Release \
+            --collect:"XPlat Code Coverage" \
+            --logger "trx;LogFileName=Unit.trx" \
+            --results-directory test-results \
+            --verbosity minimal
+
+      - name: Upload Unit Test Results
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: Unit-test-results
+          path: test-results
+
+  test-architecture:
+    name: "Architecture Tests"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: build
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v6
+        with:
+          path: ${{ github.workspace }}/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/Directory.Packages.props') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build Architecture Tests
+        run: dotnet build tests/Architecture.Tests --configuration Release --no-restore
+
+      - name: Run Architecture Tests
+        id: arch-tests
+        run: |
+          mkdir -p test-results
+          if [ ! -d "tests/Architecture.Tests" ]; then
+            echo "::notice::Architecture test project not found at tests/Architecture.Tests - skipping"
+            exit 0
+          fi
+
+          # Run tests using dotnet test
+          dotnet test tests/Architecture.Tests \
+            --configuration Release \
+            --no-build \
+            --logger "trx;LogFileName=architecture.trx" \
+            --results-directory "$GITHUB_WORKSPACE/test-results" \
+            --collect:"XPlat Code Coverage" \
+            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
+          exit_code=$?
+
+          if [ $exit_code -ne 0 ]; then
+            echo "::error::Architecture tests failed"
+          fi
+          exit $exit_code
+
+      - name: Upload Architecture Test Results
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: architecture-test-results
+          path: test-results
+
+  test-component:
+    name: "Component Tests"
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: build
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v6
+        with:
+          path: ${{ github.workspace }}/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/Directory.Packages.props') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build Component Tests
+        run: dotnet build tests/Component.Tests --configuration Release --no-restore
+
+      - name: Run Component Tests
+        id: component-tests
+        run: |
+          mkdir -p test-results
+          if [ ! -d "tests/Component.Tests" ]; then
+            echo "::notice::Component/Component test project not found at tests/Component.Tests - skipping"
+            exit 0
+          fi
+
+          # Run tests using dotnet test
+          dotnet test tests/Component.Tests \
+            --configuration Release \
+            --no-build \
+            --logger "trx;LogFileName=component.trx" \
+            --results-directory "$GITHUB_WORKSPACE/test-results" \
+            --collect:"XPlat Code Coverage" \
+            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
+          exit_code=$?
+
+          if [ $exit_code -ne 0 ]; then
+            echo "::error::Component tests failed"
+          fi
+          exit $exit_code
+
+      - name: Upload Component Test Results
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: component-test-results
+          path: test-results
+
+  test-e2e:
+    name: "E2E Tests (Aspire + Playwright E2E)"
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    needs: build
+
+    env:
+      ASPIRE_ALLOW_UNSECURED_TRANSPORT: "true"
+      # Required by E2E builder.AddConnectionString("mongodb") even though
+      # the Unit app ignores it in Testing mode (no real DB connection is made).
+      # ConnectionStrings__mongodb: "mongodb://localhost:27017"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v6
+        with:
+          path: ${{ github.workspace }}/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/Directory.Packages.props') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build E2E Tests
+        run: dotnet build tests/E2E.Tests --configuration Release --no-restore
+
+      - name: Install Playwright browsers
+        run: |
+          pwsh tests/E2E.Tests/bin/Release/net10.0/playwright.ps1 install chromium --with-deps
+
+      - name: Run E2E Tests
+        id: e2e-tests
+        run: |
+          mkdir -p test-results
+          dotnet test tests/E2E.Tests \
+            --configuration Release \
+            --no-build \
+            --verbosity normal \
+            --logger "trx;LogFileName=e2e.trx" \
+            --results-directory "$GITHUB_WORKSPACE/test-results" \
+            --collect:"XPlat Code Coverage"
+          exit_code=$?
+          if [ $exit_code -ne 0 ]; then
+            echo "::error::E2E Tests failed"
+          fi
+          exit $exit_code
+
+      - name: Upload E2E Test Results
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: e2e-test-results
           path: test-results
 
   coverage:
@@ -143,7 +380,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     needs:
-      - test-squadWorkflowStandard
+      - test-domain
+      - test-unit
+      - test-architecture
+      - test-component
+      - test-e2e
     if: always()
 
     steps:
@@ -209,7 +450,11 @@ jobs:
     timeout-minutes: 10
     needs:
       - build
-      - test-squadWorkflowStandard
+      - test-domain
+      - test-unit
+      - test-architecture
+      - test-component
+      - test-e2e
     if: always()
 
     steps:
@@ -238,17 +483,30 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Job Status" >> $GITHUB_STEP_SUMMARY
           echo "- **Build:** ${{ needs.build.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **SquadWorkflowStandard.Tests:** ${{ needs.test-squadWorkflowStandard.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Domain.Tests:** ${{ needs.test-domain.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Unit.Tests:** ${{ needs.test-unit.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Architecture.Tests:** ${{ needs.test-architecture.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Component.Tests:** ${{ needs.test-component.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **E2E.Tests (Aspire + Playwright E2E):** ${{ needs.test-e2e.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Artifacts" >> $GITHUB_STEP_SUMMARY
           echo "- Test results and coverage reports available in Actions artifacts" >> $GITHUB_STEP_SUMMARY
           echo "- Coverage report: \`coverage-reports\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
           # Set overall status
           build_status="${{ needs.build.result }}"
-          squadWorkflowStandard_status="${{ needs.test-squadWorkflowStandard.result }}"
+          domain_status="${{ needs.test-domain.result }}"
+          unit_status="${{ needs.test-unit.result }}"
+          arch_status="${{ needs.test-architecture.result }}"
+          component_status="${{ needs.test-component.result }}"
 
-          if [[ "$build_status" == "failure" || "$squadWorkflowStandard_status" == "failure" ]]; then
-          else
+          e2e_status="${{ needs.test-e2e.result }}"
+
+          if [[ "$build_status" == "failure" || "$domain_status" == "failure" || "$unit_status" == "failure" || \
+                "$arch_status" == "failure" || "$component_status" == "failure" || \
+                "$e2e_status" == "failure" ]]; then
             echo "❌ **Overall Status:** FAILED" >> $GITHUB_STEP_SUMMARY
+          else
             echo "✅ **Overall Status:** PASSED" >> $GITHUB_STEP_SUMMARY
           fi
