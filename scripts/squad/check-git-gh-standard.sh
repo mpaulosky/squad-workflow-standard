@@ -62,6 +62,7 @@ fi
 
 WORKFLOW_STANDARD="$SOURCE_REPO/source/.squad/workflows/git-gh-process-standard.md"
 WORKFLOW_BASELINE_MANIFEST="$SOURCE_REPO/source/.squad/workflows/workflow-baseline-manifest.txt"
+HOOK_BASELINE_MANIFEST="$SOURCE_REPO/source/.squad/workflows/hook-baseline-manifest.txt"
 
 if [[ ! -f "$WORKFLOW_STANDARD" ]]; then
   echo "ERROR: Canonical workflow standard not found: $WORKFLOW_STANDARD"
@@ -201,6 +202,45 @@ if [[ -f "$WORKFLOW_BASELINE_MANIFEST" ]]; then
       echo "ADAPTER CHECK FAILED: workflow drift detected for $workflow_file"
     fi
   done < "$WORKFLOW_BASELINE_MANIFEST"
+fi
+
+if [[ -f "$HOOK_BASELINE_MANIFEST" ]]; then
+  TARGET_HOOK_BASELINE_MANIFEST="$TARGET_REPO/.squad/workflows/hook-baseline-manifest.txt"
+  if [[ ! -f "$TARGET_HOOK_BASELINE_MANIFEST" ]]; then
+    HAS_FAILURE=1
+    echo "ADAPTER CHECK FAILED: missing file $TARGET_HOOK_BASELINE_MANIFEST"
+  elif ! cmp -s "$HOOK_BASELINE_MANIFEST" "$TARGET_HOOK_BASELINE_MANIFEST"; then
+    HAS_FAILURE=1
+    echo "ADAPTER CHECK FAILED: hook baseline manifest drift detected"
+  fi
+
+  while IFS= read -r hook_file || [[ -n "$hook_file" ]]; do
+    hook_file="$(printf '%s' "$hook_file" | tr -d '\r')"
+
+    if [[ -z "$hook_file" || "${hook_file:0:1}" == "#" ]]; then
+      continue
+    fi
+
+    source_hook="$SOURCE_REPO/source/hooks/$hook_file"
+    target_hook="$TARGET_REPO/.github/hooks/$hook_file"
+
+    if [[ ! -f "$source_hook" ]]; then
+      HAS_FAILURE=1
+      echo "ADAPTER CHECK FAILED: missing canonical hook $source_hook"
+      continue
+    fi
+
+    if [[ ! -f "$target_hook" ]]; then
+      HAS_FAILURE=1
+      echo "ADAPTER CHECK FAILED: missing target hook $target_hook"
+      continue
+    fi
+
+    if ! cmp -s "$source_hook" "$target_hook"; then
+      HAS_FAILURE=1
+      echo "ADAPTER CHECK FAILED: hook drift detected for $hook_file"
+    fi
+  done < "$HOOK_BASELINE_MANIFEST"
 fi
 
 if [[ "$HAS_FAILURE" -eq 0 ]]; then

@@ -63,6 +63,7 @@ fi
 mkdir -p "$TARGET_REPO/.squad/workflows"
 mkdir -p "$TARGET_REPO/.squad/skills/git-workflow-standard"
 mkdir -p "$TARGET_REPO/.github/workflows"
+mkdir -p "$TARGET_REPO/.github/hooks"
 
 copy_if_distinct() {
   local source_file="$1"
@@ -83,6 +84,7 @@ WORKFLOW_STANDARD="$SOURCE_REPO/source/.squad/workflows/git-gh-process-standard.
 WORKFLOW_README="$SOURCE_REPO/source/.squad/workflows/README.md"
 WORKFLOW_SKILL="$SOURCE_REPO/source/.squad/skills/git-workflow-standard/SKILL.md"
 WORKFLOW_BASELINE_MANIFEST="$SOURCE_REPO/source/.squad/workflows/workflow-baseline-manifest.txt"
+HOOK_BASELINE_MANIFEST="$SOURCE_REPO/source/.squad/workflows/hook-baseline-manifest.txt"
 
 for required_file in "$WORKFLOW_STANDARD" "$WORKFLOW_README" "$WORKFLOW_SKILL"; do
   if [[ ! -f "$required_file" ]]; then
@@ -104,6 +106,7 @@ copy_if_distinct \
   "$TARGET_REPO/.squad/skills/git-workflow-standard/SKILL.md"
 
 SYNCED_WORKFLOW_COUNT=0
+SYNCED_HOOK_COUNT=0
 
 if [[ -f "$WORKFLOW_BASELINE_MANIFEST" ]]; then
   copy_if_distinct \
@@ -130,6 +133,31 @@ if [[ -f "$WORKFLOW_BASELINE_MANIFEST" ]]; then
   done < "$WORKFLOW_BASELINE_MANIFEST"
 fi
 
+if [[ -f "$HOOK_BASELINE_MANIFEST" ]]; then
+  copy_if_distinct \
+    "$HOOK_BASELINE_MANIFEST" \
+    "$TARGET_REPO/.squad/workflows/hook-baseline-manifest.txt"
+
+  while IFS= read -r hook_file || [[ -n "$hook_file" ]]; do
+    hook_file="$(printf '%s' "$hook_file" | tr -d '\r')"
+
+    if [[ -z "$hook_file" || "${hook_file:0:1}" == "#" ]]; then
+      continue
+    fi
+
+    source_hook="$SOURCE_REPO/source/hooks/$hook_file"
+    target_hook="$TARGET_REPO/.github/hooks/$hook_file"
+
+    if [[ ! -f "$source_hook" ]]; then
+      echo "Missing canonical hook in source repo: $source_hook"
+      exit 2
+    fi
+
+    copy_if_distinct "$source_hook" "$target_hook"
+    SYNCED_HOOK_COUNT=$((SYNCED_HOOK_COUNT + 1))
+  done < "$HOOK_BASELINE_MANIFEST"
+fi
+
 VERSION="$(grep -E '^Standard-Version:' "$WORKFLOW_STANDARD" | awk '{print $2}')"
 echo "${VERSION:-unknown}" > "$TARGET_REPO/.squad/workflows/.git-gh-standard-version"
 
@@ -150,6 +178,15 @@ if [[ -f "$WORKFLOW_BASELINE_MANIFEST" ]]; then
 
 Workflow baseline synced:
   $SYNCED_WORKFLOW_COUNT workflow file(s) copied to $TARGET_REPO/.github/workflows
+EOF
+fi
+
+if [[ -f "$HOOK_BASELINE_MANIFEST" ]]; then
+  cat <<EOF
+  $TARGET_REPO/.squad/workflows/hook-baseline-manifest.txt
+
+Hook baseline synced:
+  $SYNCED_HOOK_COUNT hook file(s) copied to $TARGET_REPO/.github/hooks
 EOF
 fi
 
