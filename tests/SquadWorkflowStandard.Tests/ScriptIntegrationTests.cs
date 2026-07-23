@@ -147,6 +147,65 @@ public sealed class ScriptIntegrationTests
     }
 
     [Fact]
+    public void SyncScript_ShouldConfigureHooksPathToDistributedHooks()
+    {
+        using var target = new TemporaryTargetRepository();
+
+        var syncScript = RepositoryPaths.SyncScriptPath;
+        var repoRoot = RepositoryPaths.Root;
+
+        var syncResult = ProcessRunner.Run("bash", [syncScript, target.RootPath, "--source-repo", repoRoot]);
+        var hooksPathResult = ProcessRunner.Run("git", ["config", "--get", "core.hooksPath"], target.RootPath);
+
+        syncResult.ExitCode.Should().Be(0, syncResult.CombinedOutput);
+        hooksPathResult.ExitCode.Should().Be(0, hooksPathResult.CombinedOutput);
+        hooksPathResult.StdOut.Trim().Should().Be(".github/hooks");
+    }
+
+    [Fact]
+    public void CheckScript_ShouldReturnAdapterFailureExitCode_WhenHooksPathIsIncorrect()
+    {
+        using var target = new TemporaryTargetRepository();
+
+        var syncScript = RepositoryPaths.SyncScriptPath;
+        var checkScript = RepositoryPaths.CheckScriptPath;
+        var repoRoot = RepositoryPaths.Root;
+        var canonicalVersion = RepositoryPaths.GetCanonicalVersion();
+
+        target.SeedRequiredAdapters(canonicalVersion);
+        ProcessRunner.Run("bash", [syncScript, target.RootPath, "--source-repo", repoRoot]).ExitCode.Should().Be(0);
+        ProcessRunner.Run("git", ["config", "core.hooksPath", ".git/hooks"], target.RootPath).ExitCode.Should().Be(0);
+
+        var result = ProcessRunner.Run("bash", [checkScript, target.RootPath, "--source-repo", repoRoot]);
+
+        result.ExitCode.Should().Be(4, result.CombinedOutput);
+        result.StdOut.Should().Contain("ADAPTER CHECK FAILED: git core.hooksPath must be '.github/hooks'");
+        result.StdOut.Should().Contain("STATUS: ENFORCEMENT INCOMPLETE");
+    }
+
+    [Fact]
+    public void CheckScript_ShouldReturnAdapterFailureExitCode_WhenSyncedHookIsNotExecutable()
+    {
+        using var target = new TemporaryTargetRepository();
+
+        var syncScript = RepositoryPaths.SyncScriptPath;
+        var checkScript = RepositoryPaths.CheckScriptPath;
+        var repoRoot = RepositoryPaths.Root;
+        var canonicalVersion = RepositoryPaths.GetCanonicalVersion();
+        var targetHook = Path.Combine(target.RootPath, ".github", "hooks", "pre-push");
+
+        target.SeedRequiredAdapters(canonicalVersion);
+        ProcessRunner.Run("bash", [syncScript, target.RootPath, "--source-repo", repoRoot]).ExitCode.Should().Be(0);
+        ProcessRunner.Run("chmod", ["-x", targetHook]).ExitCode.Should().Be(0);
+
+        var result = ProcessRunner.Run("bash", [checkScript, target.RootPath, "--source-repo", repoRoot]);
+
+        result.ExitCode.Should().Be(4, result.CombinedOutput);
+        result.StdOut.Should().Contain($"ADAPTER CHECK FAILED: hook is not executable {targetHook}");
+        result.StdOut.Should().Contain("STATUS: ENFORCEMENT INCOMPLETE");
+    }
+
+    [Fact]
     public void SyncAndCheckScripts_ShouldRecognizeGitWorktreeTarget()
     {
         using var worktree = GitWorktreeScope.Create(RepositoryPaths.Root);
