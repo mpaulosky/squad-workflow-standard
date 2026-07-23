@@ -1,0 +1,21 @@
+# Centrally managed workflow baseline (baseline-plus-optional policy).
+# One workflow filename per line.
+
+squad-ci.yml
+squad-test.yml
+squad-release.yml
+squad-main-guard.yml
+squad-paths-guard.yml
+squad-label-enforce.yml
+squad-pr-auto-label.yml
+squad-triage.yml
+squad-issue-assign.yml
+squad-docs.yml
+squad-preview.yml
+squad-promote.yml
+sync-squad-labels.yml
+squad-lint-yaml.yml
+squad-lint-markdown.yml
+codeql-analysis.yml
+code-metrics.yml
+squad-dependabot-auto-merge.yml
