@@ -158,7 +158,7 @@ Assert-FileContains -File (Join-Path $targetRepo ".squad/ceremonies.md") -Expect
 Assert-FileContains -File (Join-Path $targetRepo ".squad/templates/issue-lifecycle.md") -Expected "Workflow Standard Binding" -Message ".squad/templates/issue-lifecycle.md must include workflow standard binding section"
 Assert-FileContains -File (Join-Path $targetRepo ".squad/templates/issue-lifecycle.md") -Expected ('Standard version: `{0}`' -f $canonicalVersion) -Message ".squad/templates/issue-lifecycle.md must bind to canonical standard version"
 Assert-FileContains -File (Join-Path $targetRepo ".squad/templates/issue-lifecycle.md") -Expected "Enforcement level: hard gate" -Message ".squad/templates/issue-lifecycle.md must explicitly declare hard gate enforcement"
-Assert-FileContains -File (Join-Path $targetRepo ".squad/templates/issue-lifecycle.md") -Expected 'Default branch policy: branch from `main`, PR to `main`' -Message ".squad/templates/issue-lifecycle.md must enforce main-first branch + PR policy"
+Assert-FileContains -File (Join-Path $targetRepo ".squad/templates/issue-lifecycle.md") -Expected 'Default branch policy: feature/work branches -> PR to `dev`; only `dev` -> PR to `main`' -Message ".squad/templates/issue-lifecycle.md must enforce dev-integration and dev-only promotion to main"
 Assert-FileContains -File (Join-Path $targetRepo ".squad/skills/git-workflow-standard/SKILL.md") -Expected ('Standard version: `{0}`' -f $canonicalVersion) -Message ".squad/skills/git-workflow-standard/SKILL.md must match canonical standard version"
 
 $configuredHooksPath = (& git -C $targetRepo config --get core.hooksPath 2>$null)

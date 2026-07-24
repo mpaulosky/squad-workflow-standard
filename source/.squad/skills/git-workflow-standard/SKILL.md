@@ -15,7 +15,7 @@ Use this as the authoritative execution pattern for issue-driven work.
 Source of truth:
 
 - `.squad/workflows/git-gh-process-standard.md`
-- Standard version: `2026.07.2`
+- Standard version: `2026.07.3`
 
 ## Rules
 
@@ -24,6 +24,10 @@ Source of truth:
 3. PR review approval is mandatory before merge.
 4. Required pre-push checks must pass before push.
 5. Cleanup is mandatory after merge.
+6. Feature/work branches PR to `dev`; only `dev` opens PRs to `main`.
+7. GitHub protections/rulesets must enforce the same model:
+   - `dev` and `main` require PRs + checks + approvals
+   - `main` accepts PRs from `dev` only (plus required `squad-main-guard`)
 
 ## Flow Selection
 
@@ -33,23 +37,23 @@ Source of truth:
 ## Standard Flow
 
 ```bash
-git checkout main
-git pull origin main
+git checkout dev
+git pull origin dev
 git checkout -b squad/{issue-number}-{kebab-slug}
 git push -u origin squad/{issue-number}-{kebab-slug}
-gh pr create --base main --title "{title}" --body "Closes #{issue-number}" --draft
+gh pr create --base dev --title "{title}" --body "Closes #{issue-number}" --draft
 ```
 
 ## Worktree Flow
 
 ```bash
-git fetch origin main
+git fetch origin dev
 git worktree add ../{repo-name}-{issue-number} \
   -b squad/{issue-number}-{kebab-slug} \
-  origin/main
+  origin/dev
 cd ../{repo-name}-{issue-number}
 git push -u origin squad/{issue-number}-{kebab-slug}
-gh pr create --base main --title "{title}" --body "Closes #{issue-number}" --draft
+gh pr create --base dev --title "{title}" --body "Closes #{issue-number}" --draft
 ```
 
 ## Cleanup
@@ -57,8 +61,8 @@ gh pr create --base main --title "{title}" --body "Closes #{issue-number}" --dra
 Standard:
 
 ```bash
-git checkout main
-git pull origin main
+git checkout dev
+git pull origin dev
 git branch -d squad/{issue-number}-{kebab-slug}
 git push origin --delete squad/{issue-number}-{kebab-slug}
 ```

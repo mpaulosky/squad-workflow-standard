@@ -2,6 +2,23 @@
 
 Reference for connecting Squad to a repository and managing the issue→branch→PR→merge lifecycle.
 
+## Workflow Standard Binding
+
+- Source: `.squad/workflows/git-gh-process-standard.md`
+- Standard version: `2026.07.3`
+- Enforcement level: hard gate
+- Default branch policy: feature/work branches -> PR to `dev`; only `dev` -> PR to `main`
+
+### GitHub branch protection / ruleset baseline
+
+Consumer repos should configure GitHub to match this policy:
+
+- Protect `dev` and `main` from direct pushes.
+- Require PRs, approvals, and required status checks on both branches.
+- Keep `squad-main-guard` required for PRs targeting `main`.
+- If rulesets support source restrictions, allow `main` PR sources from `dev`
+  only.
+
 ## Repo Connection Format
 
 When connecting Squad to an issue tracker, store the connection in `.squad/team.md`:
@@ -120,7 +137,7 @@ az boards work-item show --id {id} --output json
 **Trigger:** Agent accepts issue assignment and begins work.
 
 **Actions:**
-1. Ensure working on latest base branch (usually `main` or `dev`)
+1. Ensure working on latest integration branch (`dev`)
 2. Create feature branch using Squad naming convention
 3. Transition issue to `inProgress` state
 
@@ -128,7 +145,7 @@ az boards work-item show --id {id} --output json
 
 **Standard (single-agent, no parallelism):**
 ```bash
-git checkout main && git pull && git checkout -b squad/{issue-number}-{slug}
+git checkout dev && git pull && git checkout -b squad/{issue-number}-{slug}
 ```
 
 **Worktree (parallel multi-agent):**
@@ -183,7 +200,7 @@ git push -u origin squad/{issue-number}-{slug}
 gh pr create --title "{title}" \
   --body "Closes #{issue-number}\n\n{description}" \
   --head squad/{issue-number}-{slug} \
-  --base main
+  --base dev
 ```
 
 **Azure DevOps:**
@@ -191,7 +208,7 @@ gh pr create --title "{title}" \
 az repos pr create --title "{title}" \
   --description "Closes #{work-item-id}\n\n{description}" \
   --source-branch squad/{work-item-id}-{slug} \
-  --target-branch main
+  --target-branch dev
 ```
 
 **PR description template:**
@@ -273,7 +290,7 @@ az repos pr update --id {pr-id} --status completed --delete-source-branch true
 
 **Standard workflow cleanup:**
 ```bash
-git checkout main
+git checkout dev
 git pull
 git branch -d squad/{issue-number}-{slug}
 ```

@@ -157,8 +157,8 @@ assert_file_contains \
   ".squad/templates/issue-lifecycle.md must explicitly declare hard gate enforcement"
 assert_file_contains \
   "$TARGET_REPO/.squad/templates/issue-lifecycle.md" \
-  "Default branch policy: branch from \`main\`, PR to \`main\`" \
-  ".squad/templates/issue-lifecycle.md must enforce main-first branch + PR policy"
+  "Default branch policy: feature/work branches -> PR to \`dev\`; only \`dev\` -> PR to \`main\`" \
+  ".squad/templates/issue-lifecycle.md must enforce dev-integration and dev-only promotion to main"
 
 assert_file_contains \
   "$TARGET_REPO/.squad/skills/git-workflow-standard/SKILL.md" \

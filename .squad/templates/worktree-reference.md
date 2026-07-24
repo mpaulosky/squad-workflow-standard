@@ -36,7 +36,7 @@ Squad and all spawned agents may be running inside a **git worktree** rather tha
 
 **Cross-worktree considerations (worktree-local strategy — recommended for concurrent work):**
 - `.squad/` files are **branch-local**. Each worktree works independently — no locking, no shared-state races.
-- When branches merge into main, `.squad/` state merges with them. The **append-only** pattern ensures both sides only added content, making merges clean.
+- When branches merge into `dev` (and `dev` later promotes to `main`), `.squad/` state merges with them. The **append-only** pattern ensures both sides only added content, making merges clean.
 - A `merge=union` driver in `.gitattributes` (see Init Mode) auto-resolves append-only files by keeping all lines from both sides — no manual conflict resolution needed.
 - The Scribe commits `.squad/` changes to the worktree's branch. State flows to other branches through normal git merge / PR workflow.
 
@@ -59,7 +59,7 @@ When worktree mode is enabled, the coordinator creates dedicated worktrees for i
 - Multiple agents on the same issue share a worktree
 - Path convention: `{repo-parent}/{repo-name}-{issue-number}`
   - Example: Working on issue #42 in `C:\src\squad` → worktree at `C:\src\squad-42`
-- Branch: `squad/{issue-number}-{kebab-case-slug}` (created from base branch, typically `main`)
+- Branch: `squad/{issue-number}-{kebab-case-slug}` (created from base branch, typically `dev`)
 
 **Dependency management:**
 - After creating a worktree, link `node_modules` from the main repo to avoid reinstalling
@@ -104,9 +104,9 @@ b. **Check if worktree already exists:**
 
 c. **Create the worktree:**
    - Determine branch name: `squad/{issue-number}-{kebab-case-slug}` (derive slug from issue title if available)
-   - Determine base branch (typically `main`, check default branch if needed)
+   - Determine base branch (typically `dev`, check default branch if needed)
    - Run: `git worktree add {path} -b {branch} {baseBranch}`
-   - Example: `git worktree add C:\src\squad-42 -b squad/42-fix-login main`
+   - Example: `git worktree add C:\src\squad-42 -b squad/42-fix-login dev`
 
 d. **Set up dependencies:**
    - Link `node_modules` from main repo to avoid reinstalling:

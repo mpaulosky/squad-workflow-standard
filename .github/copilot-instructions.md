@@ -65,7 +65,8 @@ Treat this repository as a **standard pack publisher**, not as an app/runtime re
   `.git-gh-standard-version` and skill/template bindings.
 - Branch/PR policy defined by the standard is hard-gated:
   no direct pushes to `main`/`dev`, issue branches use
-  `squad/{issue-number}-{kebab-slug}`, PR target is `main`.
+  `squad/{issue-number}-{kebab-slug}`, day-to-day PR target is `dev`,
+  and only `dev` opens PRs to `main`.
 - Flow selection is explicit policy:
   single issue uses standard branch flow;
   concurrent issues use worktree flow.
