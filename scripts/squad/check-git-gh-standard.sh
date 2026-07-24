@@ -159,6 +159,14 @@ assert_file_contains \
   "$TARGET_REPO/.squad/templates/issue-lifecycle.md" \
   "Default branch policy: feature/work branches -> PR to \`dev\`; only \`dev\` -> PR to \`main\`" \
   ".squad/templates/issue-lifecycle.md must enforce dev-integration and dev-only promotion to main"
+assert_file_contains \
+  "$TARGET_REPO/.squad/templates/issue-lifecycle.md" \
+  "Post-push requirement: after pushing a work branch, immediately open/update a PR to \`dev\`." \
+  ".squad/templates/issue-lifecycle.md must require immediate work-branch PR creation to dev after push"
+assert_file_contains \
+  "$TARGET_REPO/.squad/templates/issue-lifecycle.md" \
+  "Promotion rule: do not auto-open \`dev\` -> \`main\` after routine work pushes; promotion PRs are separate." \
+  ".squad/templates/issue-lifecycle.md must prevent auto-follow-on dev-to-main promotion after routine pushes"
 
 assert_file_contains \
   "$TARGET_REPO/.squad/skills/git-workflow-standard/SKILL.md" \

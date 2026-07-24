@@ -79,6 +79,8 @@ standard (`work branches -> dev`, `dev -> main` only):
 5. **Set contributor defaults to `dev`**
    - PR templates/docs must use `--base dev`.
    - Branch naming must follow `squad/{issue-number}-{kebab-slug}`.
+   - After pushing a work branch, the immediate next step is opening/updating PR to `dev`.
+   - Do not auto-open a `dev -> main` PR after routine work pushes; promotion PRs are separate.
 6. **Verify with a live PR test**
    - Open `squad/* -> dev` PR (should pass policy checks).
    - Open non-`dev -> main` PR (should fail policy checks).

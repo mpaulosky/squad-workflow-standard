@@ -8,6 +8,8 @@ Reference for connecting Squad to a repository and managing the issueâ†’branchâ†
 - Standard version: `2026.07.3`
 - Enforcement level: hard gate
 - Default branch policy: feature/work branches -> PR to `dev`; only `dev` -> PR to `main`
+- Post-push requirement: after pushing a work branch, immediately open/update a PR to `dev`.
+- Promotion rule: do not auto-open `dev` -> `main` after routine work pushes; promotion PRs are separate.
 
 ### GitHub branch protection / ruleset baseline
 
@@ -183,15 +185,24 @@ Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
 git push -u origin squad/{issue-number}-{slug}
 ```
 
+**Immediate next step (same workflow pass):**
+```bash
+gh pr create --title "{title}" \
+  --body "Closes #{issue-number}\n\n{description}" \
+  --head squad/{issue-number}-{slug} \
+  --base dev
+```
+
 ### 4. PR Creation
 
-**Trigger:** Agent completes implementation and is ready for review.
+**Trigger:** Immediately after pushing the work branch for completed implementation.
 
 **Actions:**
-1. Open PR from feature branch to base branch
+1. Open PR from feature/work branch to `dev`
 2. Reference issue in PR description
 3. Apply labels if needed
 4. Transition issue to `needsReview` state
+5. Do **not** auto-open a `dev` -> `main` PR here; promotion PRs are separate release/promotion work.
 
 **PR creation commands:**
 
@@ -332,7 +343,7 @@ When spawning an agent to work on an issue, include this context block:
 2. Push branch
 3. Open PR using:
    ```
-   gh pr create --title "{title}" --body "Closes #{number}\n\n{description}" --head squad/{issue-number}-{slug} --base {base-branch}
+   gh pr create --title "{title}" --body "Closes #{number}\n\n{description}" --head squad/{issue-number}-{slug} --base dev
    ```
 4. Report PR URL to coordinator
 ```

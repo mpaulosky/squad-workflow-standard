@@ -25,7 +25,9 @@ Source of truth:
 4. Required pre-push checks must pass before push.
 5. Cleanup is mandatory after merge.
 6. Feature/work branches PR to `dev`; only `dev` opens PRs to `main`.
-7. GitHub protections/rulesets must enforce the same model:
+7. After pushing a work branch, immediately open/update PR to `dev`.
+8. Do not auto-open `dev` -> `main` after routine work pushes; promotion PRs are separate.
+9. GitHub protections/rulesets must enforce the same model:
    - `dev` and `main` require PRs + checks + approvals
    - `main` accepts PRs from `dev` only (plus required `squad-main-guard`)
 
@@ -55,6 +57,8 @@ cd ../{repo-name}-{issue-number}
 git push -u origin squad/{issue-number}-{kebab-slug}
 gh pr create --base dev --title "{title}" --body "Closes #{issue-number}" --draft
 ```
+
+Do not auto-open `dev` -> `main` from this step; that promotion PR is separate.
 
 ## Cleanup
 

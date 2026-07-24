@@ -137,6 +137,8 @@ For the standard policy (work branches -> `dev`, only `dev` -> `main`), set:
 - required status checks on both
 - `squad-main-guard` as required check for `main`
 - source restriction for `main` to `dev` only (where rulesets support it)
+- after pushing a work branch, immediately open/update PR to `dev`
+- do not auto-open `dev -> main` after routine work pushes (promotion PRs are separate)
 
 ### Optional .NET CLI wrapper (coexists with scripts)
 
