@@ -1,1 +1,42 @@
-[]
+[
+  {
+    "id": "ddac7da2-7e16-491c-85d5-2b0fcb3dac1a",
+    "class": "POLICY",
+    "loadGuidance": "ALWAYS",
+    "title": "PR base branch policy update",
+    "path": ".squad/memory/policy-inbox/squad-pr-base-branch-policy-update-ddac7da2.md",
+    "status": "active",
+    "createdAt": "2026-07-24T20:29:06.154Z",
+    "updatedAt": "2026-07-24T20:29:06.154Z"
+  },
+  {
+    "id": "c4f05384-1868-4d5d-b068-1b761cac5ffa",
+    "class": "POLICY",
+    "loadGuidance": "ALWAYS",
+    "title": "Post-push PR step required",
+    "path": ".squad/memory/policy-inbox/squad-post-push-pr-step-required-c4f05384.md",
+    "status": "active",
+    "createdAt": "2026-07-24T21:10:38.286Z",
+    "updatedAt": "2026-07-24T21:10:38.286Z"
+  },
+  {
+    "id": "f6f6d9c5-1ed5-41e7-8a96-19d042697886",
+    "class": "POLICY",
+    "loadGuidance": "ALWAYS",
+    "title": "Dev integration PR source policy",
+    "path": ".squad/memory/policy-inbox/squad-dev-integration-pr-source-policy-f6f6d9c5.md",
+    "status": "active",
+    "createdAt": "2026-07-24T21:15:08.148Z",
+    "updatedAt": "2026-07-24T21:15:08.148Z"
+  },
+  {
+    "id": "d5bae81a-4b46-4e45-817b-5807c71d59e5",
+    "class": "POLICY",
+    "loadGuidance": "ALWAYS",
+    "title": "Exclude paths guard for main-to-dev backmerge PRs",
+    "path": ".squad/memory/policy-inbox/squad-exclude-paths-guard-for-main-to-dev-backmerge-prs-d5bae81a.md",
+    "status": "active",
+    "createdAt": "2026-07-24T21:56:25.159Z",
+    "updatedAt": "2026-07-24T21:56:25.159Z"
+  }
+]
