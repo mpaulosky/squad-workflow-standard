@@ -1,0 +1,142 @@
+name: Project Board Audit
+
+# Audit for status drift between project board and issue/PR states
+# Updated: 2026-05-11 to use new project (PVT_kwHOA5k0b84BXZpa)
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 13 * * 1'
+
+permissions:
+  issues: read
+  pull-requests: read
+  repository-projects: read
+
+env:
+  PROJECT_ID: PVT_kwHOA5k0b84BXZpa
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Audit project board status drift
+        uses: actions/github-script@v9
+        with:
+          github-token: ${{ secrets.GH_PROJECT_TOKEN }}
+          script: |
+            const getAllProjectItems = async () => {
+              const items = [];
+              let cursor = null;
+              let title = 'Unknown';
+
+              do {
+                const project = await github.graphql(`
+                  query($projectId: ID!, $cursor: String) {
+                    node(id: $projectId) {
+                      ... on ProjectV2 {
+                        title
+                        items(first: 100, after: $cursor) {
+                          nodes {
+                            id
+                            fieldValueByName(name: "Status") {
+                              ... on ProjectV2ItemFieldSingleSelectValue {
+                                name
+                              }
+                            }
+                            content {
+                              __typename
+                              ... on Issue {
+                                number
+                                title
+                                state
+                                url
+                              }
+                              ... on PullRequest {
+                                number
+                                title
+                                state
+                                isDraft
+                                url
+                              }
+                            }
+                          }
+                          pageInfo {
+                            hasNextPage
+                            endCursor
+                          }
+                        }
+                      }
+                    }
+                  }
+                `, {
+                  projectId: process.env.PROJECT_ID,
+                  cursor,
+                });
+
+                title = project.node?.title || title;
+                const page = project.node?.items;
+                items.push(...(page?.nodes ?? []));
+                cursor = page?.pageInfo?.hasNextPage ? page.pageInfo.endCursor : null;
+              } while (cursor);
+
+              return { items, title };
+            };
+
+            const { items, title } = await getAllProjectItems();
+            const issueDrift = [];
+            const prCards = [];
+
+            for (const item of items) {
+              const status = item.fieldValueByName?.name || '<unset>';
+              const content = item.content;
+
+              if (!content) {
+                continue;
+              }
+
+              if (content.__typename === 'PullRequest') {
+                prCards.push(`PR #${content.number} — ${content.title} [${status}] (${content.url})`);
+                continue;
+              }
+
+              if (content.__typename !== 'Issue') {
+                continue;
+              }
+
+              if ((status === 'Done' || status === 'Released') && content.state === 'OPEN') {
+                issueDrift.push(`OPEN issue in ${status}: #${content.number} — ${content.title} (${content.url})`);
+              }
+
+              if ((status === 'Backlog' || status === 'In Sprint' || status === 'In Review') && content.state === 'CLOSED') {
+                issueDrift.push(`CLOSED issue in ${status}: #${content.number} — ${content.title} (${content.url})`);
+              }
+            }
+
+            const summary = core.summary
+              .addHeading('Project Board Audit')
+              .addRaw(`Project: ${title}`)
+              .addEOL()
+              .addRaw(`Checked ${items.length} item(s).`)
+              .addEOL()
+              .addEOL();
+
+            if (issueDrift.length === 0 && prCards.length === 0) {
+              summary.addRaw('No status drift detected.').addEOL();
+            } else {
+              if (issueDrift.length > 0) {
+                summary.addHeading('Issue drift', 2).addList(issueDrift);
+                for (const line of issueDrift) {
+                  core.warning(line);
+                }
+              }
+
+              if (prCards.length > 0) {
+                summary.addHeading('PR cards on issue-centric board', 2).addList(prCards);
+                for (const line of prCards) {
+                  core.warning(line);
+                }
+              }
+            }
+
+            await summary.write();
