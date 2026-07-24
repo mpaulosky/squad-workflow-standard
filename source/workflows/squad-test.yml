@@ -99,7 +99,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-build-
 
-
   discover-tests:
     name: Discover Test Projects
     runs-on: ubuntu-latest
