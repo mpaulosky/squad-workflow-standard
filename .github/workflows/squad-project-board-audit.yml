@@ -23,7 +23,7 @@ jobs:
       - name: Audit project board status drift
         uses: actions/github-script@v9
         with:
-          github-token: ${{ secrets.GH_PROJECT_TOKEN || secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.GH_PROJECT_TOKEN }}
           script: |
             const getAllProjectItems = async () => {
               const items = [];
