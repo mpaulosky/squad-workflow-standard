@@ -17,7 +17,7 @@ on:
         description: "Solution name without .slnx"
         required: false
         type: string
-        default: "ProjectName"
+        default: "squad-workflow-standard"
   push:
     branches:
       - dev
@@ -30,7 +30,7 @@ on:
       project_name:
         description: "Solution name without .slnx"
         required: false
-        default: "ProjectName"
+        default: "squad-workflow-standard"
       reason:
         description: "The reason for running the workflow"
         required: true
@@ -41,7 +41,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  SOLUTION_NAME: ${{ inputs.project_name || 'ProjectName' }}.slnx
+  SOLUTION_NAME: ${{ inputs.project_name || 'squad-workflow-standard' }}.slnx
   NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
   DOTNET_CLI_TELEMETRY_OPTOUT: true
