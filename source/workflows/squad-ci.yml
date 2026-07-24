@@ -3,15 +3,16 @@ name: Squad CI
 # Fast restore/build gate for feature branches and PRs into protected main.
 
 "on":
-  pull_request:
-    branches: [main]
-    types: [opened, synchronize, reopened, ready_for_review]
+  push:
+    branches-ignore: [main]
     paths-ignore:
       - "docs/**"
       - "**/*.md"
       - ".squad/**"
-  push:
-    branches-ignore: [main]
+
+  pull_request:
+    branches: [main, "**"]
+    types: [opened, synchronize, reopened, ready_for_review]
     paths-ignore:
       - "docs/**"
       - "**/*.md"

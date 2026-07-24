@@ -1,6 +1,8 @@
+---
+
 name: Blog → README Sync
 
-on:
+"on":
   push:
     branches: [main]
     paths: ['docs/blog/index.md']

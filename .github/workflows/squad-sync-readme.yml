@@ -2,7 +2,7 @@
 # Keeps the docs folder reference copy in sync with the project README.
 name: Sync README to docs
 
-on:
+"on":
   push:
     branches: ["main"]
     paths:
@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   sync:
-    runs-on: ubuntu-latest
+    runs-"on": ubuntu-latest
     timeout-minutes: 5
     permissions:
       contents: write

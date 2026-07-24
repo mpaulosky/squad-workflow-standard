@@ -1,6 +1,6 @@
 name: Sync Squad Labels
 
-on:
+"on":
   push:
     paths:
       - '.squad/team.md'
@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   sync-labels:
-    runs-on: ubuntu-latest
+    runs-"on": ubuntu-latest
     steps:
       - uses: actions/checkout@v7
 

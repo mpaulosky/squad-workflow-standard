@@ -1,11 +1,16 @@
 ---
+
 name: guard-main-source
 
-'on':
+"on":
+
   pull_request:
-    branches: [main]
-  workflow_dispatch:
-    types: [ opened, synchronize, reopened, ready_for_review ]
+    branches: [main, "**"]
+    types: [opened, synchronize, reopened, ready_for_review]
+
+env:
+  DEV_BRANCH: ${{ vars.SQUAD_DEV_BRANCH || 'dev' }}
+  MAIN_BRANCH: ${{ vars.SQUAD_MAIN_BRANCH || github.event.repository.default_branch || 'main' }}
 
 jobs:
   guard-main-source:
@@ -19,10 +24,18 @@ jobs:
               return;
             }
 
+            const mainBranch = process.env.MAIN_BRANCH;
+            const devBranch = process.env.DEV_BRANCH;
+            const target = context.payload.pull_request.base.ref;
+            if (target !== mainBranch) {
+              core.info(`Skipping source-branch guard for PR to ${target}; guard only applies to ${mainBranch}.`);
+              return;
+            }
+
             const source = context.payload.pull_request.head.ref;
-            const isValid = source === "dev" || source.startsWith("squad/") || source.startsWith("sprint/") || source.startsWith("hotfix/");
+            const isValid = source === devBranch || source.startsWith("squad/") || source.startsWith("sprint/") || source.startsWith("hotfix/");
             if (!isValid) {
               core.setFailed(
-                `PRs to main must come from dev, squad/*, sprint/*, or hotfix/* branches. Current source: ${source}`
+                `PRs to ${mainBranch} must come from ${devBranch}, squad/*, sprint/*, or hotfix/* branches. Current source: ${source}`
               );
             }

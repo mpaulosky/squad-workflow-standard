@@ -6,7 +6,7 @@ name: Squad Heartbeat (Ralph)
 #   - .github/workflows/squad-heartbeat.yml (active workflow)
 # Run 'squad upgrade' to sync installed copies from source templates.
 
-on:
+"on":
   # React to completed work or new squad work
   issues:
     types: [closed, labeled]

@@ -1,6 +1,6 @@
 name: Squad Milestone Release
 
-on:
+"on":
   workflow_dispatch:
     inputs:
       bump:

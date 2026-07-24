@@ -12,10 +12,10 @@
 ---
 name: "CodeQL"
 
-on:
+"on":
   push:
     branches:
-      - main
+      - "**"
     paths:
       - "**.cs"
       - "**.csproj"
@@ -34,9 +34,16 @@ on:
   schedule:
     - cron: "31 0 * * 5"
 
+env:
+  DEV_BRANCH: ${{ vars.SQUAD_DEV_BRANCH || 'dev' }}
+  PREVIEW_BRANCH: ${{ vars.SQUAD_PREVIEW_BRANCH || 'preview' }}
+  MAIN_BRANCH: ${{ vars.SQUAD_MAIN_BRANCH || github.event.repository.default_branch || 'main' }}
+  CODEQL_PUSH_BRANCH: ${{ vars.CODEQL_PUSH_BRANCH || github.event.repository.default_branch || 'main' }}
+
 jobs:
   analyze:
     name: Analyze
+    if: ${{ github.event_name != 'push' || github.ref_name == env.CODEQL_PUSH_BRANCH }}
     runs-on: ubuntu-latest
     permissions:
       actions: read

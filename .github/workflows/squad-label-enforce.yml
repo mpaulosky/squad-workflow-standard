@@ -1,6 +1,6 @@
 name: Squad Label Enforce
 
-on:
+"on":
   issues:
     types: [labeled]
 

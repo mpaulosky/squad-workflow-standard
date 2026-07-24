@@ -5,7 +5,7 @@
 # milestone-release-decision.yml watches for those labels and executes the chosen path.
 name: Milestone Review — Release or Blog
 
-on:
+"on":
   milestone:
     types: [closed]
 
@@ -15,7 +15,7 @@ permissions:
 
 jobs:
   create-ralph-review:
-    runs-on: ubuntu-latest
+    runs-"on": ubuntu-latest
     steps:
       - name: Collect milestone details
         id: details

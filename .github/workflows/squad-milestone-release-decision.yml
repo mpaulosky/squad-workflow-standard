@@ -8,7 +8,7 @@
 # blog-readme-sync.yml updates README when index.md is pushed to main.
 name: Milestone Release Decision
 
-on:
+"on":
   issues:
     types: [labeled]
 
@@ -25,7 +25,7 @@ jobs:
     if: |
       github.event.label.name == 'release-candidate' &&
       contains(github.event.issue.labels.*.name, 'squad:ralph')
-    runs-on: ubuntu-latest
+    runs-"on": ubuntu-latest
     steps:
       - name: Extract milestone info from issue title
         id: info

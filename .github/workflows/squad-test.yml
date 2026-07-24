@@ -1,7 +1,7 @@
 name: Test Suite
 
 # NOTE: All test projects now use 'dotnet test' consistently.
-# This was updated to fix issues with direct executable execution that was
+# This was updated to fix issues with direct executable execution that were
 # causing "No such file or directory" errors in CI.
 
 permissions:
@@ -10,7 +10,7 @@ permissions:
   contents: read
   pull-requests: write
 
-on:
+"on":
   workflow_call:
     inputs:
       project_name:
@@ -41,12 +41,11 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  SOLUTION_NAME: ${{ inputs.project_name || 'squad-workflow-standard' }}.slnx
   NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
   DOTNET_CLI_TELEMETRY_OPTOUT: true
 
-  # Aspire parameter bindings for E2E.Tests (Parameters:auth0MgmtClientId/Secret)
+  # Aspire parameter bindings for E2E.Tests (Parameters: auth0MgmtClientId/Secret)
   Auth0__Domain: ${{ secrets.AUTH0_DOMAIN }}
   Auth0__ClientId: ${{ secrets.AUTH0_CLIENT_ID }}
   Auth0__ClientSecret: ${{ secrets.AUTH0_CLIENT_SECRET }}
@@ -56,7 +55,6 @@ env:
   Auth0Management__Audience: https://${{ secrets.AUTH0_DOMAIN }}/api/v2/
   Parameters__auth0MgmtClientId: ${{ secrets.AUTH0_MANAGEMENT_CLIENT_ID }}
   Parameters__auth0MgmtClientSecret: ${{ secrets.AUTH0_MANAGEMENT_CLIENT_SECRET }}
-  #MongoDB__ConnectionString: ${{ secrets.MONGODB_CONNECTION_STRING }}
 
 jobs:
   build:
@@ -83,11 +81,26 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nuget-
 
+      - name: Discover solution file
+        run: |
+          mapfile -t matches < <(find . -maxdepth 1 -name '*.slnx')
+          count=${#matches[@]}
+          if [[ $count -eq 0 ]]; then
+            echo "::error::No *.slnx file found at the repository root."
+            exit 1
+          elif [[ $count -gt 1 ]]; then
+            echo "::error::Multiple *.slnx files found"
+            echo "::error::${matches[*]}"
+            exit 1
+          fi
+          echo "SOLUTION_FILE=${matches[0]}" >> "$GITHUB_ENV"
+          echo "Discovered solution: ${matches[0]}"
+
       - name: Restore dependencies
         run: dotnet restore
 
       - name: Build solution
-        run: dotnet build ${{ env.SOLUTION_NAME }} --configuration Release --no-restore
+        run: dotnet build ${{ env.SOLUTION_FILE }} --configuration Release --no-restore
 
       - name: Cache build artifacts
         uses: actions/cache@v6
@@ -98,7 +111,6 @@ jobs:
           key: ${{ runner.os }}-build-${{ hashFiles('**/*.csproj', '**/Directory.Packages.props', 'global.json') }}
           restore-keys: |
             ${{ runner.os }}-build-
-
 
   discover-tests:
     name: Discover Test Projects

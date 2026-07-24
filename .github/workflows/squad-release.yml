@@ -1,7 +1,7 @@
 name: Squad Release
 # Keeps the current main-push release flow, but validates the real solution first.
 
-on:
+"on":
   push:
     branches: [main]
     paths-ignore:

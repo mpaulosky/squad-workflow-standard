@@ -1,7 +1,7 @@
 name: Squad Docs — Build & Deploy
 # dotnet project — configure documentation build commands below
 
-on:
+"on":
   workflow_dispatch:
   push:
     branches: [preview]

@@ -2,7 +2,7 @@
 # Mirrors milestone-blog.yml but fires on release events instead of milestone close.
 name: Release Blog Brief
 
-on:
+"on":
   release:
     types: [published]
 

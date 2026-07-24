@@ -1,7 +1,9 @@
+---
+
 name: Test Suite
 
 # NOTE: All test projects now use 'dotnet test' consistently.
-# This was updated to fix issues with direct executable execution that was
+# This was updated to fix issues with direct executable execution that were
 # causing "No such file or directory" errors in CI.
 
 permissions:
@@ -10,7 +12,7 @@ permissions:
   contents: read
   pull-requests: write
 
-on:
+"on":
   workflow_call:
     inputs:
       project_name:
@@ -18,13 +20,17 @@ on:
         required: false
         type: string
         default: "squad-workflow-standard"
+
   push:
-    branches:
-      - dev
-      - main
+    branches-ignore: [main]
+
   pull_request:
-    branches:
-      - "**"
+    branches-ignore: [main]
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
+      - ".squad/**"
+
   workflow_dispatch:
     inputs:
       project_name:
@@ -46,7 +52,7 @@ env:
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
   DOTNET_CLI_TELEMETRY_OPTOUT: true
 
-  # Aspire parameter bindings for E2E.Tests (Parameters:auth0MgmtClientId/Secret)
+  # Aspire parameter bindings for E2E.Tests (Parameters: auth0MgmtClientId/Secret)
   Auth0__Domain: ${{ secrets.AUTH0_DOMAIN }}
   Auth0__ClientId: ${{ secrets.AUTH0_CLIENT_ID }}
   Auth0__ClientSecret: ${{ secrets.AUTH0_CLIENT_SECRET }}

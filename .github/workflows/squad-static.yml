@@ -1,7 +1,7 @@
 # Deploys docs/blog/ to GitHub Pages on every push to main that changes blog content
 name: Deploy static content to Pages
 
-on:
+"on":
   push:
     branches: ["main"]
     paths:
