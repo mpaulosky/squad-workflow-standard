@@ -11,7 +11,7 @@ permissions:
 env:
   PROJECT_ID: PVT_kwHOA5k0b84BXZpa
   STATUS_FIELD_ID: PVTSSF_lAHOA5k0b84BXZpazhSmuGY
-  BACKLOG_OPTION_ID: ${{ vars.BACKLOG_OPTION_ID || 'f75ad846' }}
+  BACKLOG_OPTION_ID: f75ad846
 
 jobs:
   add-to-project:
@@ -26,7 +26,7 @@ jobs:
       - name: Add issue to MyBlog project board
         uses: actions/github-script@v9
         with:
-          github-token: ${{ secrets.GH_PROJECT_TOKEN || secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.GH_PROJECT_TOKEN }}
           script: |
             const issue = context.payload.issue;
 
