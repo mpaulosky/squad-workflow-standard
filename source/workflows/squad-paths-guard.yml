@@ -116,4 +116,22 @@ jobs:
               `## 🚫 Forbidden files detected in PR to ${baseBranch}`,
               '',
               baseBranch === mainBranch
-                ? `The following files must NOT be merged into \`${mainBranch}\`.}
+                ? `The following files must NOT be merged into \`${mainBranch}\`.`
+                : `The following \`.squad/\` files must NOT be removed from \`${devBranch}\`.`,
+              baseBranch === mainBranch
+                ? `\`.squad/\` is runtime team state — it belongs on \`${devBranch}\` branches only.`
+                : `\`.squad/\` must remain present on \`${devBranch}\` so the branch retains team state.`,
+              baseBranch === mainBranch
+                ? `\`team-docs/\` is internal team content — it belongs on \`${devBranch}\` branches only.`
+                : `\`team-docs/\` is not restricted by this guard on \`${devBranch}\`.`,
+              '',
+              '### Forbidden files found:',
+              '',
+              ...forbidden.map(f => `- \`${f}\``),
+              '',
+              '### How to fix:',
+              '',
+              ...remediationLines,
+            ];
+
+            core.setFailed(lines.join('\n'));
