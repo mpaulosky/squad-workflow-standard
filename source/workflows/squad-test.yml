@@ -30,7 +30,7 @@ on:
       project_name:
         description: "Solution name without .slnx"
         required: false
-        default: "squad-workflow-standard"
+        default: "ProjectName"
       reason:
         description: "The reason for running the workflow"
         required: true
