@@ -41,3 +41,10 @@ How to decide who handles what.
 5. **"Team, ..." → fan-out.** Spawn all relevant agents in parallel as `mode: "background"`.
 6. **Anticipate downstream work.** If a feature is being built, spawn the tester to write test cases from requirements simultaneously.
 7. **Issue-labeled work** — when a `squad:{member}` label is applied to an issue, route to that member. The Lead handles all `squad` (base label) triage.
+
+## Workflow Standard Binding
+
+- Source: `.squad/workflows/git-gh-process-standard.md`
+- Template: `.squad/templates/issue-lifecycle.md`
+- Flow policy: single issue uses standard branch flow; 2+ issues require worktree flow
+- Policy: never push directly to `main` or `dev`

@@ -23,6 +23,8 @@ selection, PR flow, cleanup, and hard gates.
 - Issue branch: `squad/{issue-number}-{kebab-slug}`
 - Feature/work branch PR target: `dev`
 - Only `dev` opens PRs to `main`
+- After each successful work-branch push, immediately open/update a PR to `dev`
+- Do not auto-open `dev` -> `main` after routine work pushes; promotion PRs are separate
 
 ## GitHub enforcement baseline (branch protection / rulesets)
 
@@ -58,7 +60,7 @@ git checkout -b squad/{issue-number}-{kebab-slug}
 git push -u origin squad/{issue-number}-{kebab-slug}
 ```
 
-Open draft PR:
+Immediately after push, open draft PR to `dev`:
 
 ```bash
 gh pr create --base dev --title "{title}" --body "Closes #{issue-number}" --draft
@@ -97,6 +99,8 @@ cd ../{repo-name}-{issue-number}
 git push -u origin squad/{issue-number}-{kebab-slug}
 gh pr create --base dev --title "{title}" --body "Closes #{issue-number}" --draft
 ```
+
+Do not auto-open `dev` -> `main` from this step; that promotion PR is separate.
 
 Cleanup after merge:
 

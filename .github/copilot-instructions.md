@@ -66,7 +66,9 @@ Treat this repository as a **standard pack publisher**, not as an app/runtime re
 - Branch/PR policy defined by the standard is hard-gated:
   no direct pushes to `main`/`dev`, issue branches use
   `squad/{issue-number}-{kebab-slug}`, day-to-day PR target is `dev`,
-  and only `dev` opens PRs to `main`.
+  and only `dev` opens PRs to `main`. After pushing a work branch,
+  immediately open/update PR to `dev`; do not auto-open `dev` -> `main`
+  after routine pushes.
 - Flow selection is explicit policy:
   single issue uses standard branch flow;
   concurrent issues use worktree flow.

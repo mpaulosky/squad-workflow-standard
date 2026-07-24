@@ -149,6 +149,8 @@ internal sealed class TemporaryTargetRepository : IDisposable
              - Standard version: `{canonicalVersion}`
              - Enforcement level: hard gate
              - Default branch policy: feature/work branches -> PR to `dev`; only `dev` -> PR to `main`
+             - Post-push requirement: after pushing a work branch, immediately open/update a PR to `dev`.
+             - Promotion rule: do not auto-open `dev` -> `main` after routine work pushes; promotion PRs are separate.
              """);
 
         File.WriteAllText(
