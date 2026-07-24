@@ -28,8 +28,14 @@ jobs:
         with:
           script: |
             const baseBranch = context.payload.pull_request.base.ref;
+            const headBranch = context.payload.pull_request.head.ref;
             const mainBranch = process.env.MAIN_BRANCH;
             const devBranch = process.env.DEV_BRANCH;
+
+            if (baseBranch === devBranch && headBranch === mainBranch) {
+              core.info(`Skipping path guard for back-merge PR ${headBranch} -> ${baseBranch}.`);
+              return;
+            }
 
             if (baseBranch !== mainBranch && baseBranch !== devBranch) {
               core.info(`Skipping path guard for PR to ${baseBranch}; guard only applies to ${mainBranch} and ${devBranch}.`);
