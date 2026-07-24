@@ -1,0 +1,49 @@
+name: Hotfix Backport Reminder
+
+on:
+  pull_request:
+    branches:
+      - main
+    types: [closed]
+
+jobs:
+  remind-backport:
+    name: Remind to Backport Hotfix
+    runs-on: ubuntu-latest
+    if: >
+      github.event.pull_request.merged == true &&
+      (startsWith(github.event.pull_request.head.ref, 'hotfix/') ||
+       contains(github.event.pull_request.labels.*.name, 'hotfix'))
+    permissions:
+      issues: write
+      pull-requests: write
+
+    steps:
+      - name: Post backport reminder
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const body = [
+              '🚑 **Hotfix Backport Required**',
+              '',
+              `PR #${pr.number} ("${pr.title}") was merged directly into \`main\` as a hotfix.`,
+              '',
+              '**Action required:** Backport this fix to the \`dev\` branch to keep branches in sync.',
+              '',
+              '```bash',
+              `git checkout dev`,
+              `git pull origin dev`,
+              `git cherry-pick ${pr.merge_commit_sha}`,
+              `git push origin dev`,
+              '```',
+              '',
+              'Or open a backport PR targeting \`dev\`.',
+            ].join('\n');
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.number,
+              body,
+            });

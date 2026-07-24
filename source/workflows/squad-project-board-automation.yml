@@ -1,0 +1,358 @@
+name: Project Board Automation
+
+on:
+  pull_request:
+    types: [opened, reopened, ready_for_review, converted_to_draft, closed]
+
+# repository-projects: write covers Projects v2 for user-owned repos.
+# If mutations fail with a 403, store a PAT with 'project' scope as
+# secrets.GH_PROJECT_TOKEN and replace secrets.GITHUB_TOKEN below.
+permissions:
+  issues: read
+  pull-requests: read
+  repository-projects: write
+
+env:
+  PROJECT_ID: PVT_kwHOA5k0b84BXZpa
+  STATUS_FIELD_ID: PVTSSF_lAHOA5k0b84BXZpazhSmuGY
+  IN_SPRINT_OPTION_ID: f75ad846
+  IN_REVIEW_OPTION_ID: 47fc9ee4
+  DONE_OPTION_ID: "98236657"
+  RELEASED_OPTION_ID: 90af7f3b
+
+jobs:
+  update-project-board:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Move linked issues on project board
+        uses: actions/github-script@v9
+        with:
+          github-token: ${{ secrets.GH_PROJECT_TOKEN || secrets.GITHUB_TOKEN }}
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const action = context.payload.action;
+            const pr = context.payload.pull_request;
+            const PROJECT_ID = process.env.PROJECT_ID;
+            const STATUS_FIELD_ID = process.env.STATUS_FIELD_ID;
+            const DONE_OPTION_ID = process.env.DONE_OPTION_ID;
+            const statusTargets = {
+              inSprint: {
+                optionId: process.env.IN_SPRINT_OPTION_ID,
+                columnName: 'In Sprint',
+              },
+              inReview: {
+                optionId: process.env.IN_REVIEW_OPTION_ID,
+                columnName: 'In Review',
+              },
+              done: {
+                optionId: process.env.DONE_OPTION_ID,
+                columnName: 'Done',
+              },
+              released: {
+                optionId: process.env.RELEASED_OPTION_ID,
+                columnName: 'Released',
+              },
+            };
+
+            const parseClosingIssueNumbers = text => {
+              const issueNumbers = new Set();
+              const pattern = new RegExp(
+                `(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\\s*:?\\s+(?:${owner}\\/${repo})?#(\\d+)`,
+                'gi'
+              );
+
+              for (const match of (text ?? '').matchAll(pattern)) {
+                issueNumbers.add(Number.parseInt(match[1], 10));
+              }
+
+              return [...issueNumbers].sort((left, right) => left - right);
+            };
+
+            const looksLikeReleasePullRequest = pullRequest => {
+              const title = pullRequest.title ?? '';
+              const headRef = pullRequest.head?.ref ?? '';
+              const looksLikeReleaseTitle =
+                /^\[RELEASE\]\b/i.test(title) ||
+                /^release:/i.test(title) ||
+                /promote dev\s*(?:→|->|to)\s*main/i.test(title);
+              const looksLikeReleaseBranch =
+                headRef === 'dev' ||
+                headRef.startsWith('release/') ||
+                headRef.startsWith('hotfix/');
+
+              return pullRequest.base?.ref === 'main' && (looksLikeReleaseTitle || looksLikeReleaseBranch);
+            };
+
+            const isReleasePullRequest = pullRequest =>
+              action === 'closed' &&
+              pullRequest.merged === true &&
+              looksLikeReleasePullRequest(pullRequest);
+
+            const updateStatus = async (itemId, target) => {
+              await github.graphql(`
+                mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $optionId: String!) {
+                  updateProjectV2ItemFieldValue(input: {
+                    projectId: $projectId
+                    itemId:    $itemId
+                    fieldId:   $fieldId
+                    value:     { singleSelectOptionId: $optionId }
+                  }) {
+                    projectV2Item { id }
+                  }
+                }
+              `, {
+                projectId: PROJECT_ID,
+                itemId,
+                fieldId: STATUS_FIELD_ID,
+                optionId: target.optionId,
+              });
+            };
+
+            const getIssueProjectItem = async issueNumber => {
+              const { data: issue } = await github.rest.issues.get({
+                owner,
+                repo,
+                issue_number: issueNumber,
+              });
+
+              const projectQuery = await github.graphql(`
+                query($nodeId: ID!) {
+                  node(id: $nodeId) {
+                    ... on Issue {
+                      projectItems(first: 20) {
+                        nodes {
+                          id
+                          project { id }
+                          fieldValues(first: 50) {
+                            nodes {
+                              ... on ProjectV2ItemFieldSingleSelectValue {
+                                optionId
+                                field {
+                                  ... on ProjectV2SingleSelectField { id }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              `, { nodeId: issue.node_id });
+
+              const projectItem = projectQuery.node?.projectItems?.nodes?.find(
+                item => item.project.id === PROJECT_ID
+              );
+
+              const isDone = projectItem?.fieldValues?.nodes?.some(
+                fieldValue => fieldValue.field?.id === STATUS_FIELD_ID && fieldValue.optionId === DONE_OPTION_ID
+              ) ?? false;
+
+              return {
+                issue,
+                isDone,
+                projectItem,
+              };
+            };
+
+            const moveLinkedIssues = async target => {
+              const issueNumbers = parseClosingIssueNumbers(pr.body);
+
+              if (issueNumbers.length === 0) {
+                core.info(`PR #${pr.number}: no linked issues found — skipping`);
+                return;
+              }
+
+              core.info(
+                `PR #${pr.number} (${action}): moving issues [${issueNumbers.join(', ')}] → ${target.columnName}`
+              );
+
+              for (const issueNumber of issueNumbers) {
+                try {
+                  const { projectItem } = await getIssueProjectItem(issueNumber);
+
+                  if (!projectItem) {
+                    core.warning(`Issue #${issueNumber} is not on the MyBlog project board — skipping`);
+                    continue;
+                  }
+
+                  await updateStatus(projectItem.id, target);
+                  core.info(`✅ Issue #${issueNumber} → ${target.columnName}`);
+                } catch (err) {
+                  core.warning(`Could not update issue #${issueNumber}: ${err.message}`);
+                }
+              }
+            };
+
+            const getReleaseCommits = async pullNumber => {
+              const commits = await github.paginate(github.rest.pulls.listCommits, {
+                owner,
+                repo,
+                pull_number: pullNumber,
+                per_page: 100,
+              });
+
+              return commits.map(commit => ({
+                sha: commit.sha,
+                message: commit.commit?.message ?? '',
+              }));
+            };
+
+            const getAssociatedPullRequests = async commitSha => {
+              const response = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+                owner,
+                repo,
+                commit_sha: commitSha,
+              });
+
+              return response.data ?? [];
+            };
+
+            const getPreviousReleasePullRequest = async currentPullRequest => {
+              const closedPullRequests = await github.paginate(github.rest.pulls.list, {
+                owner,
+                repo,
+                state: 'closed',
+                base: 'main',
+                sort: 'updated',
+                direction: 'desc',
+                per_page: 100,
+              });
+
+              const previousRelease = closedPullRequests
+                .filter(candidate =>
+                  candidate.number !== currentPullRequest.number &&
+                  candidate.merged_at &&
+                  candidate.merged_at < currentPullRequest.merged_at &&
+                  looksLikeReleasePullRequest(candidate)
+                )
+                .sort((left, right) => right.merged_at.localeCompare(left.merged_at))[0];
+
+              return previousRelease ?? null;
+            };
+
+            // Compare the current release PR commit set to the previous release PR commit
+            // set so only newly shipped commits contribute Released board transitions.
+            const getShippedReleaseCommits = async currentPullRequest => {
+              const currentReleaseCommits = await getReleaseCommits(currentPullRequest.number);
+              const previousReleasePullRequest = await getPreviousReleasePullRequest(currentPullRequest);
+
+              if (!previousReleasePullRequest) {
+                return currentReleaseCommits;
+              }
+
+              const previousReleaseCommits = await getReleaseCommits(previousReleasePullRequest.number);
+              const previousReleaseCommitShas = new Set(previousReleaseCommits.map(commit => commit.sha));
+
+              return currentReleaseCommits.filter(commit => !previousReleaseCommitShas.has(commit.sha));
+            };
+
+            const moveReleasedIssues = async () => {
+              const releaseCommits = await getShippedReleaseCommits(pr);
+              const relatedPullRequests = new Map();
+              const issueNumbers = new Set();
+
+              for (const { sha, message } of releaseCommits) {
+                const associatedPullRequests = await getAssociatedPullRequests(sha);
+
+                for (const associatedPullRequest of associatedPullRequests) {
+                  if (
+                    !associatedPullRequest.merged_at ||
+                    associatedPullRequest.number === pr.number ||
+                    looksLikeReleasePullRequest(associatedPullRequest)
+                  ) {
+                    continue;
+                  }
+
+                  relatedPullRequests.set(associatedPullRequest.number, associatedPullRequest);
+                }
+
+                for (const issueNumber of parseClosingIssueNumbers(message)) {
+                  issueNumbers.add(issueNumber);
+                }
+              }
+
+              for (const relatedPullRequest of relatedPullRequests.values()) {
+                for (const issueNumber of parseClosingIssueNumbers(relatedPullRequest.body)) {
+                  issueNumbers.add(issueNumber);
+                }
+              }
+
+              // Also parse the release/hotfix PR body itself.
+              // For hotfix PRs the Closes #N reference lives only on the PR body
+              // (there is no intermediary squad PR in the commit walk).
+              for (const issueNumber of parseClosingIssueNumbers(pr.body)) {
+                issueNumbers.add(issueNumber);
+              }
+
+              if (issueNumbers.size === 0) {
+                core.notice(`Release PR #${pr.number}: no shipped issues were identified`);
+                return;
+              }
+
+              core.info(
+                `Release PR #${pr.number}: evaluating issues [${[...issueNumbers].sort((left, right) => left - right).join(', ')}] for Released`
+              );
+
+              let moved = 0;
+
+              for (const issueNumber of [...issueNumbers].sort((left, right) => left - right)) {
+                try {
+                  const { issue, isDone, projectItem } = await getIssueProjectItem(issueNumber);
+
+                  if (!projectItem) {
+                    core.info(`Skipping issue #${issueNumber}: not on the MyBlog project board`);
+                    continue;
+                  }
+
+                  if (!isDone) {
+                    core.info(`Skipping issue #${issueNumber}: current project status is not Done`);
+                    continue;
+                  }
+
+                  await updateStatus(projectItem.id, statusTargets.released);
+                  moved++;
+                  core.info(`✅ Issue #${issue.number} → Released`);
+                } catch (err) {
+                  core.warning(`Could not evaluate issue #${issueNumber}: ${err.message}`);
+                }
+              }
+
+              core.notice(`Release PR #${pr.number}: moved ${moved} shipped issue(s) to Released`);
+            };
+
+            const getTargetStatus = () => {
+              if (action === 'converted_to_draft') {
+                return statusTargets.inSprint;
+              }
+
+              if (action === 'closed') {
+                return pr.merged ? statusTargets.done : statusTargets.inSprint;
+              }
+
+              if (action === 'opened' || action === 'reopened') {
+                return pr.draft ? statusTargets.inSprint : statusTargets.inReview;
+              }
+
+              if (action === 'ready_for_review') {
+                return statusTargets.inReview;
+              }
+
+              return null;
+            };
+
+            if (isReleasePullRequest(pr)) {
+              await moveReleasedIssues();
+              return;
+            }
+
+            const target = getTargetStatus();
+
+            if (!target) {
+              core.info(`No board transition configured for pull_request.${action}`);
+              return;
+            }
+
+            await moveLinkedIssues(target);

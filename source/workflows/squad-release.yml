@@ -5,9 +5,9 @@ on:
   push:
     branches: [main]
     paths-ignore:
-      - 'docs/**'
-      - '**/*.md'
-      - '.squad/**'
+      - "docs/**"
+      - "**/*.md"
+      - ".squad/**"
   workflow_dispatch:
 
 permissions:
@@ -39,7 +39,7 @@ jobs:
       - name: Install GitVersion
         uses: gittools/actions/gitversion/setup@v4.7.0
         with:
-          versionSpec: '6.x'
+          versionSpec: "6.x"
 
       - name: Use GitVersion
         id: gitversion
