@@ -2,9 +2,9 @@
 ---
 name: Squad Paths Guard
 
-'on':
+"on":
   pull_request:
-    branches: [main]
+    branches: [main, dev]
     types: [opened, synchronize, reopened]
 
 permissions:
@@ -22,6 +22,8 @@ jobs:
         uses: actions/github-script@v9
         with:
           script: |
+            const baseBranch = context.payload.pull_request.base.ref;
+
             // Fetch all files changed in this PR (paginated)
             const files = [];
             let page = 1;
@@ -38,31 +40,78 @@ jobs:
               page++;
             }
 
-            // Check each file against forbidden path rules
-            // Allow removals — deleting forbidden files from protected branches is fine
+            // Check each file against branch-specific forbidden path rules.
             const forbidden = files
-              .filter(f => f.status !== 'removed')
-              .map(f => f.filename)
               .filter(f => {
-                // .squad/** — ALL team state files, zero exceptions
-                if (f === '.squad' || f.startsWith('.squad/')) return true;
-                // team-docs/** — ALL internal team docs, zero exceptions
-                if (f.startsWith('team-docs/')) return true;
+                const filename = f.filename;
+
+                if (baseBranch === 'main') {
+                  // main: block new or modified .squad/ and team-docs/ paths, but allow removals.
+                  return f.status !== 'removed' && (
+                    filename === '.squad' ||
+                    filename.startsWith('.squad/') ||
+                    filename.startsWith('team-docs/')
+                  );
+                }
+
+                if (baseBranch === 'dev') {
+                  // dev: keep .squad/ retained by blocking removals only.
+                  return f.status === 'removed' && (
+                    filename === '.squad' ||
+                    filename.startsWith('.squad/')
+                  );
+                }
+
                 return false;
-              });
+              })
+              .map(f => f.filename);
 
             if (forbidden.length === 0) {
-              core.info('✅ No forbidden paths found in PR — all clear.');
+              core.info(`✅ No forbidden paths found in PR to ${baseBranch} — all clear.`);
               return;
             }
 
             // Build a clear, actionable error message
+            const remediationLines = baseBranch === 'main'
+              ? [
+                  '```bash',
+                  '# Remove tracked .squad/ files (keeps local copies):',
+                  'git rm --cached -r .squad/',
+                  '',
+                  '# Remove tracked team-docs/ files:',
+                  'git rm --cached -r team-docs/',
+                  '',
+                  '# Commit the removal and push:',
+                  'git commit -m "chore: remove forbidden paths from PR"',
+                  'git push',
+                  '```',
+                  '',
+                  '> ⚠️ `.squad/` is committed on `dev` and feature branches by design.',
+                  '> The guard workflow is the enforcement mechanism that keeps these files off `main`.',
+                  '> `git rm --cached` untracks them from this PR without deleting your local copies.',
+                ]
+              : [
+                  '```bash',
+                  '# Restore removed .squad/ files before merging to dev:',
+                  'git checkout -- .squad/',
+                  '```',
+                  '',
+                  '> ⚠️ `dev` must retain `.squad/` so the branch keeps team state.',
+                  '> Restore any removed `.squad/` files before merging this PR.',
+                ];
+
             const lines = [
-              '## 🚫 Forbidden files detected in PR to main',
+              `## 🚫 Forbidden files detected in PR to ${baseBranch}`,
               '',
-              'The following files must NOT be merged into `main`.',
-              '`.squad/` is runtime team state — it belongs on dev branches only.',
-              '`team-docs/` is internal team content — it belongs on dev branches only.',
+              baseBranch === 'main'
+                ? 'The following files must NOT be merged into `main`.'
+                : 'The following `.squad/` files must NOT be removed from `dev`.',
+              baseBranch === 'main'
+                ? '`.squad/` is runtime team state — it belongs on dev branches only.'
+                : '`.squad/` must remain present on `dev` so the branch retains team state.',
+              baseBranch === 'main'
+                ? '`team-docs/` is internal team content — it belongs on dev branches only.'
+                : '`team-docs/` is not restricted by this guard on `dev`.',
               '',
               '### Forbidden files found:',
               '',
@@ -70,21 +119,7 @@ jobs:
               '',
               '### How to fix:',
               '',
-              '```bash',
-              '# Remove tracked .squad/ files (keeps local copies):',
-              'git rm --cached -r .squad/',
-              '',
-              '# Remove tracked team-docs/ files:',
-              'git rm --cached -r team-docs/',
-              '',
-              '# Commit the removal and push:',
-              'git commit -m "chore: remove forbidden paths from PR"',
-              'git push',
-              '```',
-              '',
-              '> ⚠️ `.squad/` is committed on `dev` and feature branches by design.',
-              '> The guard workflow is the enforcement mechanism that keeps these files off `main`.',
-              '> `git rm --cached` untracks them from this PR without deleting your local copies.',
+              ...remediationLines,
             ];
 
             core.setFailed(lines.join('\n'));

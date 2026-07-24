@@ -1,11 +1,11 @@
 ---
 name: guard-main-source
 
-'on':
+"on":
   pull_request:
     branches: [main]
   workflow_dispatch:
-    types: [ opened, synchronize, reopened, ready_for_review ]
+    types: [opened, synchronize, reopened, ready_for_review]
 
 jobs:
   guard-main-source:
@@ -20,9 +20,9 @@ jobs:
             }
 
             const source = context.payload.pull_request.head.ref;
-            const isValid = source === "dev"  || source.startsWith("squad/") || source.startsWith("hotfix/");
+            const isValid = source === "dev" || source.startsWith("squad/") || source.startsWith("sprint/") || source.startsWith("hotfix/");
             if (!isValid) {
               core.setFailed(
-                `PRs to main must come from dev or hotfix/* branches. Current source: ${source}`
+                `PRs to main must come from dev, squad/*, sprint/*, or hotfix/* branches. Current source: ${source}`
               );
             }
