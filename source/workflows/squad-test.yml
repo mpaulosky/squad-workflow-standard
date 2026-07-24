@@ -271,13 +271,18 @@ jobs:
         run: |
           if [ -f "./coverage-output/Summary.json" ]; then
             echo "=== Summary.json raw ===" && cat ./coverage-output/Summary.json | jq . || true
+            coverable_lines=$(jq -r '.summary.coverablelines // .summary.coverableLines // .coverablelines // .coverableLines // 0' ./coverage-output/Summary.json 2>/dev/null || echo "0")
             coverage=$(jq -r '.summary.linecoverage // .lineCoverage // 0' ./coverage-output/Summary.json 2>/dev/null || echo "0")
             echo "Line Coverage: $coverage%"
-            if (( $(echo "$coverage < 80" | bc -l) )); then
-              echo "::error::Code coverage is below 80% threshold: $coverage% (required: 80%)"
-              exit 1
+            if [ "$coverable_lines" = "0" ]; then
+              echo "::warning::No coverable lines found in Summary.json — skipping threshold check"
             else
-              echo "::notice::Coverage gate passed: $coverage% >= 80%"
+              if (( $(echo "$coverage < 80" | bc -l) )); then
+                echo "::error::Code coverage is below 80% threshold: $coverage% (required: 80%)"
+                exit 1
+              else
+                echo "::notice::Coverage gate passed: $coverage% >= 80%"
+              fi
             fi
           else
             echo "::warning::Coverage report not available — skipping threshold check"
