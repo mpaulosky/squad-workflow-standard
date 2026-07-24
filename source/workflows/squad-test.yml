@@ -17,7 +17,7 @@ on:
         description: "Solution name without .slnx"
         required: false
         type: string
-        default: "ProjectName"
+        default: ""
   push:
     branches:
       - dev
@@ -30,7 +30,7 @@ on:
       project_name:
         description: "Solution name without .slnx"
         required: false
-        default: "ProjectName"
+        default: ""
       reason:
         description: "The reason for running the workflow"
         required: true
@@ -41,7 +41,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  SOLUTION_NAME: ${{ inputs.project_name || 'ProjectName' }}.slnx
+  SOLUTION_NAME: ${{ inputs.project_name || github.event.repository.name }}.slnx
   NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
   DOTNET_CLI_TELEMETRY_OPTOUT: true
@@ -98,7 +98,6 @@ jobs:
           key: ${{ runner.os }}-build-${{ hashFiles('**/*.csproj', '**/Directory.Packages.props', 'global.json') }}
           restore-keys: |
             ${{ runner.os }}-build-
-
 
   discover-tests:
     name: Discover Test Projects
@@ -195,7 +194,13 @@ jobs:
       - name: Install Playwright browsers
         if: ${{ matrix.requires_playwright }}
         run: |
-          pwsh tests/E2E.Tests/bin/Release/net10.0/playwright.ps1 install chromium --with-deps
+          project_dir="$(dirname "${{ matrix.project_path }}")"
+          playwright_script=$(find "$project_dir/bin/Release" -type f -name "playwright.ps1" | head -n 1)
+          if [ -z "$playwright_script" ]; then
+            echo "::error::Unable to locate playwright.ps1 for ${{ matrix.project_path }}"
+            exit 1
+          fi
+          pwsh "$playwright_script" install chromium --with-deps
 
       - name: Run tests
         id: run-tests

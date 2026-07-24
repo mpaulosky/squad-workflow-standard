@@ -3,7 +3,7 @@ name: Blog → README Sync
 on:
   push:
     branches: [main]
-    paths: ['docs/blog/index.md']
+    paths: ["docs/blog/index.md"]
   workflow_dispatch:
 
 permissions:
@@ -81,5 +81,5 @@ jobs:
           git diff --quiet README.md || (
             git add README.md &&
             git commit -m "docs: sync Dev Blog section from docs/blog/index.md [skip ci]" &&
-            git push origin HEAD:dev
+            git push origin HEAD:main
           )
