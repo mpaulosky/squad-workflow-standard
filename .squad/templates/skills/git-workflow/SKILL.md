@@ -16,6 +16,13 @@ Squad uses a three-branch model. **All feature work starts from `dev`, not `main
 | `dev` | Integration branch — all feature work lands here | `npm publish --tag preview` on merge |
 | `insiders` | Early-access channel — synced from dev | `npm publish --tag insiders` on sync |
 
+### Required GitHub protections/rulesets
+
+- Protect `dev` and `main` (no direct pushes).
+- Require PRs, approvals, and required status checks on both branches.
+- Keep `squad-main-guard` required for PRs into `main`.
+- Restrict `main` PR source to `dev` only when rulesets support it.
+
 ## Branch Naming Convention
 
 Issue branches MUST use: `squad/{issue-number}-{kebab-case-slug}`

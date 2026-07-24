@@ -31,7 +31,7 @@ Every agent spawn must include the following four sections. Copy and fill in the
 Example:
 - [ ] File X exists and contains Y
 - [ ] No regressions in existing tests
-- [ ] PR is open targeting main with description matching the issue
+- [ ] PR is open targeting dev (or dev→main for promotion PRs) with description matching the issue
 
 ## Escalation path
 {What the agent should do if uncertain or stuck. "Stop and ask me" is valid.}

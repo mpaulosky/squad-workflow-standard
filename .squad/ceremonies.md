@@ -67,3 +67,7 @@ At round start, call Test-RetroOverdue (see skill retro-enforcement). If overdue
 
 **Why GitHub Issues, not markdown:**
 Production data: 0% completion across 6 retros using markdown checklists, 100% after switching to GitHub Issues.
+
+## Workflow Standard Reference
+
+Reference: `.squad/workflows/git-gh-process-standard.md`

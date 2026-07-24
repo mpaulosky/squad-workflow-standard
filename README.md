@@ -80,7 +80,7 @@ The workflow set includes:
 
 - linting (`squad-lint-yaml.yml`, `squad-lint-markdown.yml`)
 - test/release templates (`squad-ci.yml`, `squad-test.yml`, `squad-release.yml`)
-- policy guards (`squad-main-from-dev-guard.yml`)
+- policy guards (`squad-main-guard.yml`)
 - labeling/triage/assignment automation
 - project board automation/audit
 - milestone/release blog orchestration
@@ -127,6 +127,18 @@ bash scripts/squad/check-git-gh-standard.sh /absolute/path/to/target-repo
 ```powershell
 pwsh scripts/squad/check-git-gh-standard.ps1 /absolute/path/to/target-repo
 ```
+
+### Configure GitHub branch protections/rulesets in target repos
+
+For the standard policy (work branches -> `dev`, only `dev` -> `main`), set:
+
+- protected `dev` and `main` branches (no direct pushes)
+- PR required + approval required on both
+- required status checks on both
+- `squad-main-guard` as required check for `main`
+- source restriction for `main` to `dev` only (where rulesets support it)
+- after pushing a work branch, immediately open/update PR to `dev`
+- do not auto-open `dev -> main` after routine work pushes (promotion PRs are separate)
 
 ### Optional .NET CLI wrapper (coexists with scripts)
 

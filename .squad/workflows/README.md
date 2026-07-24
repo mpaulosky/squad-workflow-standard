@@ -1,12 +1,17 @@
-## Squad Workflow Standards Distribution
+# Squad Workflow Standards Distribution
 
 This directory hosts the canonical git + `gh` process standard for squad
 issue work.
 
 ## Distributed Assets
 
-- `git-gh-process-standard.md` — canonical process (main-first, hard gates,
+- `git-gh-process-standard.md` — canonical process (dev-integration with
+  dev-only promotion to main, hard gates,
   standard-vs-worktree split)
+- `workflow-baseline-manifest.txt` — canonical workflow list (maps to
+  target `.github/workflows/`)
+- `hook-baseline-manifest.txt` — canonical hook list (maps to
+  target `.github/hooks/`)
 - `.git-gh-standard-version` — version stamp written in each target repo
 - `.squad/skills/git-workflow-standard/SKILL.md` — executable guidance surface
 - `README.md` (this file) — bootstrap + retrofit playbook
@@ -17,35 +22,71 @@ issue work.
 2. From this source repo, install/update the standard pack:
 
    ```bash
-   ~/github/squad-workflow-standard/scripts/squad/sync-git-gh-standard.sh /absolute/path/to/target-repo
+   scripts/squad/sync-git-gh-standard.sh /absolute/path/to/target-repo
    ```
 
 3. Validate required enforcement wiring:
 
    ```bash
-   ~/github/squad-workflow-standard/scripts/squad/check-git-gh-standard.sh /absolute/path/to/target-repo
+   scripts/squad/check-git-gh-standard.sh /absolute/path/to/target-repo
    ```
 
 4. Resolve any failing checks before opening issue-work PRs.
+
+Hook enforcement is part of sync/check:
+
+- `sync-git-gh-standard.sh` sets `core.hooksPath=.github/hooks` and marks
+  hook files executable.
+- `check-git-gh-standard.sh` fails if hook activation or executability drifts.
 
 ## Retrofit (existing squad repo)
 
 1. From this source repo, sync the latest standard pack:
 
    ```bash
-   ~/github/squad-workflow-standard/scripts/squad/sync-git-gh-standard.sh /absolute/path/to/target-repo
+   scripts/squad/sync-git-gh-standard.sh /absolute/path/to/target-repo
    ```
 
 2. Run deterministic drift checks:
 
    ```bash
-   ~/github/squad-workflow-standard/scripts/squad/check-git-gh-standard.sh /absolute/path/to/target-repo
+   scripts/squad/check-git-gh-standard.sh /absolute/path/to/target-repo
    ```
 
 3. If drift is reported, reconcile:
    - `.squad/routing.md` hard gates + flow split + canonical binding
-   - `.squad/templates/issue-lifecycle.md` standard version + main-first policy
+   - `.squad/templates/issue-lifecycle.md` standard version + dev/main PR policy
    - `.squad/ceremonies.md` pre-push hard gate + versioned source-of-truth
+
+## GitHub branch protection / ruleset migration checklist
+
+Use this checklist in each consumer repo to align GitHub settings with the
+standard (`work branches -> dev`, `dev -> main` only):
+
+1. **Sync + validate standard assets**
+   - `scripts/squad/sync-git-gh-standard.sh /absolute/path/to/target-repo`
+   - `scripts/squad/check-git-gh-standard.sh /absolute/path/to/target-repo`
+2. **Protect `dev` and `main`**
+   - Require pull requests before merge.
+   - Block direct pushes to both branches.
+   - Require at least one approval.
+3. **Require status checks on `dev` and `main`**
+   - Mark CI/test checks as required.
+   - Keep `squad-main-guard` required for PRs into `main`.
+4. **Enforce `main` source branch policy**
+   - Allow merges to `main` from `dev` only
+     (ruleset source restriction where available).
+5. **Set contributor defaults to `dev`**
+   - PR templates/docs must use `--base dev`.
+   - Branch naming must follow `squad/{issue-number}-{kebab-slug}`.
+   - After pushing a work branch, the immediate next step is opening/updating PR to `dev`.
+   - Do not auto-open a `dev -> main` PR after routine work pushes; promotion PRs are separate.
+6. **Verify with a live PR test**
+   - Open `squad/* -> dev` PR (should pass policy checks).
+   - Open non-`dev -> main` PR (should fail policy checks).
+7. **Lock in and monitor**
+   - Add policy check to onboarding/runbooks.
+   - Re-run `check-git-gh-standard.sh` after workflow/ruleset edits.
 
 ## Pilot and rollout execution playbook
 
@@ -63,9 +104,10 @@ Pass requires all of the following:
 1. Daily `check-git-gh-standard.sh` returns exit code `0` in both pilot repos
    for 5 consecutive business days.
 2. All issue work uses `squad/{issue-number}-{kebab-slug}` branch naming and
-   PRs targeting `main`.
-3. No direct push events to `main` or `dev`.
-4. No unresolved Sev1/Sev2 incidents caused by workflow adoption.
+   PRs targeting `dev`.
+3. Promotion PRs into `main` originate only from `dev`.
+4. No direct push events to `main` or `dev`.
+5. No unresolved Sev1/Sev2 incidents caused by workflow adoption.
 
 Fail on any missed criterion or unresolved Sev1/Sev2 workflow breakage longer
 than one business day.
@@ -86,21 +128,21 @@ If pilot fails or post-rollout critical regression occurs:
 2. Re-run sync to each affected repo:
 
    ```bash
-   ~/github/squad-workflow-standard/scripts/squad/sync-git-gh-standard.sh /absolute/path/to/target-repo
+   scripts/squad/sync-git-gh-standard.sh /absolute/path/to/target-repo
    ```
 
 3. Validate recovery:
 
    ```bash
-   ~/github/squad-workflow-standard/scripts/squad/check-git-gh-standard.sh /absolute/path/to/target-repo
+   scripts/squad/check-git-gh-standard.sh /absolute/path/to/target-repo
    ```
 
 4. Log corrective issue and re-run pilot gate before reattempting rollout.
 
 ### Detect-and-prompt policy
 
-When `check-git-gh-standard.sh` detects version drift, it must stop green status and
-prompt the operator with three actions:
+When `check-git-gh-standard.sh` detects version drift, it must stop green
+status and prompt the operator with three actions:
 
 1. Update now (`sync-git-gh-standard.sh`)
 2. Defer and rerun the check before the next gated issue workflow

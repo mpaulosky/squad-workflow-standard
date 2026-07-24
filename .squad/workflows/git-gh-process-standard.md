@@ -1,6 +1,6 @@
 # Git + GH Process Standard
 
-Standard-Version: 2026.07.1
+Standard-Version: 2026.07.3
 Owner: Squad process governance
 
 ## Purpose
@@ -18,9 +18,33 @@ selection, PR flow, cleanup, and hard gates.
 
 ## Branch model (default)
 
-- Base branch: `main`
+- Integration branch: `dev`
+- Promotion branch: `main`
 - Issue branch: `squad/{issue-number}-{kebab-slug}`
-- PR target: `main`
+- Feature/work branch PR target: `dev`
+- Only `dev` opens PRs to `main`
+- After each successful work-branch push, immediately open/update a PR to `dev`
+- Do not auto-open `dev` -> `main` after routine work pushes; promotion PRs are separate
+
+## GitHub enforcement baseline (branch protection / rulesets)
+
+To enforce this branch model in GitHub, configure protections/rulesets for both
+`dev` and `main`:
+
+1. Protect `dev` and `main` from direct pushes.
+2. Require pull requests before merge on both branches.
+3. Require at least one approval before merge on both branches.
+4. Require status checks before merge (at minimum: CI/test workflows used in the
+   repo).
+5. Restrict `main` merge source to `dev` only:
+   - Keep `squad-main-guard.yml` enabled and required for `main`.
+   - In rulesets, limit allowed source branch pattern for `main` to `dev` when
+     your ruleset plan supports source-branch restrictions.
+6. Ensure issue/work branches merge into `dev`, not `main`:
+   - Set repository defaults/templates (`gh pr create --base dev`) and
+     contributor guidance accordingly.
+   - Optionally restrict direct branch creation in UI to preserve
+     `squad/{issue-number}-{kebab-slug}` convention.
 
 ## Flow selection
 
@@ -30,16 +54,16 @@ selection, PR flow, cleanup, and hard gates.
 ## Standard flow
 
 ```bash
-git checkout main
-git pull origin main
+git checkout dev
+git pull origin dev
 git checkout -b squad/{issue-number}-{kebab-slug}
 git push -u origin squad/{issue-number}-{kebab-slug}
 ```
 
-Open draft PR:
+Immediately after push, open draft PR to `dev`:
 
 ```bash
-gh pr create --base main --title "{title}" --body "Closes #{issue-number}" --draft
+gh pr create --base dev --title "{title}" --body "Closes #{issue-number}" --draft
 ```
 
 Mark ready after checks pass:
@@ -51,8 +75,8 @@ gh pr ready
 Cleanup after merge:
 
 ```bash
-git checkout main
-git pull origin main
+git checkout dev
+git pull origin dev
 git branch -d squad/{issue-number}-{kebab-slug}
 git push origin --delete squad/{issue-number}-{kebab-slug}
 ```
@@ -62,8 +86,10 @@ git push origin --delete squad/{issue-number}-{kebab-slug}
 From the primary clone:
 
 ```bash
-git fetch origin main
-git worktree add ../{repo-name}-{issue-number} -b squad/{issue-number}-{kebab-slug} origin/main
+git fetch origin dev
+git worktree add ../{repo-name}-{issue-number} \
+  -b squad/{issue-number}-{kebab-slug} \
+  origin/dev
 ```
 
 Inside the worktree:
@@ -71,8 +97,10 @@ Inside the worktree:
 ```bash
 cd ../{repo-name}-{issue-number}
 git push -u origin squad/{issue-number}-{kebab-slug}
-gh pr create --base main --title "{title}" --body "Closes #{issue-number}" --draft
+gh pr create --base dev --title "{title}" --body "Closes #{issue-number}" --draft
 ```
+
+Do not auto-open `dev` -> `main` from this step; that promotion PR is separate.
 
 Cleanup after merge:
 
@@ -88,13 +116,19 @@ git push origin --delete squad/{issue-number}-{kebab-slug}
 Run required tests/validation configured by the repo before push.
 If any gate fails, fix and rerun before pushing.
 
+## Required hook activation
+
+- Repositories must set `git config core.hooksPath .github/hooks`.
+- Required hooks are `pre-commit`, `pre-push`, and `post-checkout`.
+- Hook files in `.github/hooks/` must remain executable.
+
 ## Phased rollout plan (mandatory adoption)
 
 ### Phase 0: Preparation
 
 1. Confirm canonical source files are current in ArticlesSite.
 2. Record current state in each pilot repo:
-   - `~/github/squad-workflow-standard/scripts/squad/check-git-gh-standard.sh /absolute/path/to/target-repo`
+   - `scripts/squad/check-git-gh-standard.sh /absolute/path/to/target-repo`
 3. Announce pilot start date, owner, and freeze window for process changes.
 
 ### Phase 1: Pilot scope
@@ -114,7 +148,7 @@ Pilot is **pass** only if all criteria are true:
 1. `check-git-gh-standard.sh` exits `0` in both pilot repos for 5 consecutive
    business days.
 2. 100% of pilot issue work uses `squad/{issue-number}-{kebab-slug}` branches
-   and PRs to `main`.
+   and PRs to `dev`.
 3. 0 direct pushes to `main` or `dev` in pilot repos.
 4. 0 unresolved Sev1/Sev2 incidents caused by workflow standard adoption.
 
@@ -136,9 +170,9 @@ Trigger rollback on pilot fail or post-rollout Sev1/Sev2 workflow regression.
 
 1. Pin to the last known good standard version in source control.
 2. Re-sync affected repos from that version using:
-   - `~/github/squad-workflow-standard/scripts/squad/sync-git-gh-standard.sh /absolute/path/to/target-repo`
+   - `scripts/squad/sync-git-gh-standard.sh /absolute/path/to/target-repo`
 3. Re-run:
-   - `~/github/squad-workflow-standard/scripts/squad/check-git-gh-standard.sh /absolute/path/to/target-repo`
+   - `scripts/squad/check-git-gh-standard.sh /absolute/path/to/target-repo`
 4. Open a corrective issue before retrying rollout.
 
 ## Drift and upgrade posture
@@ -163,5 +197,5 @@ They must keep the canonical binding and hard-gate language intact.
 Validation command:
 
 ```bash
-~/github/squad-workflow-standard/scripts/squad/check-git-gh-standard.sh /absolute/path/to/target-repo
+scripts/squad/check-git-gh-standard.sh /absolute/path/to/target-repo
 ```

@@ -2,6 +2,25 @@
 
 Reference for connecting Squad to a repository and managing the issue→branch→PR→merge lifecycle.
 
+## Workflow Standard Binding
+
+- Source: `.squad/workflows/git-gh-process-standard.md`
+- Standard version: `2026.07.3`
+- Enforcement level: hard gate
+- Default branch policy: feature/work branches -> PR to `dev`; only `dev` -> PR to `main`
+- Post-push requirement: after pushing a work branch, immediately open/update a PR to `dev`.
+- Promotion rule: do not auto-open `dev` -> `main` after routine work pushes; promotion PRs are separate.
+
+### GitHub branch protection / ruleset baseline
+
+Consumer repos should configure GitHub to match this policy:
+
+- Protect `dev` and `main` from direct pushes.
+- Require PRs, approvals, and required status checks on both branches.
+- Keep `squad-main-guard` required for PRs targeting `main`.
+- If rulesets support source restrictions, allow `main` PR sources from `dev`
+  only.
+
 ## Repo Connection Format
 
 When connecting Squad to an issue tracker, store the connection in `.squad/team.md`:
@@ -120,7 +139,7 @@ az boards work-item show --id {id} --output json
 **Trigger:** Agent accepts issue assignment and begins work.
 
 **Actions:**
-1. Ensure working on latest base branch (usually `main` or `dev`)
+1. Ensure working on latest integration branch (`dev`)
 2. Create feature branch using Squad naming convention
 3. Transition issue to `inProgress` state
 
@@ -128,7 +147,7 @@ az boards work-item show --id {id} --output json
 
 **Standard (single-agent, no parallelism):**
 ```bash
-git checkout main && git pull && git checkout -b squad/{issue-number}-{slug}
+git checkout dev && git pull && git checkout -b squad/{issue-number}-{slug}
 ```
 
 **Worktree (parallel multi-agent):**
@@ -166,15 +185,24 @@ Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
 git push -u origin squad/{issue-number}-{slug}
 ```
 
+**Immediate next step (same workflow pass):**
+```bash
+gh pr create --title "{title}" \
+  --body "Closes #{issue-number}\n\n{description}" \
+  --head squad/{issue-number}-{slug} \
+  --base dev
+```
+
 ### 4. PR Creation
 
-**Trigger:** Agent completes implementation and is ready for review.
+**Trigger:** Immediately after pushing the work branch for completed implementation.
 
 **Actions:**
-1. Open PR from feature branch to base branch
+1. Open PR from feature/work branch to `dev`
 2. Reference issue in PR description
 3. Apply labels if needed
 4. Transition issue to `needsReview` state
+5. Do **not** auto-open a `dev` -> `main` PR here; promotion PRs are separate release/promotion work.
 
 **PR creation commands:**
 
@@ -183,7 +211,7 @@ git push -u origin squad/{issue-number}-{slug}
 gh pr create --title "{title}" \
   --body "Closes #{issue-number}\n\n{description}" \
   --head squad/{issue-number}-{slug} \
-  --base main
+  --base dev
 ```
 
 **Azure DevOps:**
@@ -191,7 +219,7 @@ gh pr create --title "{title}" \
 az repos pr create --title "{title}" \
   --description "Closes #{work-item-id}\n\n{description}" \
   --source-branch squad/{work-item-id}-{slug} \
-  --target-branch main
+  --target-branch dev
 ```
 
 **PR description template:**
@@ -273,7 +301,7 @@ az repos pr update --id {pr-id} --status completed --delete-source-branch true
 
 **Standard workflow cleanup:**
 ```bash
-git checkout main
+git checkout dev
 git pull
 git branch -d squad/{issue-number}-{slug}
 ```
@@ -315,7 +343,7 @@ When spawning an agent to work on an issue, include this context block:
 2. Push branch
 3. Open PR using:
    ```
-   gh pr create --title "{title}" --body "Closes #{number}\n\n{description}" --head squad/{issue-number}-{slug} --base {base-branch}
+   gh pr create --title "{title}" --body "Closes #{number}\n\n{description}" --head squad/{issue-number}-{slug} --base dev
    ```
 4. Report PR URL to coordinator
 ```
