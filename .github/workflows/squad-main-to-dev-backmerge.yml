@@ -1,0 +1,76 @@
+name: Squad Back-merge main to dev
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: squad-main-to-dev-backmerge
+  cancel-in-progress: true
+
+jobs:
+  backmerge-sync-pr:
+    name: Ensure main → dev back-merge PR
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create or reuse main → dev PR
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+
+            let compare;
+            try {
+              compare = await github.rest.repos.compareCommitsWithBasehead({
+                owner,
+                repo,
+                basehead: 'dev...main'
+              });
+            } catch (error) {
+              if (error.status === 404) {
+                core.info('No-op: main and/or dev branch not found.');
+                return;
+              }
+              throw error;
+            }
+
+            if (compare.data.ahead_by === 0) {
+              core.info('No-op: dev is already up to date with main.');
+              return;
+            }
+
+            const openPrs = await github.rest.pulls.list({
+              owner,
+              repo,
+              state: 'open',
+              base: 'dev',
+              head: `${owner}:main`,
+              per_page: 1
+            });
+
+            if (openPrs.data.length > 0) {
+              core.info(`Existing back-merge PR found: #${openPrs.data[0].number}`);
+              return;
+            }
+
+            const created = await github.rest.pulls.create({
+              owner,
+              repo,
+              base: 'dev',
+              head: 'main',
+              title: 'chore: sync main back into dev',
+              body: [
+                'Automated back-merge PR to keep `dev` aligned with `main`.',
+                '',
+                '- Trigger: push to `main` (or manual dispatch)',
+                '- Behavior: creates this PR only when `main` is ahead of `dev`',
+                '- Deduplication: reuses any existing open `main` → `dev` PR'
+              ].join('\n')
+            });
+
+            core.info(`Created back-merge PR #${created.data.number}`);

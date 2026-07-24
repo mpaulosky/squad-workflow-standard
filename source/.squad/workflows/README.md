@@ -76,6 +76,7 @@ standard (`work branches -> dev`, `dev -> main` only):
 4. **Enforce `main` source branch policy**
    - Allow merges to `main` from `dev` only
      (ruleset source restriction where available).
+   - Keep `squad-main-to-dev-backmerge` enabled to auto-open/reuse `main` -> `dev` sync PRs when `main` moves ahead.
 5. **Set contributor defaults to `dev`**
    - PR templates/docs must use `--base dev`.
    - Branch naming must follow `squad/{issue-number}-{kebab-slug}`.
