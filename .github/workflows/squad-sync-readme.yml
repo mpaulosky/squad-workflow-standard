@@ -2,7 +2,7 @@
 # Keeps the docs folder reference copy in sync with the project README.
 name: Sync README to docs
 
-on:
+"on":
   push:
     branches: ["main"]
     paths:

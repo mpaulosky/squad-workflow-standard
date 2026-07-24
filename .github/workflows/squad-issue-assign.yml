@@ -1,6 +1,6 @@
 name: Squad Issue Assign
 
-on:
+"on":
   issues:
     types: [labeled]
 

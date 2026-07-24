@@ -216,12 +216,15 @@ public sealed class ScriptIntegrationTests
 
         generatedWorkflow.Should().Be(sourceWorkflow);
         sourceWorkflow.Should().Contain("context.payload.pull_request.base.ref");
-        sourceWorkflow.Should().Contain("baseBranch === 'main'");
-        sourceWorkflow.Should().Contain("baseBranch === 'dev'");
+        sourceWorkflow.Should().Contain("const mainBranch = process.env.MAIN_BRANCH;");
+        sourceWorkflow.Should().Contain("const devBranch = process.env.DEV_BRANCH;");
+        sourceWorkflow.Should().Contain("baseBranch !== mainBranch && baseBranch !== devBranch");
+        sourceWorkflow.Should().Contain("baseBranch === mainBranch");
+        sourceWorkflow.Should().Contain("baseBranch === devBranch");
         sourceWorkflow.Should().Contain("main: block new or modified .squad/ and team-docs/ paths, but allow removals.");
         sourceWorkflow.Should().Contain("dev: keep .squad/ retained by blocking removals only.");
-        sourceWorkflow.Should().Contain("The following files must NOT be merged into `main`.");
-        sourceWorkflow.Should().Contain("The following `.squad/` files must NOT be removed from `dev`.");
+        sourceWorkflow.Should().Contain("The following files must NOT be merged into \\`${mainBranch}\\`.");
+        sourceWorkflow.Should().Contain("The following \\`.squad/\\` files must NOT be removed from \\`${devBranch}\\`.");
     }
 
     [Fact]

@@ -5,7 +5,7 @@
 # milestone-release-decision.yml watches for those labels and executes the chosen path.
 name: Milestone Review — Release or Blog
 
-on:
+"on":
   milestone:
     types: [closed]
 

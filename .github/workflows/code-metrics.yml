@@ -2,12 +2,13 @@
 
 name: '.NET code metrics'
 
-on:
+"on":
   push:
     branches:
       - main
     paths:
       - '!./CODE_METRICS.md' # ignore this file
+
   pull_request:
     branches:
       - "**"

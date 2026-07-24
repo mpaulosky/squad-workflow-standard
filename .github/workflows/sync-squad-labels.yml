@@ -1,6 +1,6 @@
 name: Sync Squad Labels
 
-on:
+"on":
   push:
     paths:
       - '.squad/team.md'

@@ -1,6 +1,6 @@
 name: Squad Triage
 
-on:
+"on":
   issues:
     types: [labeled]
 
