@@ -24,8 +24,9 @@ Always follow that prompt. This skill provides supplementary context.
 3. `dotnet test --configuration Release` — must show **Failed: 0**
 4. `npx --yes markdownlint-cli2 "**/*.md"`
 5. For standard-pack validation in a target repo, run:
-  - `bash scripts/squad/sync-git-gh-standard.sh /absolute/path/to/target-repo`
-  - `bash scripts/squad/check-git-gh-standard.sh /absolute/path/to/target-repo`
+
+- `bash scripts/squad/sync-git-gh-standard.sh /absolute/path/to/target-repo`
+- `bash scripts/squad/check-git-gh-standard.sh /absolute/path/to/target-repo`
 
 ### Repository-Specific Notes
 

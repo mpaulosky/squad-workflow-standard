@@ -6,7 +6,7 @@ issue work.
 ## Distributed Assets
 
 - `git-gh-process-standard.md` — canonical process (dev-integration with
-  dev-only promotion to main, hard gates,
+   PR-only promotion through preview, hard gates,
   standard-vs-worktree split)
 - `workflow-baseline-manifest.txt` — canonical workflow list (maps to
   target `.github/workflows/`)
@@ -61,30 +61,34 @@ Hook enforcement is part of sync/check:
 ## GitHub branch protection / ruleset migration checklist
 
 Use this checklist in each consumer repo to align GitHub settings with the
-standard (`work branches -> dev`, `dev -> main` only):
+standard (`work branches -> dev`, `dev -> preview`, `preview -> main`):
 
 1. **Sync + validate standard assets**
    - `scripts/squad/sync-git-gh-standard.sh /absolute/path/to/target-repo`
    - `scripts/squad/check-git-gh-standard.sh /absolute/path/to/target-repo`
-2. **Protect `dev` and `main`**
+2. **Protect `dev`, `preview`, and `main`**
    - Require pull requests before merge.
-   - Block direct pushes to both branches.
+   - Block direct pushes to all three branches.
    - Require at least one approval.
-3. **Require status checks on `dev` and `main`**
+3. **Require status checks on `dev`, `preview`, and `main`**
    - Mark CI/test checks as required.
+   - Keep `squad-preview-guard` required for PRs into `preview`.
    - Keep `squad-main-guard` required for PRs into `main`.
-4. **Enforce `main` source branch policy**
-   - Allow merges to `main` from `dev` only
+4. **Enforce promotion source branch policy**
+   - Allow merges to `preview` from `automation/promote-preview` only
      (ruleset source restriction where available).
+   - Allow merges to `main` from `preview` only, plus any explicit
+     `hotfix/*` exception you document.
    - Keep `squad-main-to-dev-backmerge` enabled to auto-open/reuse `main` -> `dev` sync PRs when `main` moves ahead.
 5. **Set contributor defaults to `dev`**
    - PR templates/docs must use `--base dev`.
    - Branch naming must follow `squad/{issue-number}-{kebab-slug}`.
    - After pushing a work branch, the immediate next step is opening/updating PR to `dev`.
-   - Do not auto-open a `dev -> main` PR after routine work pushes; promotion PRs are separate.
+   - Do not auto-open a `dev -> preview` PR after routine work pushes; promotion PRs are separate.
 6. **Verify with a live PR test**
    - Open `squad/* -> dev` PR (should pass policy checks).
-   - Open non-`dev -> main` PR (should fail policy checks).
+   - Open non-`automation/promote-preview -> preview` PR (should fail policy checks).
+   - Open non-`preview -> main` PR (should fail policy checks unless it is an approved `hotfix/*` exception).
 7. **Lock in and monitor**
    - Add policy check to onboarding/runbooks.
    - Re-run `check-git-gh-standard.sh` after workflow/ruleset edits.
@@ -106,8 +110,8 @@ Pass requires all of the following:
    for 5 consecutive business days.
 2. All issue work uses `squad/{issue-number}-{kebab-slug}` branch naming and
    PRs targeting `dev`.
-3. Promotion PRs into `main` originate only from `dev`.
-4. No direct push events to `main` or `dev`.
+3. Promotion PRs into `preview` originate only from `automation/promote-preview`, and promotion PRs into `main` originate only from `preview` or an explicit `hotfix/*` exception.
+4. No direct push events to `main`, `preview`, or `dev`.
 5. No unresolved Sev1/Sev2 incidents caused by workflow adoption.
 
 Fail on any missed criterion or unresolved Sev1/Sev2 workflow breakage longer

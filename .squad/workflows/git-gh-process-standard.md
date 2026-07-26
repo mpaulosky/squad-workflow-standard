@@ -10,7 +10,7 @@ selection, PR flow, cleanup, and hard gates.
 
 ## Non-negotiables
 
-1. No direct pushes to `main` or `dev`.
+1. No direct pushes to `main`, `preview`, or `dev`.
 2. Every file-producing issue change must go through a PR.
 3. PR review is mandatory before merge.
 4. Pre-push checks are mandatory.
@@ -19,12 +19,19 @@ selection, PR flow, cleanup, and hard gates.
 ## Branch model (default)
 
 - Integration branch: `dev`
+- Release branch: `preview`
 - Promotion branch: `main`
+- Preview promotion branch: `automation/promote-preview`
 - Issue branch: `squad/{issue-number}-{kebab-slug}`
 - Feature/work branch PR target: `dev`
-- Only `dev` opens PRs to `main`
+- Preview PR target: `preview`
+- Preview PRs open from a sanitized branch derived from `preview`
+- Release PR target: `main`
+- Release PRs to `main` open from `preview`
 - After each successful work-branch push, immediately open/update a PR to `dev`
-- Do not auto-open `dev` -> `main` after routine work pushes; promotion PRs are separate
+- Do not auto-open `dev` -> `preview` after routine work pushes; promotion PRs are separate
+- Preview-side automation must open or reuse an `automation/promote-preview` -> `preview` PR instead of pushing directly to `preview`
+- Main-side automation must open or reuse a `preview` -> `main` PR instead of pushing directly to `main`
 - Back-merge sync (`main` -> `dev`) is automated via `squad-main-to-dev-backmerge.yml`:
    - Triggered on push to `main` (and manual dispatch)
    - Opens a `main` -> `dev` PR only when `main` is ahead
@@ -33,19 +40,26 @@ selection, PR flow, cleanup, and hard gates.
 
 ## GitHub enforcement baseline (branch protection / rulesets)
 
-To enforce this branch model in GitHub, configure protections/rulesets for both
-`dev` and `main`:
+To enforce this branch model in GitHub, configure protections/rulesets for
+`dev`, `preview`, and `main`:
 
-1. Protect `dev` and `main` from direct pushes.
-2. Require pull requests before merge on both branches.
-3. Require at least one approval before merge on both branches.
+1. Protect `dev`, `preview`, and `main` from direct pushes.
+2. Require pull requests before merge on all three branches.
+3. Require at least one approval before merge on all three branches.
 4. Require status checks before merge (at minimum: CI/test workflows used in the
    repo).
-5. Restrict `main` merge source to `dev` only:
+5. Restrict `preview` merge source to the sanctioned promotion branch:
+    - Keep `squad-preview-guard.yml` enabled and required for `preview`.
+    - In rulesets, limit allowed source branch pattern for `preview` to
+       `automation/promote-preview` when your ruleset plan supports source-branch
+       restrictions.
+6. Restrict `main` merge source to `preview` for release PRs:
    - Keep `squad-main-guard.yml` enabled and required for `main`.
-   - In rulesets, limit allowed source branch pattern for `main` to `dev` when
-     your ruleset plan supports source-branch restrictions.
-6. Ensure issue/work branches merge into `dev`, not `main`:
+    - In rulesets, limit allowed source branch pattern for `main` to `preview`
+       when your ruleset plan supports source-branch restrictions.
+    - If the repo uses emergency hotfix branches, document the explicit
+       `hotfix/*` exception alongside that ruleset.
+7. Ensure issue/work branches merge into `dev`, not `preview` or `main`:
    - Set repository defaults/templates (`gh pr create --base dev`) and
      contributor guidance accordingly.
    - Optionally restrict direct branch creation in UI to preserve
@@ -115,7 +129,9 @@ git push -u origin squad/{issue-number}-{kebab-slug}
 gh pr create --base dev --title "{title}" --body "Closes #{issue-number}" --draft
 ```
 
-Do not auto-open `dev` -> `main` from this step; that promotion PR is separate.
+Do not auto-open `dev` -> `preview` from this step; promotion stays on the
+separate sanitized `automation/promote-preview` -> `preview` path, followed by
+the `preview` -> `main` release PR path.
 
 Cleanup after merge:
 
@@ -164,7 +180,7 @@ Pilot is **pass** only if all criteria are true:
    business days.
 2. 100% of pilot issue work uses `squad/{issue-number}-{kebab-slug}` branches
    and PRs to `dev`.
-3. 0 direct pushes to `main` or `dev` in pilot repos.
+3. 0 direct pushes to `main`, `preview`, or `dev` in pilot repos.
 4. 0 unresolved Sev1/Sev2 incidents caused by workflow standard adoption.
 
 Pilot is **fail** if any criterion is missed or if Sev1/Sev2 workflow breakage

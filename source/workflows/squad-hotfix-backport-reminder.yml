@@ -1,6 +1,7 @@
+---
 name: Hotfix Backport Reminder
 
-on:
+"on":
   pull_request:
     branches:
       - main
@@ -27,18 +28,28 @@ jobs:
             const body = [
               '🚑 **Hotfix Backport Required**',
               '',
-              `PR #${pr.number} ("${pr.title}") was merged directly into \`main\` as a hotfix.`,
+              `PR #${pr.number} ("${pr.title}") was merged directly into`,
+              '\`main\` as a hotfix.',
               '',
-              '**Action required:** Backport this fix to the \`dev\` branch to keep branches in sync.',
+              '**Action required:** Backport this fix to the \`dev\`',
+              'branch to keep branches in sync.',
               '',
               '```bash',
               `git checkout dev`,
               `git pull origin dev`,
+              `git checkout -b hotfix/backport-${pr.number}`,
               `git cherry-pick ${pr.merge_commit_sha}`,
-              `git push origin dev`,
+              `git push -u origin hotfix/backport-${pr.number}`,
+                [
+                  'gh pr create --base dev',
+                  `  --head hotfix/backport-${pr.number}`,
+                  `  --title "hotfix: backport PR #${pr.number} to dev"`,
+                  `  --body "Backport of #${pr.number}"`
+                ].join(' \\\n'),
               '```',
               '',
-              'Or open a backport PR targeting \`dev\`.',
+              'Open and merge that backport PR into \`dev\`.',
+              'Do not push directly to \`dev\`.',
             ].join('\n');
 
             await github.rest.issues.createComment({

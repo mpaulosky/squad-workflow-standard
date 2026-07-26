@@ -21,7 +21,7 @@ if [[ -n "$PUSH_REFS" ]] && echo "$PUSH_REFS" | grep -q "^refs/tags/"; then
 fi
 
 CURRENT_BRANCH="$(git symbolic-ref --short HEAD 2>/dev/null || echo "")"
-if [[ "$CURRENT_BRANCH" == "main" || "$CURRENT_BRANCH" == "dev" ]]; then
+if [[ "$CURRENT_BRANCH" == "main" || "$CURRENT_BRANCH" == "preview" || "$CURRENT_BRANCH" == "dev" ]]; then
   echo -e "${RED}❌ Direct pushes to '${CURRENT_BRANCH}' are not allowed.${RESET}"
   exit 1
 fi
