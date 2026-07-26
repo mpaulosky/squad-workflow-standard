@@ -1,13 +1,13 @@
+---
 name: Dependabot Auto-Merge
 
 "on":
   pull_request_target:
     types: [opened, reopened, synchronize, ready_for_review]
     branches: [dev]
-  workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
   pull-requests: write
 
 jobs:
@@ -16,7 +16,11 @@ jobs:
       github.event_name == 'pull_request_target' &&
       github.event.pull_request.user.login == 'dependabot[bot]' &&
       github.event.pull_request.base.ref == 'dev' &&
-      github.event.pull_request.draft == false
+      github.event.pull_request.draft == false &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    concurrency:
+      group: dependabot-auto-merge-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
     runs-on: ubuntu-latest
     steps:
       - uses: actions/github-script@v9
@@ -24,21 +28,233 @@ jobs:
           script: |
             const pullRequestId = context.payload.pull_request.node_id;
             const pullNumber = context.payload.pull_request.number;
-            try {
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            const waitForStablePullRequest = async () => {
+              const pollIntervalMs = 15000;
+              const maxAttempts = 120; // 30 minutes
+
+              for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+                const result = await github.graphql(
+                  `query PullRequestState(
+                     $owner: String!
+                     $repo: String!
+                     $number: Int!
+                   ) {
+                     repository(owner: $owner, name: $repo) {
+                       pullRequest(number: $number) {
+                         number
+                         mergeable
+                         mergeStateStatus
+                         commits(last: 1) {
+                           nodes {
+                             commit {
+                               statusCheckRollup {
+                                 contexts(first: 100) {
+                                   nodes {
+                                     ... on CheckRun {
+                                       name
+                                       status
+                                       conclusion
+                                     }
+                                     ... on StatusContext {
+                                       context
+                                       state
+                                     }
+                                   }
+                                 }
+                               }
+                             }
+                           }
+                         }
+                       }
+                     }
+                   }`,
+                  { owner, repo, number: pullNumber }
+                );
+
+                const pr = result.repository.pullRequest;
+                if (!pr) {
+                  throw new Error(`PR #${pullNumber} was not found.`);
+                }
+
+                if (pr.mergeable === "CONFLICTING") {
+                  throw new Error(
+                    `PR #${pullNumber} has merge conflicts and ` +
+                    `cannot be auto-merged.`
+                  );
+                }
+
+                const contexts =
+                  pr.commits?.nodes?.[0]?.commit?.statusCheckRollup?.contexts
+                    ?.nodes ?? [];
+                const mergeStateReady =
+                  pr.mergeStateStatus === "CLEAN" ||
+                  pr.mergeStateStatus === "HAS_HOOKS";
+                const mergeableReady = pr.mergeable === "MERGEABLE";
+
+                if (contexts.length === 0) {
+                  core.info(
+                    `PR #${pullNumber} has no check contexts yet; waiting ` +
+                    `(${attempt}/${maxAttempts}).`
+                  );
+                  if (mergeableReady && mergeStateReady) {
+                    core.info(
+                      `PR #${pullNumber} is stable without check contexts ` +
+                      `(mergeable=${pr.mergeable}, ` +
+                      `mergeStateStatus=${pr.mergeStateStatus}).`
+                    );
+                    return;
+                  }
+                } else {
+                  let hasPendingChecks = false;
+                  let hasFailedChecks = false;
+                  const failedCheckNames = [];
+
+                  for (const checkContext of contexts) {
+                    if (
+                      Object.prototype.hasOwnProperty.call(
+                        checkContext,
+                        "status"
+                      )
+                    ) {
+                      // CheckRun
+                      if (checkContext.status !== "COMPLETED") {
+                        hasPendingChecks = true;
+                        continue;
+                      }
+
+                      const allowedConclusions = new Set([
+                        "SUCCESS",
+                        "NEUTRAL",
+                        "SKIPPED"
+                      ]);
+                      if (!allowedConclusions.has(checkContext.conclusion)) {
+                        hasFailedChecks = true;
+                        failedCheckNames.push(
+                          `${checkContext.name}: ` +
+                          `${checkContext.conclusion ?? "UNKNOWN"}`
+                        );
+                      }
+                    } else if (
+                      Object.prototype.hasOwnProperty.call(
+                        checkContext,
+                        "state"
+                      )
+                    ) {
+                      // StatusContext
+                      if (
+                        checkContext.state === "PENDING" ||
+                        checkContext.state === "EXPECTED"
+                      ) {
+                        hasPendingChecks = true;
+                        continue;
+                      }
+
+                      if (checkContext.state !== "SUCCESS") {
+                        hasFailedChecks = true;
+                        failedCheckNames.push(
+                          `${checkContext.context}: ${checkContext.state}`
+                        );
+                      }
+                    }
+                  }
+
+                  if (hasFailedChecks) {
+                    throw new Error(
+                      `PR #${pullNumber} has failing checks; ` +
+                      `skipping auto-merge enablement. ` +
+                      `Failing checks: ${failedCheckNames.join(", ")}`
+                    );
+                  }
+
+                  if (!hasPendingChecks && mergeableReady && mergeStateReady) {
+                    core.info(
+                      `PR #${pullNumber} is stable ` +
+                      `(mergeable=${pr.mergeable}, ` +
+                      `mergeStateStatus=${pr.mergeStateStatus}).`
+                    );
+                    return;
+                  }
+
+                  core.info(
+                    `PR #${pullNumber} is not stable yet ` +
+                    `(mergeable=${pr.mergeable}, ` +
+                    `mergeStateStatus=${pr.mergeStateStatus}, ` +
+                    `pendingChecks=${hasPendingChecks}) ` +
+                    `(${attempt}/${maxAttempts}).`
+                  );
+                }
+
+                if (attempt < maxAttempts) {
+                  await new Promise((resolve) =>
+                    setTimeout(resolve, pollIntervalMs)
+                  );
+                }
+              }
+
+              throw new Error(
+                `PR #${pullNumber} did not reach a stable status before ` +
+                `timeout; skipping auto-merge enablement.`
+              );
+            };
+
+            const enableAutoMerge = async () => {
               await github.graphql(
                 `mutation EnableAutoMerge($pullRequestId: ID!) {
-                   enablePullRequestAutoMerge(input: { pullRequestId: $pullRequestId, mergeMethod: SQUASH }) {
+                   enablePullRequestAutoMerge(
+                     input: {
+                       pullRequestId: $pullRequestId
+                       mergeMethod: SQUASH
+                     }
+                   ) {
                      pullRequest { number }
                    }
                  }`,
                 { pullRequestId }
               );
-              core.info(`Enabled auto-merge for PR #${pullNumber}.`);
-            } catch (error) {
-              const message = error.message ?? String(error);
-              if (message.includes("already enabled")) {
-                core.info(`Auto-merge already enabled for PR #${pullNumber}.`);
+            };
+
+            await waitForStablePullRequest();
+
+            const maxAttempts = 8;
+            const retryDelayMs = 15000;
+
+            for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+              try {
+                await enableAutoMerge();
+                core.info(`Enabled auto-merge for PR #${pullNumber}.`);
                 return;
+              } catch (error) {
+                const message = error.message ?? String(error);
+                if (message.includes("already enabled")) {
+                  core.info(
+                    `Auto-merge already enabled for PR #${pullNumber}.`
+                  );
+                  return;
+                }
+                if (message.includes("unstable")) {
+                  if (attempt === maxAttempts) {
+                    core.warning(
+                      `PR #${pullNumber} remained in unstable status after ` +
+                      `${maxAttempts} attempts; skipping auto-merge ` +
+                      `enablement for this run.`
+                    );
+                    return;
+                  }
+
+                  core.info(
+                    `PR #${pullNumber} is in unstable status. ` +
+                    `Retrying auto-merge enablement ` +
+                    `(${attempt}/${maxAttempts})...`
+                  );
+                  await new Promise((resolve) =>
+                    setTimeout(resolve, retryDelayMs)
+                  );
+                  continue;
+                }
+
+                throw error;
               }
-              throw error;
             }
