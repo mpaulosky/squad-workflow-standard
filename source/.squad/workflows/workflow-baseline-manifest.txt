@@ -21,6 +21,7 @@ squad-milestone-release-decision.yml
 squad-milestone-release.yml
 squad-paths-guard.yml
 squad-preview.yml
+squad-preview-guard.yml
 squad-project-board-audit.yml
 squad-project-board-automation.yml
 squad-promote.yml

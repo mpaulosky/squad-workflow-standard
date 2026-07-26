@@ -19,19 +19,20 @@ Source of truth:
 
 ## Rules
 
-1. No direct pushes to `main` or `dev`.
+1. No direct pushes to `main`, `preview`, or `dev`.
 2. Every file-producing issue change goes through PR.
 3. PR review approval is mandatory before merge.
 4. Required pre-push checks must pass before push.
 5. Cleanup is mandatory after merge.
-6. Feature/work branches PR to `dev`; only `dev` opens PRs to `main`.
+6. Feature/work branches PR to `dev`; `dev` promotes to `preview` via the sanctioned promotion branch; `preview` opens PRs to `main`.
 7. After pushing a work branch, immediately open/update PR to `dev`.
-8. Do not auto-open `dev` -> `main` after routine work pushes; promotion PRs are separate.
+8. Do not auto-open `dev` -> `preview` after routine work pushes; promotion PRs are separate.
 9. Back-merge sync from `main` to `dev` must be handled by `squad-main-to-dev-backmerge.yml` (create/reuse PR, no-op when in sync).
 10. GitHub protections/rulesets must enforce the same model:
 
-- `dev` and `main` require PRs + checks + approvals
-- `main` accepts PRs from `dev` only (plus required `squad-main-guard`)
+- `dev`, `preview`, and `main` require PRs + checks + approvals
+- `preview` accepts PRs from `automation/promote-preview` only (plus required `squad-preview-guard`)
+- `main` accepts PRs from `preview` only, with any explicit `hotfix/*` exception guarded by `squad-main-guard`
 
 ## Flow Selection
 
@@ -60,7 +61,7 @@ git push -u origin squad/{issue-number}-{kebab-slug}
 gh pr create --base dev --title "{title}" --body "Closes #{issue-number}" --draft
 ```
 
-Do not auto-open `dev` -> `main` from this step; that promotion PR is separate.
+Do not auto-open `dev` -> `preview` from this step; preview/main promotion PRs remain separate.
 
 ## Cleanup
 
