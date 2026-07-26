@@ -27,7 +27,8 @@ Source of truth:
 6. Feature/work branches PR to `dev`; only `dev` opens PRs to `main`.
 7. After pushing a work branch, immediately open/update PR to `dev`.
 8. Do not auto-open `dev` -> `main` after routine work pushes; promotion PRs are separate.
-9. GitHub protections/rulesets must enforce the same model:
+9. Back-merge sync from `main` to `dev` must be handled by `squad-main-to-dev-backmerge.yml` (create/reuse PR, no-op when in sync).
+10. GitHub protections/rulesets must enforce the same model:
    - `dev` and `main` require PRs + checks + approvals
    - `main` accepts PRs from `dev` only (plus required `squad-main-guard`)
 

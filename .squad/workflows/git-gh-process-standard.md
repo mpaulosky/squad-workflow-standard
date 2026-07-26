@@ -25,6 +25,11 @@ selection, PR flow, cleanup, and hard gates.
 - Only `dev` opens PRs to `main`
 - After each successful work-branch push, immediately open/update a PR to `dev`
 - Do not auto-open `dev` -> `main` after routine work pushes; promotion PRs are separate
+- Back-merge sync (`main` -> `dev`) is automated via `squad-main-to-dev-backmerge.yml`:
+   - Triggered on push to `main` (and manual dispatch)
+   - Opens a `main` -> `dev` PR only when `main` is ahead
+   - Reuses existing open back-merge PR (no duplicates)
+   - No-ops when `main` and `dev` are already in sync
 
 ## GitHub enforcement baseline (branch protection / rulesets)
 
