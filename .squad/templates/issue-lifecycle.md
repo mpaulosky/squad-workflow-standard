@@ -7,19 +7,22 @@ Reference for connecting Squad to a repository and managing the issueâ†’branchâ†
 - Source: `.squad/workflows/git-gh-process-standard.md`
 - Standard version: `2026.07.3`
 - Enforcement level: hard gate
-- Default branch policy: feature/work branches -> PR to `dev`; only `dev` -> PR to `main`
+- Default branch policy: feature/work branches -> PR to `dev`; `dev` -> sanitized promotion branch -> PR to `preview`; `preview` -> PR to `main`
 - Post-push requirement: after pushing a work branch, immediately open/update a PR to `dev`.
-- Promotion rule: do not auto-open `dev` -> `main` after routine work pushes; promotion PRs are separate.
+- Promotion rule: do not auto-open `dev` -> `main` after routine work pushes; promotion flows through a sanitized PR branch into `preview`, then a separate `preview` -> `main` release PR.
 
 ### GitHub branch protection / ruleset baseline
 
 Consumer repos should configure GitHub to match this policy:
 
-- Protect `dev` and `main` from direct pushes.
-- Require PRs, approvals, and required status checks on both branches.
+- Protect `dev`, `preview`, and `main` from direct pushes.
+- Require PRs, approvals, and required status checks on all three branches.
+- Keep `squad-preview-guard` required for PRs targeting `preview`.
 - Keep `squad-main-guard` required for PRs targeting `main`.
-- If rulesets support source restrictions, allow `main` PR sources from `dev`
-  only.
+- If rulesets support source restrictions, allow `preview` PR sources from
+  `automation/promote-preview` and `main` PR sources from `preview`.
+- If the repo uses emergency hotfix branches, document any allowed `hotfix/*`
+  exception explicitly in the ruleset and runbook.
 
 ## Repo Connection Format
 

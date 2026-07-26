@@ -47,4 +47,4 @@ How to decide who handles what.
 - Source: `.squad/workflows/git-gh-process-standard.md`
 - Template: `.squad/templates/issue-lifecycle.md`
 - Flow policy: single issue uses standard branch flow; 2+ issues require worktree flow
-- Policy: never push directly to `main` or `dev`
+- Policy: never push directly to `main`, `preview`, or `dev`
