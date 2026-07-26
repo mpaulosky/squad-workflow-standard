@@ -20,6 +20,7 @@ squad-milestone-blog.yml
 squad-milestone-release-decision.yml
 squad-milestone-release.yml
 squad-paths-guard.yml
+squad-pr-automerge.yml
 squad-preview.yml
 squad-preview-guard.yml
 squad-project-board-audit.yml
