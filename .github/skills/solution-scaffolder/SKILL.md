@@ -1,20 +1,20 @@
 ---
 name: solution-scaffolder
-description: 'Create new .NET solutions with complete project structure, configurations, and conventions based on the ArticlesSite architecture. Guides users through interactive prompts to scaffold solutions following SOLID principles, clean architecture, and established coding standards.'
+description: 'Create new .NET solutions with complete project structure, configurations, and conventions based on the squad-workflow-standard architecture. Guides users through interactive prompts to scaffold solutions following SOLID principles, clean architecture, and established coding standards.'
 ---
 
 # Solution Scaffolder
 
 ## Overview
 
-This skill automates the creation of new .NET solutions that follow **Vertical Slice Architecture** along with the conventions and best practices of the ArticlesSite repository. Vertical Slice Architecture organizes code by business features rather than technical layers, resulting in simpler, more maintainable, and feature-focused projects. This skill provides an interactive guided experience that ensures consistency across projects while respecting custom requirements and project-specific needs.
+This skill automates the creation of new .NET solutions that follow **Vertical Slice Architecture** along with the conventions and best practices of the squad-workflow-standard repository. Vertical Slice Architecture organizes code by business features rather than technical layers, resulting in simpler, more maintainable, and feature-focused projects. This skill provides an interactive guided experience that ensures consistency across projects while respecting custom requirements and project-specific needs.
 
 ## When to Use
 
 Use this skill when:
 
 - Creating a new .NET 10 solution from scratch
-- Starting a new project that should follow ArticlesSite conventions
+- Starting a new project that should follow squad-workflow-standard conventions
 - Onboarding team members to consistent project structure
 - Establishing standardized folder layouts, configurations, and dependencies
 - User asks to "create a new solution", "scaffold a project", or "set up a new .NET application"
@@ -24,7 +24,7 @@ Use this skill when:
 ## Core Principles
 
 1. **Vertical Slice Architecture**: Organize code by business features, not technical layers
-2. **Convention Over Configuration**: Use ArticlesSite patterns as defaults, allowing overrides when needed
+2. **Convention Over Configuration**: Use squad-workflow-standard patterns as defaults, allowing overrides when needed
 3. **Interactive Guidance**: Ask targeted questions to understand project requirements before generating scaffolds
 4. **Completeness**: Create a production-ready structure with all necessary files and configurations
 5. **Standards Compliance**: Enforce C# 14, .NET 10, and established coding guidelines
@@ -199,7 +199,7 @@ MyWebApp/                                    (Solution Root)
 │   │   └── Features/
 │   │       └── Articles/
 │   └── MyWebApp.Tests.E2E/                (End-to-end tests, if selected)
-├── .editorconfig                          (Copy from ArticlesSite)
+├── .editorconfig                          (Copy from squad-workflow-standard)
 ├── .gitignore                             (Customized for selections)
 ├── Directory.Build.props                  (C# 14, .NET 10 config)
 ├── Directory.Packages.props                (Centralized versions)
@@ -248,9 +248,9 @@ All `.csproj` files must include:
 
 ### Configuration Files
 
-- **.editorconfig**: Copy from ArticlesSite (enforces style rules)
+- **.editorconfig**: Copy from squad-workflow-standard (enforces style rules)
 - **Directory.Build.props**: Centralized build configuration
-- **Directory.Packages.props**: Pinned NuGet versions from ArticlesSite standards
+- **Directory.Packages.props**: Pinned NuGet versions from squad-workflow-standard standards
 - **global.json**: Lock .NET SDK to 10.x
 - **.gitignore**: Extended with project-specific ignores
 - **appsettings.json**: Environment-specific configs (Development, Staging, Production)
@@ -284,7 +284,7 @@ global using Microsoft.Extensions.DependencyInjection;
 
 ## NuGet Package Defaults
 
-Use ArticlesSite `Directory.Packages.props` as the baseline. Include only what's selected:
+Use squad-workflow-standard `Directory.Packages.props` as the baseline. Include only what's selected:
 
 ### Core (Always)
 - `Microsoft.Extensions.Configuration.*`
@@ -323,11 +323,11 @@ Use ArticlesSite `Directory.Packages.props` as the baseline. Include only what's
 
 ## Customization & Overrides
 
-While this skill follows ArticlesSite conventions, allow customization in:
+While this skill follows squad-workflow-standard conventions, allow customization in:
 
 1. **Namespace Prefix**: Default to solution name, but allow override (e.g., `Company.Product`)
 2. **Project Structure**: Offer different folder layouts (flat vs. grouped)
-3. **Package Versions**: Use ArticlesSite versions by default, but allow newer stable versions
+3. **Package Versions**: Use squad-workflow-standard versions by default, but allow newer stable versions
 4. **CI/CD Strategy**: GitHub Actions by default, but allow GitLab CI, Azure Pipelines, etc.
 5. **License Type**: MIT by default, but allow Apache 2.0, GPL, custom, or none
 
@@ -544,7 +544,7 @@ After scaffolding, verify:
 ### Current Scope
 
 - Creates .NET 10 solutions only
-- Focuses on ArticlesSite patterns
+- Focuses on squad-workflow-standard patterns
 - Interactive CLI-based generation only
 
 ### Out of Scope (For Future)
@@ -728,7 +728,7 @@ Routes PRs to appropriate reviewers:
 
 #### **instructions/** - Coding Standards (Solution-Specific)
 
-Customized versions of ArticlesSite guidelines:
+Customized versions of squad-workflow-standard guidelines:
 
 **copilot-instructions.md**
 - Technology stack requirements
@@ -909,4 +909,4 @@ This skill should:
 3. Create files using the repository's supported file-creation tools (for example, `create_file`) instead of shell commands
 4. Run `dotnet restore` after scaffolding to verify
 5. Provide clear, actionable next steps
-6. Reference ArticlesSite instructions (copilot-instructions.md, blazor.instructions.md, etc.) as generation rules
+6. Reference squad-workflow-standard instructions (copilot-instructions.md, blazor.instructions.md, etc.) as generation rules

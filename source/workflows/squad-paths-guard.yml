@@ -59,17 +59,33 @@ jobs:
             }
 
             // Check each file against branch-specific forbidden path rules.
+            const mainAllowedSquadDocs = new Set([
+              '.squad/skills/build-repair/SKILL.md',
+              '.squad/skills/git-workflow-standard/SKILL.md',
+              '.squad/workflows/README.md',
+              '.squad/workflows/git-gh-process-standard.md',
+            ]);
+
             const forbidden = files
               .filter(f => {
                 const filename = f.filename;
 
                 if (baseBranch === mainBranch) {
                   // main: block new or modified .squad/ and team-docs/ paths, but allow removals.
-                  return f.status !== 'removed' && (
-                    filename === '.squad' ||
-                    filename.startsWith('.squad/') ||
-                    filename.startsWith('team-docs/')
-                  );
+                  if (f.status === 'removed') {
+                    return false;
+                  }
+
+                  if (filename === '.squad') {
+                    return true;
+                  }
+
+                  if (filename.startsWith('.squad/')) {
+                    // These canonical docs are intentionally allowed into main.
+                    return !mainAllowedSquadDocs.has(filename);
+                  }
+
+                  return filename.startsWith('team-docs/');
                 }
 
                 if (baseBranch === devBranch) {
