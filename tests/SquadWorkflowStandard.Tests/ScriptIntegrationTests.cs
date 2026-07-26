@@ -51,12 +51,16 @@ public sealed class ScriptIntegrationTests
         // Assert
         result.ExitCode.Should().Be(0, result.CombinedOutput);
 
-        File.Exists(Path.Combine(target.RootPath, ".squad", "workflows", "git-gh-process-standard.md")).Should().BeTrue();
+        File.Exists(Path.Combine(target.RootPath, ".squad", "workflows", "git-gh-process-standard.md")).Should()
+            .BeTrue();
         File.Exists(Path.Combine(target.RootPath, ".squad", "workflows", "README.md")).Should().BeTrue();
-        File.Exists(Path.Combine(target.RootPath, ".squad", "skills", "git-workflow-standard", "SKILL.md")).Should().BeTrue();
+        File.Exists(Path.Combine(target.RootPath, ".squad", "skills", "git-workflow-standard", "SKILL.md")).Should()
+            .BeTrue();
         File.Exists(Path.Combine(target.RootPath, ".squad", "workflows", ".git-gh-standard-version")).Should().BeTrue();
-        File.Exists(Path.Combine(target.RootPath, ".squad", "workflows", "workflow-baseline-manifest.txt")).Should().BeTrue();
-        File.Exists(Path.Combine(target.RootPath, ".squad", "workflows", "hook-baseline-manifest.txt")).Should().BeTrue();
+        File.Exists(Path.Combine(target.RootPath, ".squad", "workflows", "workflow-baseline-manifest.txt")).Should()
+            .BeTrue();
+        File.Exists(Path.Combine(target.RootPath, ".squad", "workflows", "hook-baseline-manifest.txt")).Should()
+            .BeTrue();
 
         foreach (var workflowFile in workflowEntries)
         {
@@ -221,10 +225,149 @@ public sealed class ScriptIntegrationTests
         sourceWorkflow.Should().Contain("baseBranch !== mainBranch && baseBranch !== devBranch");
         sourceWorkflow.Should().Contain("baseBranch === mainBranch");
         sourceWorkflow.Should().Contain("baseBranch === devBranch");
-        sourceWorkflow.Should().Contain("main: block new or modified .squad/ and team-docs/ paths, but allow removals.");
+        sourceWorkflow.Should()
+            .Contain("main: block new or modified .squad/ and team-docs/ paths, but allow removals.");
         sourceWorkflow.Should().Contain("dev: keep .squad/ retained by blocking removals only.");
         sourceWorkflow.Should().Contain("The following files must NOT be merged into \\`${mainBranch}\\`.");
-        sourceWorkflow.Should().Contain("The following \\`.squad/\\` files must NOT be removed from \\`${devBranch}\\`.");
+        sourceWorkflow.Should()
+            .Contain("The following \\`.squad/\\` files must NOT be removed from \\`${devBranch}\\`.");
+    }
+
+    [Fact]
+    public void ProtectedDevBranchWorkflows_ShouldUsePullRequestsInsteadOfDirectPushes()
+    {
+        var sourceBlogWorkflowPath =
+            Path.Combine(RepositoryPaths.Root, "source", "workflows", "squad-blog-readme-sync.yml");
+        var generatedBlogWorkflowPath =
+            Path.Combine(RepositoryPaths.Root, ".github", "workflows", "squad-blog-readme-sync.yml");
+        var sourceHotfixWorkflowPath = Path.Combine(RepositoryPaths.Root, "source", "workflows",
+            "squad-hotfix-backport-reminder.yml");
+        var generatedHotfixWorkflowPath = Path.Combine(RepositoryPaths.Root, ".github", "workflows",
+            "squad-hotfix-backport-reminder.yml");
+
+        var sourceBlogWorkflow = File.ReadAllText(sourceBlogWorkflowPath);
+        var generatedBlogWorkflow = File.ReadAllText(generatedBlogWorkflowPath);
+        var sourceHotfixWorkflow = File.ReadAllText(sourceHotfixWorkflowPath);
+        var generatedHotfixWorkflow = File.ReadAllText(generatedHotfixWorkflowPath);
+
+        generatedBlogWorkflow.Should().Be(sourceBlogWorkflow);
+        generatedHotfixWorkflow.Should().Be(sourceHotfixWorkflow);
+
+        sourceBlogWorkflow.Should().Contain("pull-requests: write");
+        sourceBlogWorkflow.Should().Contain("fetch-depth: 0");
+        sourceBlogWorkflow.Should().Contain("id: update_readme_sync");
+        sourceBlogWorkflow.Should().Contain("cp README.md \"$RUNNER_TEMP/README.blog-readme-sync.md\"");
+        sourceBlogWorkflow.Should().Contain("git restore README.md");
+        sourceBlogWorkflow.Should().Contain("git fetch origin dev --depth=1");
+        sourceBlogWorkflow.Should().Contain("if: steps.update_readme_sync.outputs.readme_changed == 'true'");
+        sourceBlogWorkflow.Should().Contain("git switch -C automation/blog-readme-sync origin/dev");
+        sourceBlogWorkflow.Should().Contain("cp \"$RUNNER_TEMP/README.blog-readme-sync.md\" README.md");
+        sourceBlogWorkflow.Should().Contain("echo \"committed=false\" >> \"$GITHUB_OUTPUT\"");
+        sourceBlogWorkflow.Should().Contain("Create or reuse README sync PR to dev");
+        sourceBlogWorkflow.Should().Contain("if: steps.commit_readme_sync.outputs.committed == 'true'");
+        sourceBlogWorkflow.Should().Contain("base: 'dev'");
+        sourceBlogWorkflow.Should().Contain("head: 'automation/blog-readme-sync'");
+        sourceBlogWorkflow.Should().NotContain("git push origin HEAD:dev");
+        sourceBlogWorkflow.Should().NotContain("git switch -C automation/blog-readme-sync\n");
+
+        sourceHotfixWorkflow.Should().Contain("git checkout -b hotfix/backport-${pr.number}");
+        sourceHotfixWorkflow.Should().Contain("git push -u origin hotfix/backport-${pr.number}");
+        sourceHotfixWorkflow.Should().Contain("'gh pr create --base dev'");
+        sourceHotfixWorkflow.Should().Contain("].join('");
+        sourceHotfixWorkflow.Should().Contain("--head hotfix/backport-${pr.number}");
+        sourceHotfixWorkflow.Should().Contain("Do not push directly to \\`dev\\`.");
+        sourceHotfixWorkflow.Should().NotContain("git push origin dev");
+        sourceHotfixWorkflow.Should().NotContain("'gh pr create --base dev \\");
+    }
+
+    [Fact]
+    public void ProtectedMainReadmeSyncWorkflow_ShouldUsePullRequestInsteadOfDirectPush()
+    {
+        var sourceWorkflowPath = Path.Combine(RepositoryPaths.Root, "source", "workflows", "squad-sync-readme.yml");
+        var generatedWorkflowPath =
+            Path.Combine(RepositoryPaths.Root, ".github", "workflows", "squad-sync-readme.yml");
+
+        var sourceWorkflow = File.ReadAllText(sourceWorkflowPath);
+        var generatedWorkflow = File.ReadAllText(generatedWorkflowPath);
+
+        generatedWorkflow.Should().Be(sourceWorkflow);
+        sourceWorkflow.Should().Contain("pull-requests: write");
+        sourceWorkflow.Should().Contain("fetch-depth: 0");
+        sourceWorkflow.Should().Contain("id: prepare_sync_readme");
+        sourceWorkflow.Should().Contain("cp docs/README.md \"$RUNNER_TEMP/README.sync-readme.docs.md\"");
+        sourceWorkflow.Should().Contain("git restore docs/README.md");
+        sourceWorkflow.Should().Contain("git fetch origin \"${MAIN_BRANCH}\" --depth=1");
+        sourceWorkflow.Should().Contain("git switch -C automation/sync-readme \"origin/${MAIN_BRANCH}\"");
+        sourceWorkflow.Should().Contain("Create or reuse README sync PR to main");
+        sourceWorkflow.Should().Contain("base: mainBranch");
+        sourceWorkflow.Should().Contain("head: 'automation/sync-readme'");
+        sourceWorkflow.Should().NotContain("git push\n");
+        sourceWorkflow.Should().NotContain("git push origin main");
+    }
+
+    [Fact]
+    public void ProtectedPromotionWorkflows_ShouldUseProtectedPullRequestLegs()
+    {
+        var sourcePromoteWorkflowPath = Path.Combine(RepositoryPaths.Root, "source", "workflows",
+            "squad-promote.yml");
+        var generatedPromoteWorkflowPath = Path.Combine(RepositoryPaths.Root, ".github", "workflows",
+            "squad-promote.yml");
+        var sourcePreviewGuardWorkflowPath = Path.Combine(RepositoryPaths.Root, "source", "workflows",
+            "squad-preview-guard.yml");
+        var generatedPreviewGuardWorkflowPath = Path.Combine(RepositoryPaths.Root, ".github", "workflows",
+            "squad-preview-guard.yml");
+        var sourceMainGuardWorkflowPath = Path.Combine(RepositoryPaths.Root, "source", "workflows",
+            "squad-main-guard.yml");
+        var generatedMainGuardWorkflowPath = Path.Combine(RepositoryPaths.Root, ".github", "workflows",
+            "squad-main-guard.yml");
+
+        var sourcePromoteWorkflow = File.ReadAllText(sourcePromoteWorkflowPath);
+        var generatedPromoteWorkflow = File.ReadAllText(generatedPromoteWorkflowPath);
+        var sourcePreviewGuardWorkflow = File.ReadAllText(sourcePreviewGuardWorkflowPath);
+        var generatedPreviewGuardWorkflow = File.ReadAllText(generatedPreviewGuardWorkflowPath);
+        var sourceMainGuardWorkflow = File.ReadAllText(sourceMainGuardWorkflowPath);
+        var generatedMainGuardWorkflow = File.ReadAllText(generatedMainGuardWorkflowPath);
+
+        generatedPromoteWorkflow.Should().Be(sourcePromoteWorkflow);
+        generatedPreviewGuardWorkflow.Should().Be(sourcePreviewGuardWorkflow);
+        generatedMainGuardWorkflow.Should().Be(sourceMainGuardWorkflow);
+
+        sourcePromoteWorkflow.Should().Contain("pull-requests: write");
+        sourcePromoteWorkflow.Should().Contain("PREVIEW_PROMOTION_BRANCH");
+        sourcePromoteWorkflow.Should()
+            .Contain("git switch -C \"${PREVIEW_PROMOTION_BRANCH}\" \"origin/${PREVIEW_BRANCH}\"");
+        sourcePromoteWorkflow.Should().Contain("git push --force-with-lease origin \"${PREVIEW_PROMOTION_BRANCH}\"");
+        sourcePromoteWorkflow.Should().Contain("Create or reuse sanitized dev → preview promotion PR");
+        sourcePromoteWorkflow.Should().Contain("const devBranch = process.env.DEV_BRANCH;");
+        sourcePromoteWorkflow.Should().Contain("basehead: `${previewBranch}...${promotionBranch}`");
+        sourcePromoteWorkflow.Should().Contain("base: previewBranch");
+        sourcePromoteWorkflow.Should().Contain("head: promotionBranch");
+        sourcePromoteWorkflow.Should()
+            .Contain("title: `chore: promote ${devBranch} → ${previewBranch} via sanitized PR`");
+        sourcePromoteWorkflow.Should().Contain("`- Source branch: \\`${devBranch}\\``");
+        sourcePromoteWorkflow.Should()
+            .NotContain("title: `chore: promote ${DEV_BRANCH} → ${PREVIEW_BRANCH} via sanitized PR`");
+        sourcePromoteWorkflow.Should().NotContain("`- Source branch: \\`${DEV_BRANCH}\\``");
+        sourcePromoteWorkflow.Should().Contain("avoids direct pushes to protected `preview`");
+        sourcePromoteWorkflow.Should().NotContain("git push origin \"${PREVIEW_BRANCH}\"");
+        sourcePromoteWorkflow.Should().Contain("Create or reuse preview → main release PR");
+        sourcePromoteWorkflow.Should().Contain("compareCommitsWithBasehead");
+        sourcePromoteWorkflow.Should().Contain("basehead: `${mainBranch}...${previewBranch}`");
+        sourcePromoteWorkflow.Should().Contain("base: mainBranch");
+        sourcePromoteWorkflow.Should().Contain("head: previewBranch");
+        sourcePromoteWorkflow.Should().NotContain("git push origin \"${MAIN_BRANCH}\"");
+
+        sourcePreviewGuardWorkflow.Should().Contain("const previewBranch = process.env.PREVIEW_BRANCH;");
+        sourcePreviewGuardWorkflow.Should().Contain("const promotionBranch = process.env.PREVIEW_PROMOTION_BRANCH;");
+        sourcePreviewGuardWorkflow.Should().Contain("source !== promotionBranch");
+        sourcePreviewGuardWorkflow.Should().Contain("must come from ${promotionBranch}");
+        sourcePreviewGuardWorkflow.Should().NotContain("source === \"dev\"");
+
+        sourceMainGuardWorkflow.Should().Contain("const previewBranch = process.env.PREVIEW_BRANCH;");
+        sourceMainGuardWorkflow.Should().Contain("source === previewBranch || source.startsWith(\"hotfix/\")");
+        sourceMainGuardWorkflow.Should()
+            .Contain("must come from ${previewBranch} or hotfix/* branches");
+        sourceMainGuardWorkflow.Should().NotContain("source === \"dev\"");
     }
 
     [Fact]
