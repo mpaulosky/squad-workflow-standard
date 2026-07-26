@@ -37,9 +37,9 @@ Always follow that prompt. This skill provides supplementary context.
 
 ### Common Failures and Fixes
 
-| Symptom | Root Cause | Fix |
-| --- | --- | --- |
-| `MSB4019` on Linux CI | `%USERPROFILE%` path in NuGet.config | Remove `<config>` block from NuGet.config |
-| Markdown lint failures | Rule drift in docs/prompts/skills | Run markdownlint and apply minimal formatting fixes |
-| check script exits `3` | Standard version drift in target repo | Re-sync standard pack, then rerun check |
-| check script exits `4` | Missing required adapters in target repo | Add required adapter blocks, rerun check |
+| Symptom                | Root Cause                               | Fix                                                 |
+| ---------------------- | ---------------------------------------- | --------------------------------------------------- |
+| `MSB4019` on Linux CI  | `%USERPROFILE%` path in NuGet.config     | Remove `<config>` block from NuGet.config           |
+| Markdown lint failures | Rule drift in docs/prompts/skills        | Run markdownlint and apply minimal formatting fixes |
+| check script exits `3` | Standard version drift in target repo    | Re-sync standard pack, then rerun check             |
+| check script exits `4` | Missing required adapters in target repo | Add required adapter blocks, rerun check            |
