@@ -29,8 +29,9 @@ Source of truth:
 8. Do not auto-open `dev` -> `main` after routine work pushes; promotion PRs are separate.
 9. Back-merge sync from `main` to `dev` must be handled by `squad-main-to-dev-backmerge.yml` (create/reuse PR, no-op when in sync).
 10. GitHub protections/rulesets must enforce the same model:
-   - `dev` and `main` require PRs + checks + approvals
-   - `main` accepts PRs from `dev` only (plus required `squad-main-guard`)
+
+- `dev` and `main` require PRs + checks + approvals
+- `main` accepts PRs from `dev` only (plus required `squad-main-guard`)
 
 ## Flow Selection
 
@@ -70,6 +71,8 @@ git checkout dev
 git pull origin dev
 git branch -d squad/{issue-number}-{kebab-slug}
 git push origin --delete squad/{issue-number}-{kebab-slug}
+git branch -d hotfix/{slug}  # if a hotfix branch was used
+git push origin --delete hotfix/{slug}  # if a hotfix branch was used
 ```
 
 Worktree:
@@ -79,4 +82,6 @@ git worktree remove ../{repo-name}-{issue-number}
 git worktree prune
 git branch -d squad/{issue-number}-{kebab-slug}
 git push origin --delete squad/{issue-number}-{kebab-slug}
+git branch -d hotfix/{slug}  # if a hotfix branch was used
+git push origin --delete hotfix/{slug}  # if a hotfix branch was used
 ```
