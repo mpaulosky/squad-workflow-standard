@@ -71,6 +71,15 @@ git branch -d squad/{issue-number}-{kebab-slug}
 git push origin --delete squad/{issue-number}-{kebab-slug}
 ```
 
+Orphan state backend:
+
+```bash
+git checkout dev
+git pull origin dev
+git branch -D {state-branch}
+git push origin --delete {state-branch}
+```
+
 Worktree:
 
 ```bash

@@ -81,6 +81,16 @@ git branch -d squad/{issue-number}-{kebab-slug}
 git push origin --delete squad/{issue-number}-{kebab-slug}
 ```
 
+If the repo uses an orphan state branch, remove it after its state has been
+promoted or archived elsewhere:
+
+```bash
+git checkout dev
+git pull origin dev
+git branch -D {state-branch}
+git push origin --delete {state-branch}
+```
+
 ## Worktree flow (parallel issues)
 
 From the primary clone:
