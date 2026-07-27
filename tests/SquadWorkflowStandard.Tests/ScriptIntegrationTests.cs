@@ -393,6 +393,48 @@ public sealed class ScriptIntegrationTests
     }
 
     [Fact]
+    public void BranchCleanupWorkflow_ShouldBeSourceSyncedAndSupportDispatchAndSchedule()
+    {
+        var sourceWorkflowPath =
+            Path.Combine(RepositoryPaths.Root, "source", "workflows", "squad-branch-worktree-cleanup.yml");
+        var generatedWorkflowPath =
+            Path.Combine(RepositoryPaths.Root, ".github", "workflows", "squad-branch-worktree-cleanup.yml");
+
+        var sourceWorkflow = File.ReadAllText(sourceWorkflowPath);
+        var generatedWorkflow = File.ReadAllText(generatedWorkflowPath);
+
+        generatedWorkflow.Should().Be(sourceWorkflow);
+        sourceWorkflow.Should().Contain("workflow_dispatch:");
+        sourceWorkflow.Should().Contain("schedule:");
+        sourceWorkflow.Should().Contain("scripts/squad/cleanup-squad-branches.sh");
+        sourceWorkflow.Should().Contain("--apply");
+        sourceWorkflow.Should().Contain("--delete-remote");
+        sourceWorkflow.Should().Contain("Cleanup stale squad/sprint/hotfix branches and worktrees");
+    }
+
+    [Fact]
+    public void CleanupScripts_ShouldIncludeHotfixBranchPatternSupport()
+    {
+        var bashScriptPath = Path.Combine(RepositoryPaths.Root, "scripts", "squad", "cleanup-squad-branches.sh");
+        var psScriptPath = Path.Combine(RepositoryPaths.Root, "scripts", "squad", "cleanup-squad-branches.ps1");
+
+        var bashScript = File.ReadAllText(bashScriptPath);
+        var psScript = File.ReadAllText(psScriptPath);
+
+        bashScript.Should().Contain("refs/heads/hotfix/*");
+        bashScript.Should().Contain("refs/remotes/${REMOTE}/hotfix/*");
+        bashScript.Should().Contain("No candidate squad/*, sprint/*, or hotfix/* branches found.");
+        bashScript.Should().Contain("^(squad|sprint|hotfix)/([0-9]+)(-|$)");
+
+        psScript.Should().Contain("refs/heads/hotfix/*");
+        psScript.Should().Contain("refs/remotes/$remote/hotfix/*");
+        psScript.Should().Contain("No candidate squad/*, sprint/*, or hotfix/* branches found.");
+        psScript.Should().Contain("^(squad|sprint|hotfix)/(\\d+)(-|$)");
+        psScript.Should().Contain("--json number,state,mergedAt,closedAt,url");
+        psScript.Should().Contain("--json state,url,number");
+    }
+
+    [Fact]
     public void SyncAndCheckScripts_ShouldRecognizeGitWorktreeTarget()
     {
         using var worktree = GitWorktreeScope.Create(RepositoryPaths.Root);
