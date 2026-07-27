@@ -1,6 +1,6 @@
 ---
 name: "git-workflow"
-description: "Squad branching model: dev-first workflow with insiders preview channel"
+description: "Squad branching model: dev -> preview -> main promotion flow"
 domain: "version-control"
 confidence: "high"
 source: "team-decision"
@@ -8,20 +8,23 @@ source: "team-decision"
 
 ## Context
 
-Squad uses a three-branch model. **All feature work starts from `dev`, not `main`.**
+Squad uses a three-branch promotion model: `dev` -> `preview` -> `main`.
+**All feature work starts from `dev`, not `main`.**
 
 | Branch | Purpose | Publishes |
 |--------|---------|-----------|
-| `main` | Released, tagged, in-npm code only | `npm publish` on tag |
 | `dev` | Integration branch — all feature work lands here | `npm publish --tag preview` on merge |
-| `insiders` | Early-access channel — synced from dev | `npm publish --tag insiders` on sync |
+| `preview` | Release-candidate promotion branch fed by sanitized promotion PRs | Pre-release validation channel |
+| `main` | Released, tagged, stable code only | `npm publish` on tag |
 
 ### Required GitHub protections/rulesets
 
-- Protect `dev` and `main` (no direct pushes).
-- Require PRs, approvals, and required status checks on both branches.
+- Protect `dev`, `preview`, and `main` (no direct pushes).
+- Require PRs, approvals, and required status checks on all three branches.
+- Keep `squad-preview-guard` required for PRs into `preview`.
 - Keep `squad-main-guard` required for PRs into `main`.
-- Restrict `main` PR source to `dev` only when rulesets support it.
+- Restrict `preview` PR source to `automation/promote-preview` when rulesets support it.
+- Restrict `main` PR source to `preview` when rulesets support it (plus any documented `hotfix/*` exception).
 
 ## Branch Naming Convention
 
@@ -206,6 +209,7 @@ These compose naturally. You can have:
 
 ## Promotion Pipeline
 
-- dev → insiders: Automated sync on green build
-- dev → main: Manual merge when ready for stable release, then tag
-- Hotfixes: Branch from main as `hotfix/{slug}`, PR to dev, cherry-pick to main if urgent
+- dev -> preview: Automated/reused promotion PR from `automation/promote-preview` into `preview`
+- preview -> main: Release PR from `preview` into `main` when stable release is approved
+- main -> dev: Automated back-merge PR when `main` moves ahead of `dev`
+- Hotfixes: Branch from `main` as `hotfix/{slug}`, use documented exception policy, then reconcile back through normal promotion/back-merge flow

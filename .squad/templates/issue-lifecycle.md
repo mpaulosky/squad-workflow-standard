@@ -159,7 +159,7 @@ git worktree add ../worktrees/{issue-number} -b squad/{issue-number}-{slug}
 cd ../worktrees/{issue-number}
 ```
 
-> **Note:** Worktree support is in progress (#525). Current implementation uses standard checkout.
+Use this flow when 2+ issues are active concurrently in the same repository.
 
 ### 3. Implementation & Commit
 
@@ -298,7 +298,7 @@ az repos pr update --id {pr-id} --status completed --delete-source-branch true
 1. Issue automatically closes (if "Closes #{number}" is in PR description)
 2. Feature branch is deleted
 3. Squad board state transitions to `done`
-4. Worktree cleanup (if worktree was used — #525)
+4. Worktree cleanup (if a worktree was used)
 
 ### 7. Cleanup
 
@@ -309,7 +309,7 @@ git pull
 git branch -d squad/{issue-number}-{slug}
 ```
 
-**Worktree cleanup (future, #525):**
+**Worktree cleanup:**
 ```bash
 cd {original-cwd}
 git worktree remove ../worktrees/{issue-number}
@@ -416,7 +416,7 @@ Research documented → Research PR merged → Implementation issue created →
 Implementation agent spawned → Feature built → PR merged
 ```
 
-### Pattern 4: Parallel Multi-Agent (Future, #525)
+### Pattern 4: Parallel Multi-Agent
 ```
 Epic issue created → Decomposed into sub-issues → Each sub-issue assigned → 
 Multiple agents work in parallel worktrees → PRs opened concurrently → 
@@ -436,9 +436,9 @@ All PRs reviewed → All PRs merged → Epic closed
 
 ## Migration Notes
 
-**v0.8.x → v0.9.x (Worktree Support):**
-- `checkout -b` → `git worktree add` for parallel agents
+**v0.8.x -> v0.9.x (Worktree Support):**
+- `checkout -b` -> `git worktree add` for parallel agents
 - Worktree cleanup added to post-merge flow
 - `TEAM_ROOT` passing to agents to support worktree-aware state resolution
 
-This template will be updated as worktree lifecycle support lands in #525.
+This template reflects currently supported worktree lifecycle behavior.
