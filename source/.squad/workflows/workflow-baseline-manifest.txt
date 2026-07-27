@@ -15,6 +15,7 @@ squad-label-enforce.yml
 squad-lint-markdown.yml
 squad-lint-yaml.yml
 squad-main-guard.yml
+squad-main-to-dev-backmerge-guard.yml
 squad-main-to-dev-backmerge.yml
 squad-milestone-blog.yml
 squad-milestone-release-decision.yml
