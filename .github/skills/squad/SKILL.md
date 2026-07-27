@@ -168,6 +168,19 @@ Proceed? (yes / no)
 - **confirm:** false
 - **platform_caveats:** CLI-only — long-running foreground process. Not viable in VS Code without an integrated terminal. Run: `squad watch --interval {n}` in your terminal.
 
+### Cleanup Squad Branches and Worktrees
+
+- **intent:** cleanup branches, cleanup worktrees, prune squad branches, remove sprint branches, cleanup merged branches
+- **summary:** Run branch/worktree cleanup for merged, closed, or orphaned `squad/*` and `sprint/*` branches
+- **action:** shell
+- **command:** bash scripts/squad/cleanup-squad-branches.sh
+- **args:**
+  - `apply`: Apply deletions? | choices: {dry-run, apply} | default: dry-run
+  - `delete-remote`: Delete remote branches too? | choices: {yes, no} | default: yes
+  - `orphan-days`: Minimum age in days for orphan cleanup | default: 14
+- **confirm:** true
+- **platform_caveats:** Requires `gh` auth and repo access. Recommended flow: run dry-run first, then rerun with `--apply --delete-remote`.
+
 ---
 
 ## Plugins & Skills

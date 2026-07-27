@@ -393,6 +393,25 @@ public sealed class ScriptIntegrationTests
     }
 
     [Fact]
+    public void BranchCleanupWorkflow_ShouldBeSourceSyncedAndSupportDispatchAndSchedule()
+    {
+        var sourceWorkflowPath =
+            Path.Combine(RepositoryPaths.Root, "source", "workflows", "squad-branch-worktree-cleanup.yml");
+        var generatedWorkflowPath =
+            Path.Combine(RepositoryPaths.Root, ".github", "workflows", "squad-branch-worktree-cleanup.yml");
+
+        var sourceWorkflow = File.ReadAllText(sourceWorkflowPath);
+        var generatedWorkflow = File.ReadAllText(generatedWorkflowPath);
+
+        generatedWorkflow.Should().Be(sourceWorkflow);
+        sourceWorkflow.Should().Contain("workflow_dispatch:");
+        sourceWorkflow.Should().Contain("schedule:");
+        sourceWorkflow.Should().Contain("scripts/squad/cleanup-squad-branches.sh");
+        sourceWorkflow.Should().Contain("--apply");
+        sourceWorkflow.Should().Contain("--delete-remote");
+    }
+
+    [Fact]
     public void SyncAndCheckScripts_ShouldRecognizeGitWorktreeTarget()
     {
         using var worktree = GitWorktreeScope.Create(RepositoryPaths.Root);
