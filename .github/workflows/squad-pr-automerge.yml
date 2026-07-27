@@ -100,7 +100,8 @@ jobs:
 
               if (
                 combinedMessage.includes("already merged") ||
-                combinedMessage.includes("already enabled")
+                combinedMessage.includes("already enabled") ||
+                combinedMessage.includes("unstable status")
               ) {
                 core.warning(
                   `Skipping PR #${pullNumber}: ${error.message}`
