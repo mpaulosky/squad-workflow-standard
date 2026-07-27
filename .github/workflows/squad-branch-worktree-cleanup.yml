@@ -5,10 +5,17 @@ name: Squad Branch and Worktree Cleanup
   workflow_dispatch:
     inputs:
       apply:
-        description: Apply cleanup changes (delete branches/worktrees)
+        description: Apply cleanup changes (requires apply_signal=APPLY_CLEANUP)
         required: false
         default: false
         type: boolean
+      apply_signal:
+        description: >-
+          Explicit destructive confirmation token
+          (must be APPLY_CLEANUP)
+        required: false
+        default: ""
+        type: string
       delete_remote:
         description: Delete eligible remote branches
         required: false
@@ -47,13 +54,14 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Run cleanup (dry-run by default for manual dispatch)
+      - name: Run cleanup (schedule dry-run; manual apply needs signal)
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
           EVENT_NAME: ${{ github.event_name }}
           INPUT_APPLY: ${{ inputs.apply }}
+          INPUT_APPLY_SIGNAL: ${{ inputs.apply_signal }}
           INPUT_DELETE_REMOTE: ${{ inputs.delete_remote }}
           INPUT_ORPHAN_DAYS: ${{ inputs.orphan_days }}
           INPUT_FORCE_LOCAL: ${{ inputs.force_local }}
@@ -68,20 +76,26 @@ jobs:
 
           ORPHAN_DAYS="${INPUT_ORPHAN_DAYS:-14}"
           if [[ "$EVENT_NAME" == "schedule" ]]; then
-            APPLY_ARGS+=(--apply)
-            DELETE_REMOTE_ARGS+=(--delete-remote)
+            echo "Schedule trigger enforces dry-run mode."
           else
             if [[ "${INPUT_APPLY:-false}" == "true" ]]; then
+              if [[ "${INPUT_APPLY_SIGNAL:-}" != "APPLY_CLEANUP" ]]; then
+                echo "::error::apply_signal must be APPLY_CLEANUP for --apply."
+                exit 1
+              fi
               APPLY_ARGS+=(--apply)
-            fi
-            if [[ "${INPUT_DELETE_REMOTE:-true}" == "true" ]]; then
-              DELETE_REMOTE_ARGS+=(--delete-remote)
-            fi
-            if [[ "${INPUT_FORCE_LOCAL:-false}" == "true" ]]; then
-              FORCE_LOCAL_ARGS+=(--force-local)
-            fi
-            if [[ "${INPUT_FORCE_WORKTREE:-false}" == "true" ]]; then
-              FORCE_WORKTREE_ARGS+=(--force-worktree)
+
+              if [[ "${INPUT_DELETE_REMOTE:-true}" == "true" ]]; then
+                DELETE_REMOTE_ARGS+=(--delete-remote)
+              fi
+              if [[ "${INPUT_FORCE_LOCAL:-false}" == "true" ]]; then
+                FORCE_LOCAL_ARGS+=(--force-local)
+              fi
+              if [[ "${INPUT_FORCE_WORKTREE:-false}" == "true" ]]; then
+                FORCE_WORKTREE_ARGS+=(--force-worktree)
+              fi
+            elif [[ "${INPUT_DELETE_REMOTE:-false}" == "true" ]]; then
+              echo "Ignoring delete_remote because apply=false (dry-run)."
             fi
           fi
 

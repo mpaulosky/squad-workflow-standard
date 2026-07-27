@@ -18,6 +18,7 @@ Options:
 
 Behavior:
   - Targets branch patterns: squad/* and sprint/*
+  - Never deletes protected branches: main/dev/preview/insiders/default branch
   - Deletes only when branch is eligible:
     * linked PR is merged or closed (and no open PR exists), or
     * linked issue is closed (and no open PR exists), or
@@ -45,6 +46,7 @@ APPLY=false
 DELETE_REMOTE=false
 FORCE_LOCAL=false
 FORCE_WORKTREE=false
+DEFAULT_BRANCH=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -105,6 +107,22 @@ require_command jq
 if [[ -z "$REPO" ]]; then
   REPO="$(gh repo view --json nameWithOwner --jq '.nameWithOwner')"
 fi
+
+DEFAULT_BRANCH="$(gh repo view "$REPO" --json defaultBranchRef --jq '.defaultBranchRef.name' 2>/dev/null || true)"
+if [[ -z "$DEFAULT_BRANCH" || "$DEFAULT_BRANCH" == "null" ]]; then
+  DEFAULT_BRANCH="main"
+fi
+
+is_protected_branch() {
+  local branch="$1"
+  case "$branch" in
+    main|dev|preview|insiders)
+      return 0
+      ;;
+  esac
+
+  [[ "$branch" == "$DEFAULT_BRANCH" ]]
+}
 
 DEV_BRANCH="${SQUAD_DEV_BRANCH:-dev}"
 MAIN_WORKTREE="$(git rev-parse --show-toplevel)"
@@ -191,6 +209,7 @@ format_age_days() {
 }
 
 echo "Repo: $REPO"
+echo "Default branch: $DEFAULT_BRANCH"
 echo "Remote: $REMOTE"
 echo "Apply: $APPLY"
 echo "Delete remote: $DELETE_REMOTE"
@@ -213,11 +232,70 @@ REMOTE_DELETE_COUNT=0
 WORKTREE_REMOVE_COUNT=0
 SKIP_COUNT=0
 
+declare -A REASON_COUNTS=()
+declare -a PLAN_LOCAL=()
+declare -a PLAN_REMOTE=()
+declare -a PLAN_WORKTREE=()
+declare -a PROTECTED_SKIPS=()
+declare -a ACTION_SKIPS=()
+declare -a DELETED_LOCAL=()
+declare -a DELETED_REMOTE=()
+declare -a REMOVED_WORKTREES=()
+
+add_reason_count() {
+  local reason="$1"
+  if [[ -n "${REASON_COUNTS[$reason]:-}" ]]; then
+    REASON_COUNTS["$reason"]=$((REASON_COUNTS[$reason] + 1))
+  else
+    REASON_COUNTS["$reason"]=1
+  fi
+}
+
+print_list() {
+  local title="$1"
+  shift
+  echo "$title"
+  if [[ $# -eq 0 ]]; then
+    echo "  - none"
+    return
+  fi
+
+  local item
+  for item in "$@"; do
+    echo "  - $item"
+  done
+}
+
 while IFS= read -r branch; do
   pr_state="NONE"
   issue_state="NONE"
   reason="NOT_ELIGIBLE"
   eligible=false
+
+  local_flag="no"
+  remote_flag="no"
+  worktree_count=0
+
+  if [[ -n "${LOCAL_EXISTS[$branch]:-}" ]]; then
+    local_flag="yes"
+  fi
+
+  if [[ -n "${REMOTE_EXISTS[$branch]:-}" ]]; then
+    remote_flag="yes"
+  fi
+
+  wt_lines="${WORKTREE_BY_BRANCH[$branch]:-}"
+  if [[ -n "$wt_lines" ]]; then
+    worktree_count="$(printf '%s\n' "$wt_lines" | sed '/^$/d' | wc -l | tr -d ' ')"
+  fi
+
+  if is_protected_branch "$branch"; then
+    reason="PROTECTED_BRANCH"
+    add_reason_count "$reason"
+    PROTECTED_SKIPS+=("$branch")
+    echo "$branch | FALSE | $reason | $pr_state | $issue_state | n/a | $local_flag | $remote_flag | $worktree_count"
+    continue
+  fi
 
   pr_json="$(gh pr list --repo "$REPO" --state all --head "$branch" --json number,state,mergedAt,closedAt,url 2>/dev/null || echo '[]')"
   pr_has_merged="$(jq -r 'map(select(.mergedAt != null)) | length' <<<"$pr_json")"
@@ -267,27 +345,28 @@ while IFS= read -r branch; do
     fi
   fi
 
-  local_flag="no"
-  remote_flag="no"
-  worktree_count=0
-
-  if [[ -n "${LOCAL_EXISTS[$branch]:-}" ]]; then
-    local_flag="yes"
-  fi
-
-  if [[ -n "${REMOTE_EXISTS[$branch]:-}" ]]; then
-    remote_flag="yes"
-  fi
-
-  wt_lines="${WORKTREE_BY_BRANCH[$branch]:-}"
-  if [[ -n "$wt_lines" ]]; then
-    worktree_count="$(printf '%s\n' "$wt_lines" | sed '/^$/d' | wc -l | tr -d ' ')"
-  fi
-
   echo "$branch | $(to_upper "$eligible") | $reason | $pr_state | $issue_state | $age_days | $local_flag | $remote_flag | $worktree_count"
+  add_reason_count "$reason"
 
   if [[ "$eligible" == true ]]; then
     ((ELIGIBLE_COUNT+=1))
+
+    if [[ -n "$wt_lines" ]]; then
+      while IFS= read -r wt; do
+        [[ -z "$wt" ]] && continue
+        if [[ "$wt" != "$MAIN_WORKTREE" ]]; then
+          PLAN_WORKTREE+=("$branch ($reason) -> $wt")
+        fi
+      done <<<"$wt_lines"
+    fi
+
+    if [[ -n "${LOCAL_EXISTS[$branch]:-}" && "$branch" != "$CURRENT_BRANCH" ]]; then
+      PLAN_LOCAL+=("$branch ($reason)")
+    fi
+
+    if [[ "$DELETE_REMOTE" == true && -n "${REMOTE_EXISTS[$branch]:-}" ]]; then
+      PLAN_REMOTE+=("$branch ($reason)")
+    fi
 
     if [[ "$APPLY" == true ]]; then
       if [[ -n "$wt_lines" ]]; then
@@ -300,10 +379,18 @@ while IFS= read -r branch; do
           if [[ "$FORCE_WORKTREE" == true ]]; then
             if git worktree remove --force "$wt"; then
               ((WORKTREE_REMOVE_COUNT+=1))
+              REMOVED_WORKTREES+=("$wt")
+            else
+              ((SKIP_COUNT+=1))
+              ACTION_SKIPS+=("worktree:$wt:remove_failed")
             fi
           else
             if git worktree remove "$wt"; then
               ((WORKTREE_REMOVE_COUNT+=1))
+              REMOVED_WORKTREES+=("$wt")
+            else
+              ((SKIP_COUNT+=1))
+              ACTION_SKIPS+=("worktree:$wt:remove_failed")
             fi
           fi
         done <<<"$wt_lines"
@@ -317,24 +404,38 @@ while IFS= read -r branch; do
           if [[ "$FORCE_LOCAL" == true ]]; then
             if git branch -D "$branch"; then
               ((LOCAL_DELETE_COUNT+=1))
+              DELETED_LOCAL+=("$branch")
+            else
+              ((SKIP_COUNT+=1))
+              echo "Skip local delete (failed): $branch"
+              ACTION_SKIPS+=("branch:$branch:local_delete_failed")
             fi
           else
             if git branch -d "$branch"; then
               ((LOCAL_DELETE_COUNT+=1))
+              DELETED_LOCAL+=("$branch")
             else
               ((SKIP_COUNT+=1))
               echo "Skip local delete (not fully merged, use --force-local to override): $branch"
+              ACTION_SKIPS+=("branch:$branch:local_not_merged")
             fi
           fi
         fi
       fi
 
       if [[ "$DELETE_REMOTE" == true && -n "${REMOTE_EXISTS[$branch]:-}" ]]; then
-        if git push "$REMOTE" --delete "$branch"; then
+        open_pr_now="$(gh pr list --repo "$REPO" --state open --head "$branch" --json number --jq 'length' 2>/dev/null || echo 0)"
+        if [[ "$open_pr_now" =~ ^[0-9]+$ ]] && (( open_pr_now > 0 )); then
+          ((SKIP_COUNT+=1))
+          echo "Skip remote delete (open PR exists): $branch"
+          ACTION_SKIPS+=("branch:$branch:remote_blocked_open_pr")
+        elif git push "$REMOTE" --delete "$branch"; then
           ((REMOTE_DELETE_COUNT+=1))
+          DELETED_REMOTE+=("$branch")
         else
           ((SKIP_COUNT+=1))
           echo "Skip remote delete (failed): $branch"
+          ACTION_SKIPS+=("branch:$branch:remote_delete_failed")
         fi
       fi
     fi
@@ -343,6 +444,29 @@ done < <(printf '%s\n' "${!CANDIDATES[@]}" | sort)
 
 if [[ "$APPLY" == true ]]; then
   git worktree prune || true
+fi
+
+echo
+echo "Classification by reason:"
+if [[ ${#REASON_COUNTS[@]} -eq 0 ]]; then
+  echo "  - none"
+else
+  while IFS= read -r reason; do
+    echo "  - $reason: ${REASON_COUNTS[$reason]}"
+  done < <(printf '%s\n' "${!REASON_COUNTS[@]}" | sort)
+fi
+
+print_list "Protected branches skipped:" "${PROTECTED_SKIPS[@]}"
+
+if [[ "$APPLY" == true ]]; then
+  print_list "Deleted local branches:" "${DELETED_LOCAL[@]}"
+  print_list "Deleted remote branches:" "${DELETED_REMOTE[@]}"
+  print_list "Removed worktrees:" "${REMOVED_WORKTREES[@]}"
+  print_list "Skipped actions:" "${ACTION_SKIPS[@]}"
+else
+  print_list "Dry-run local delete plan:" "${PLAN_LOCAL[@]}"
+  print_list "Dry-run remote delete plan:" "${PLAN_REMOTE[@]}"
+  print_list "Dry-run worktree remove plan:" "${PLAN_WORKTREE[@]}"
 fi
 
 echo

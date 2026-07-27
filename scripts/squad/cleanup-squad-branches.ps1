@@ -3,7 +3,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 function Show-Usage {
-@"
+	@"
 Usage:
   cleanup-squad-branches.ps1 [options]
 
@@ -16,14 +16,17 @@ Options:
   --force-worktree          Use git worktree remove --force for eligible worktrees
   --apply                   Apply changes (default is dry-run)
   -h, --help                Show this help
+
+Behavior:
+	- Never deletes protected branches: main/dev/preview/insiders/default branch
 "@
 }
 
 function Require-Command {
-    param([Parameter(Mandatory = $true)][string]$Name)
-    if (-not (Get-Command $Name -ErrorAction SilentlyContinue)) {
-        throw "Missing required command: $Name"
-    }
+	param([Parameter(Mandatory = $true)][string]$Name)
+	if (-not (Get-Command $Name -ErrorAction SilentlyContinue)) {
+		throw "Missing required command: $Name"
+	}
 }
 
 $repo = ""
@@ -33,51 +36,67 @@ $apply = $false
 $deleteRemote = $false
 $forceLocal = $false
 $forceWorktree = $false
+$defaultBranch = ""
 
 for ($i = 0; $i -lt $args.Count; $i++) {
-    $arg = $args[$i]
-    switch ($arg) {
-        "--repo" {
-            $i++
-            if ($i -ge $args.Count) { throw "Missing value for --repo" }
-            $repo = $args[$i]
-        }
-        "--remote" {
-            $i++
-            if ($i -ge $args.Count) { throw "Missing value for --remote" }
-            $remote = $args[$i]
-        }
-        "--orphan-days" {
-            $i++
-            if ($i -ge $args.Count) { throw "Missing value for --orphan-days" }
-            $orphanDays = [int]$args[$i]
-        }
-        "--delete-remote" { $deleteRemote = $true }
-        "--force-local" { $forceLocal = $true }
-        "--force-worktree" { $forceWorktree = $true }
-        "--apply" { $apply = $true }
-        "-h" { Show-Usage; exit 0 }
-        "--help" { Show-Usage; exit 0 }
-        default {
-            throw "Unexpected argument: $arg"
-        }
-    }
+	$arg = $args[$i]
+	switch ($arg) {
+		"--repo" {
+			$i++
+			if ($i -ge $args.Count) { throw "Missing value for --repo" }
+			$repo = $args[$i]
+		}
+		"--remote" {
+			$i++
+			if ($i -ge $args.Count) { throw "Missing value for --remote" }
+			$remote = $args[$i]
+		}
+		"--orphan-days" {
+			$i++
+			if ($i -ge $args.Count) { throw "Missing value for --orphan-days" }
+			$orphanDays = [int]$args[$i]
+		}
+		"--delete-remote" { $deleteRemote = $true }
+		"--force-local" { $forceLocal = $true }
+		"--force-worktree" { $forceWorktree = $true }
+		"--apply" { $apply = $true }
+		"-h" { Show-Usage; exit 0 }
+		"--help" { Show-Usage; exit 0 }
+		default {
+			throw "Unexpected argument: $arg"
+		}
+	}
 }
 
 if ($orphanDays -lt 0) {
-    throw "--orphan-days must be a non-negative integer"
+	throw "--orphan-days must be a non-negative integer"
 }
 
 & git rev-parse --is-inside-work-tree 2>$null | Out-Null
 if ($LASTEXITCODE -ne 0) {
-    throw "Run this script inside a git repository."
+	throw "Run this script inside a git repository."
 }
 
 Require-Command -Name git
 Require-Command -Name gh
 
 if ([string]::IsNullOrWhiteSpace($repo)) {
-    $repo = (& gh repo view --json nameWithOwner --jq '.nameWithOwner').Trim()
+	$repo = (& gh repo view --json nameWithOwner --jq '.nameWithOwner').Trim()
+}
+
+$defaultBranch = (& gh repo view $repo --json defaultBranchRef --jq '.defaultBranchRef.name' 2>$null).Trim()
+if ([string]::IsNullOrWhiteSpace($defaultBranch) -or $defaultBranch -eq "null") {
+	$defaultBranch = "main"
+}
+
+function Is-ProtectedBranch {
+	param([Parameter(Mandatory = $true)][string]$Branch)
+
+	if ($Branch -in @("main", "dev", "preview", "insiders")) {
+		return $true
+	}
+
+	return $Branch -eq $defaultBranch
 }
 
 $mainWorktree = (& git rev-parse --show-toplevel).Trim()
@@ -93,67 +112,68 @@ $worktreesByBranch = @{}
 
 $localBranches = & git for-each-ref --format='%(refname:short)' 'refs/heads/squad/*' 'refs/heads/sprint/*'
 foreach ($branch in $localBranches) {
-    if ([string]::IsNullOrWhiteSpace($branch)) { continue }
-    [void]$candidates.Add($branch)
-    $localExists[$branch] = $true
+	if ([string]::IsNullOrWhiteSpace($branch)) { continue }
+	[void]$candidates.Add($branch)
+	$localExists[$branch] = $true
 }
 
 $remoteRefs = & git for-each-ref --format='%(refname:short)' "refs/remotes/$remote/squad/*" "refs/remotes/$remote/sprint/*"
 foreach ($remoteRef in $remoteRefs) {
-    if ([string]::IsNullOrWhiteSpace($remoteRef)) { continue }
-    $branch = $remoteRef.Substring($remote.Length + 1)
-    [void]$candidates.Add($branch)
-    $remoteExists[$branch] = $true
+	if ([string]::IsNullOrWhiteSpace($remoteRef)) { continue }
+	$branch = $remoteRef.Substring($remote.Length + 1)
+	[void]$candidates.Add($branch)
+	$remoteExists[$branch] = $true
 }
 
 $wtPath = ""
 $wtBranch = ""
 $wtLines = & git worktree list --porcelain
 foreach ($line in $wtLines + "") {
-    if ([string]::IsNullOrWhiteSpace($line)) {
-        if ($wtPath -and $wtBranch) {
-            $branchName = $wtBranch -replace '^refs/heads/', ''
-            if (-not $worktreesByBranch.ContainsKey($branchName)) {
-                $worktreesByBranch[$branchName] = [System.Collections.Generic.List[string]]::new()
-            }
-            $worktreesByBranch[$branchName].Add($wtPath)
-        }
-        $wtPath = ""
-        $wtBranch = ""
-        continue
-    }
+	if ([string]::IsNullOrWhiteSpace($line)) {
+		if ($wtPath -and $wtBranch) {
+			$branchName = $wtBranch -replace '^refs/heads/', ''
+			if (-not $worktreesByBranch.ContainsKey($branchName)) {
+				$worktreesByBranch[$branchName] = [System.Collections.Generic.List[string]]::new()
+			}
+			$worktreesByBranch[$branchName].Add($wtPath)
+		}
+		$wtPath = ""
+		$wtBranch = ""
+		continue
+	}
 
-    if ($line.StartsWith("worktree ")) {
-        $wtPath = $line.Substring("worktree ".Length)
-    }
-    elseif ($line.StartsWith("branch refs/heads/")) {
-        $wtBranch = $line.Substring("branch ".Length)
-    }
+	if ($line.StartsWith("worktree ")) {
+		$wtPath = $line.Substring("worktree ".Length)
+	}
+	elseif ($line.StartsWith("branch refs/heads/")) {
+		$wtBranch = $line.Substring("branch ".Length)
+	}
 }
 
 function Get-BranchEpoch {
-    param([Parameter(Mandatory = $true)][string]$Branch)
+	param([Parameter(Mandatory = $true)][string]$Branch)
 
-    $best = 0L
+	$best = 0L
 
-    if ($localExists.ContainsKey($Branch)) {
-        $epoch = (& git log -1 --format=%ct "refs/heads/$Branch" 2>$null).Trim()
-        if ($epoch -match '^\d+$' -and [long]$epoch -gt $best) {
-            $best = [long]$epoch
-        }
-    }
+	if ($localExists.ContainsKey($Branch)) {
+		$epoch = (& git log -1 --format=%ct "refs/heads/$Branch" 2>$null).Trim()
+		if ($epoch -match '^\d+$' -and [long]$epoch -gt $best) {
+			$best = [long]$epoch
+		}
+	}
 
-    if ($remoteExists.ContainsKey($Branch)) {
-        $epoch = (& git log -1 --format=%ct "refs/remotes/$remote/$Branch" 2>$null).Trim()
-        if ($epoch -match '^\d+$' -and [long]$epoch -gt $best) {
-            $best = [long]$epoch
-        }
-    }
+	if ($remoteExists.ContainsKey($Branch)) {
+		$epoch = (& git log -1 --format=%ct "refs/remotes/$remote/$Branch" 2>$null).Trim()
+		if ($epoch -match '^\d+$' -and [long]$epoch -gt $best) {
+			$best = [long]$epoch
+		}
+	}
 
-    return $best
+	return $best
 }
 
 Write-Host "Repo: $repo"
+Write-Host "Default branch: $defaultBranch"
 Write-Host "Remote: $remote"
 Write-Host "Apply: $apply"
 Write-Host "Delete remote: $deleteRemote"
@@ -163,8 +183,8 @@ Write-Host "Orphan threshold (days): $orphanDays"
 Write-Host ""
 
 if ($candidates.Count -eq 0) {
-    Write-Host "No candidate squad/* or sprint/* branches found."
-    exit 0
+	Write-Host "No candidate squad/* or sprint/* branches found."
+	exit 0
 }
 
 Write-Host "Branch evaluation summary:"
@@ -176,154 +196,263 @@ $remoteDeleteCount = 0
 $worktreeRemoveCount = 0
 $skipCount = 0
 
-foreach ($branch in ($candidates.ToArray() | Sort-Object)) {
-    $prState = "NONE"
-    $issueState = "NONE"
-    $reason = "NOT_ELIGIBLE"
-    $eligible = $false
+$reasonCounts = @{}
+$planLocal = [System.Collections.Generic.List[string]]::new()
+$planRemote = [System.Collections.Generic.List[string]]::new()
+$planWorktree = [System.Collections.Generic.List[string]]::new()
+$protectedSkips = [System.Collections.Generic.List[string]]::new()
+$actionSkips = [System.Collections.Generic.List[string]]::new()
+$deletedLocal = [System.Collections.Generic.List[string]]::new()
+$deletedRemote = [System.Collections.Generic.List[string]]::new()
+$removedWorktrees = [System.Collections.Generic.List[string]]::new()
 
-    $prJsonRaw = & gh pr list --repo $repo --state all --head $branch --json number,state,mergedAt,closedAt,url 2>$null
-    if (-not $prJsonRaw) {
-        $prJsonRaw = "[]"
-    }
+function Add-ReasonCount {
+	param([Parameter(Mandatory = $true)][string]$Reason)
 
-    $prs = $prJsonRaw | ConvertFrom-Json
-    if ($prs -isnot [System.Array]) {
-        $prs = @($prs)
-    }
+	if ($reasonCounts.ContainsKey($Reason)) {
+		$reasonCounts[$Reason] = [int]$reasonCounts[$Reason] + 1
+	}
+	else {
+		$reasonCounts[$Reason] = 1
+	}
+}
 
-    $hasOpen = $prs | Where-Object { $_.state -eq "OPEN" }
-    $hasMerged = $prs | Where-Object { $null -ne $_.mergedAt }
-    $hasClosed = $prs | Where-Object { $_.state -eq "CLOSED" }
+function Write-List {
+	param(
+		[Parameter(Mandatory = $true)][string]$Title,
+		[System.Collections.IEnumerable]$Items = @()
+	)
 
-    if ($hasOpen.Count -gt 0) {
-        $prState = "OPEN"
-    }
-    elseif ($hasMerged.Count -gt 0) {
-        $prState = "MERGED"
-    }
-    elseif ($hasClosed.Count -gt 0) {
-        $prState = "CLOSED"
-    }
+	$itemsArray = @($Items)
 
-    $issueNumber = ""
-    if ($branch -match '^(squad|sprint)/(\d+)(-|$)') {
-        $issueNumber = $Matches[2]
-    }
+	Write-Host $Title
+	if ($itemsArray.Count -eq 0) {
+		Write-Host "  - none"
+		return
+	}
 
-    if ($issueNumber) {
-        try {
-            $issueJson = & gh issue view $issueNumber --repo $repo --json state,url,number 2>$null
-            $issueState = (($issueJson | ConvertFrom-Json).state).ToUpperInvariant()
-        }
-        catch {
-            $issueState = "MISSING"
-        }
-    }
+	foreach ($item in $itemsArray) {
+		Write-Host "  - $item"
+	}
+}
 
-    $branchEpoch = Get-BranchEpoch -Branch $branch
-    $ageDays = if ($branchEpoch -gt 0) { [int](($now - $branchEpoch) / 86400) } else { -1 }
+foreach ($branch in ($candidates | Sort-Object)) {
+	$prState = "NONE"
+	$issueState = "NONE"
+	$reason = "NOT_ELIGIBLE"
+	$eligible = $false
+	$localFlag = if ($localExists.ContainsKey($branch)) { "yes" } else { "no" }
+	$remoteFlag = if ($remoteExists.ContainsKey($branch)) { "yes" } else { "no" }
+	$wtCount = if ($worktreesByBranch.ContainsKey($branch)) { $worktreesByBranch[$branch].Count } else { 0 }
 
-    if ($prState -eq "OPEN") {
-        $eligible = $false
-        $reason = "OPEN_PR"
-    }
-    elseif ($prState -eq "MERGED" -or $prState -eq "CLOSED") {
-        $eligible = $true
-        $reason = "PR_$prState"
-    }
-    elseif ($issueState -eq "CLOSED") {
-        $eligible = $true
-        $reason = "ISSUE_CLOSED"
-    }
-    elseif ($prState -eq "NONE" -and ($issueState -eq "NONE" -or $issueState -eq "MISSING")) {
-        if ($ageDays -ge $orphanDays) {
-            $eligible = $true
-            $reason = "ORPHANED_AGE"
-        }
-        else {
-            $eligible = $false
-            $reason = "ORPHANED_TOO_RECENT"
-        }
-    }
+	if (Is-ProtectedBranch -Branch $branch) {
+		$reason = "PROTECTED_BRANCH"
+		Add-ReasonCount -Reason $reason
+		[void]$protectedSkips.Add($branch)
+		Write-Host "$branch | FALSE | $reason | $prState | $issueState | n/a | $localFlag | $remoteFlag | $wtCount"
+		continue
+	}
 
-    $localFlag = if ($localExists.ContainsKey($branch)) { "yes" } else { "no" }
-    $remoteFlag = if ($remoteExists.ContainsKey($branch)) { "yes" } else { "no" }
-    $wtCount = if ($worktreesByBranch.ContainsKey($branch)) { $worktreesByBranch[$branch].Count } else { 0 }
-    $ageText = if ($ageDays -ge 0) { "$ageDays" } else { "unknown" }
+	$prJsonRaw = & gh pr list --repo $repo --state all --head $branch --json number,state,mergedAt,closedAt,url 2>$null
+	if (-not $prJsonRaw) {
+		$prJsonRaw = "[]"
+	}
 
-    Write-Host "$branch | $($eligible.ToString().ToUpperInvariant()) | $reason | $prState | $issueState | $ageText | $localFlag | $remoteFlag | $wtCount"
+	$prs = $prJsonRaw | ConvertFrom-Json
+	if ($prs -isnot [System.Array]) {
+		$prs = @($prs)
+	}
 
-    if (-not $eligible) {
-        continue
-    }
+	$hasOpen = @($prs | Where-Object { $_.state -eq "OPEN" })
+	$hasMerged = @($prs | Where-Object { $null -ne $_.mergedAt })
+	$hasClosed = @($prs | Where-Object { $_.state -eq "CLOSED" })
 
-    $eligibleCount++
+	if ($hasOpen.Count -gt 0) {
+		$prState = "OPEN"
+	}
+	elseif ($hasMerged.Count -gt 0) {
+		$prState = "MERGED"
+	}
+	elseif ($hasClosed.Count -gt 0) {
+		$prState = "CLOSED"
+	}
 
-    if (-not $apply) {
-        continue
-    }
+	$issueNumber = ""
+	if ($branch -match '^(squad|sprint)/(\d+)(-|$)') {
+		$issueNumber = $Matches[2]
+	}
 
-    if ($worktreesByBranch.ContainsKey($branch)) {
-        foreach ($wt in $worktreesByBranch[$branch]) {
-            if ($wt -eq $mainWorktree) {
-                continue
-            }
+	if ($issueNumber) {
+		try {
+			$issueJson = & gh issue view $issueNumber --repo $repo --json state,url,number 2>$null
+			$issueState = (($issueJson | ConvertFrom-Json).state).ToUpperInvariant()
+		}
+		catch {
+			$issueState = "MISSING"
+		}
+	}
 
-            if ($forceWorktree) {
-                & git worktree remove --force $wt
-            }
-            else {
-                & git worktree remove $wt
-            }
+	$branchEpoch = Get-BranchEpoch -Branch $branch
+	$ageDays = if ($branchEpoch -gt 0) { [int](($now - $branchEpoch) / 86400) } else { -1 }
 
-            if ($LASTEXITCODE -eq 0) {
-                $worktreeRemoveCount++
-            }
-            else {
-                $skipCount++
-                Write-Host "Skip worktree remove (failed): $wt"
-            }
-        }
-    }
+	if ($prState -eq "OPEN") {
+		$eligible = $false
+		$reason = "OPEN_PR"
+	}
+	elseif ($prState -eq "MERGED" -or $prState -eq "CLOSED") {
+		$eligible = $true
+		$reason = "PR_$prState"
+	}
+	elseif ($issueState -eq "CLOSED") {
+		$eligible = $true
+		$reason = "ISSUE_CLOSED"
+	}
+	elseif ($prState -eq "NONE" -and ($issueState -eq "NONE" -or $issueState -eq "MISSING")) {
+		if ($ageDays -ge $orphanDays) {
+			$eligible = $true
+			$reason = "ORPHANED_AGE"
+		}
+		else {
+			$eligible = $false
+			$reason = "ORPHANED_TOO_RECENT"
+		}
+	}
 
-    if ($localExists.ContainsKey($branch)) {
-        if ($branch -eq $currentBranch) {
-            $skipCount++
-            Write-Host "Skip local delete for current branch: $branch"
-        }
-        else {
-            if ($forceLocal) {
-                & git branch -D $branch
-            }
-            else {
-                & git branch -d $branch
-            }
+	$ageText = if ($ageDays -ge 0) { "$ageDays" } else { "unknown" }
 
-            if ($LASTEXITCODE -eq 0) {
-                $localDeleteCount++
-            }
-            else {
-                $skipCount++
-                Write-Host "Skip local delete (failed): $branch"
-            }
-        }
-    }
+	Write-Host "$branch | $($eligible.ToString().ToUpperInvariant()) | $reason | $prState | $issueState | $ageText | $localFlag | $remoteFlag | $wtCount"
+	Add-ReasonCount -Reason $reason
 
-    if ($deleteRemote -and $remoteExists.ContainsKey($branch)) {
-        & git push $remote --delete $branch
-        if ($LASTEXITCODE -eq 0) {
-            $remoteDeleteCount++
-        }
-        else {
-            $skipCount++
-            Write-Host "Skip remote delete (failed): $branch"
-        }
-    }
+	if (-not $eligible) {
+		continue
+	}
+
+	$eligibleCount++
+
+	if ($worktreesByBranch.ContainsKey($branch)) {
+		foreach ($wt in $worktreesByBranch[$branch]) {
+			if ($wt -ne $mainWorktree) {
+				[void]$planWorktree.Add("$branch ($reason) -> $wt")
+			}
+		}
+	}
+
+	if ($localExists.ContainsKey($branch) -and $branch -ne $currentBranch) {
+		[void]$planLocal.Add("$branch ($reason)")
+	}
+
+	if ($deleteRemote -and $remoteExists.ContainsKey($branch)) {
+		[void]$planRemote.Add("$branch ($reason)")
+	}
+
+	if (-not $apply) {
+		continue
+	}
+
+	if ($worktreesByBranch.ContainsKey($branch)) {
+		foreach ($wt in $worktreesByBranch[$branch]) {
+			if ($wt -eq $mainWorktree) {
+				continue
+			}
+
+			if ($forceWorktree) {
+				& git worktree remove --force $wt
+			}
+			else {
+				& git worktree remove $wt
+			}
+
+			if ($LASTEXITCODE -eq 0) {
+				$worktreeRemoveCount++
+				[void]$removedWorktrees.Add($wt)
+			}
+			else {
+				$skipCount++
+				Write-Host "Skip worktree remove (failed): $wt"
+				[void]$actionSkips.Add("worktree:$wt:remove_failed")
+			}
+		}
+	}
+
+	if ($localExists.ContainsKey($branch)) {
+		if ($branch -eq $currentBranch) {
+			$skipCount++
+			Write-Host "Skip local delete for current branch: $branch"
+		}
+		else {
+			if ($forceLocal) {
+				& git branch -D $branch
+			}
+			else {
+				& git branch -d $branch
+			}
+
+			if ($LASTEXITCODE -eq 0) {
+				$localDeleteCount++
+				[void]$deletedLocal.Add($branch)
+			}
+			else {
+				$skipCount++
+				Write-Host "Skip local delete (failed): $branch"
+				[void]$actionSkips.Add("branch:$branch:local_delete_failed")
+			}
+		}
+	}
+
+	if ($deleteRemote -and $remoteExists.ContainsKey($branch)) {
+		$openNowRaw = & gh pr list --repo $repo --state open --head $branch --json number --jq 'length' 2>$null
+		$openNow = 0
+		if ($openNowRaw -and ($openNowRaw.ToString().Trim() -match '^\d+$')) {
+			$openNow = [int]$openNowRaw.ToString().Trim()
+		}
+
+		if ($openNow -gt 0) {
+			$skipCount++
+			Write-Host "Skip remote delete (open PR exists): $branch"
+			[void]$actionSkips.Add("branch:$branch:remote_blocked_open_pr")
+		}
+		else {
+			& git push $remote --delete $branch
+			if ($LASTEXITCODE -eq 0) {
+				$remoteDeleteCount++
+				[void]$deletedRemote.Add($branch)
+			}
+			else {
+				$skipCount++
+				Write-Host "Skip remote delete (failed): $branch"
+				[void]$actionSkips.Add("branch:$branch:remote_delete_failed")
+			}
+		}
+	}
 }
 
 if ($apply) {
-    & git worktree prune
+	& git worktree prune
+}
+
+Write-Host ""
+Write-Host "Classification by reason:"
+if ($reasonCounts.Count -eq 0) {
+	Write-Host "  - none"
+}
+else {
+	foreach ($entry in ($reasonCounts.GetEnumerator() | Sort-Object Name)) {
+		Write-Host "  - $($entry.Name): $($entry.Value)"
+	}
+}
+
+Write-List -Title "Protected branches skipped:" -Items $protectedSkips
+
+if ($apply) {
+	Write-List -Title "Deleted local branches:" -Items $deletedLocal
+	Write-List -Title "Deleted remote branches:" -Items $deletedRemote
+	Write-List -Title "Removed worktrees:" -Items $removedWorktrees
+	Write-List -Title "Skipped actions:" -Items $actionSkips
+}
+else {
+	Write-List -Title "Dry-run local delete plan:" -Items $planLocal
+	Write-List -Title "Dry-run remote delete plan:" -Items $planRemote
+	Write-List -Title "Dry-run worktree remove plan:" -Items $planWorktree
 }
 
 Write-Host ""
@@ -335,5 +464,5 @@ Write-Host "Worktrees removed: $worktreeRemoveCount"
 Write-Host "Skipped actions: $skipCount"
 
 if (-not $apply) {
-    Write-Host "Dry-run only. Re-run with --apply to perform cleanup."
+	Write-Host "Dry-run only. Re-run with --apply to perform cleanup."
 }
