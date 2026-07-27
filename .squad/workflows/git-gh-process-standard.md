@@ -33,12 +33,10 @@ selection, PR flow, cleanup, and hard gates.
 - Preview-side automation must open or reuse an `automation/promote-preview` -> `preview` PR instead of pushing directly to `preview`
 - Main-side automation must open or reuse a `preview` -> `main` PR instead of pushing directly to `main`
 - Back-merge sync (`main` -> `dev`) is automated via `squad-main-to-dev-backmerge.yml`:
-  - Triggered on push to `main` (and manual dispatch)
-  - Opens a `main` -> `dev` PR only when `main` is ahead
-  - Reuses existing open back-merge PR (no duplicates)
-  - No-ops when `main` and `dev` are already in sync
-   - `.squad/` must remain `dev`-owned; back-merge PRs from `main` must not modify `.squad/`
-   - `squad-main-to-dev-backmerge-guard.yml` enforces this by failing any `main` -> `dev` PR that changes `.squad/`
+   - Triggered on push to `main` (and manual dispatch)
+   - Opens a `main` -> `dev` PR only when `main` is ahead
+   - Reuses existing open back-merge PR (no duplicates)
+   - No-ops when `main` and `dev` are already in sync
 
 ## GitHub enforcement baseline (branch protection / rulesets)
 
@@ -51,24 +49,21 @@ To enforce this branch model in GitHub, configure protections/rulesets for
 4. Require status checks before merge (at minimum: CI/test workflows used in the
    repo).
 5. Restrict `preview` merge source to the sanctioned promotion branch:
-   - Keep `squad-preview-guard.yml` enabled and required for `preview`.
-   - In rulesets, limit allowed source branch pattern for `preview` to
-     `automation/promote-preview` when your ruleset plan supports source-branch
-     restrictions.
+    - Keep `squad-preview-guard.yml` enabled and required for `preview`.
+    - In rulesets, limit allowed source branch pattern for `preview` to
+       `automation/promote-preview` when your ruleset plan supports source-branch
+       restrictions.
 6. Restrict `main` merge source to `preview` for release PRs:
    - Keep `squad-main-guard.yml` enabled and required for `main`.
-   - In rulesets, limit allowed source branch pattern for `main` to `preview`
-     when your ruleset plan supports source-branch restrictions.
-   - If the repo uses emergency hotfix branches, document the explicit
-     `hotfix/*` exception alongside that ruleset.
+    - In rulesets, limit allowed source branch pattern for `main` to `preview`
+       when your ruleset plan supports source-branch restrictions.
+    - If the repo uses emergency hotfix branches, document the explicit
+       `hotfix/*` exception alongside that ruleset.
 7. Ensure issue/work branches merge into `dev`, not `preview` or `main`:
    - Set repository defaults/templates (`gh pr create --base dev`) and
      contributor guidance accordingly.
    - Optionally restrict direct branch creation in UI to preserve
      `squad/{issue-number}-{kebab-slug}` convention.
-8. Protect `dev`-owned squad state during back-merge:
-   - Keep `squad-main-to-dev-backmerge-guard.yml` enabled and required for PRs into `dev`.
-   - If a `main` -> `dev` PR includes `.squad/` changes, resolve by excluding those changes before merge.
 
 ## Flow selection
 
