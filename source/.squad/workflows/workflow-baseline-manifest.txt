@@ -6,6 +6,7 @@ codeql-analysis.yml
 squad-add-issues-to-project.yml
 squad-blog-readme-sync.yml
 squad-ci.yml
+squad-close-dev-merged-issues.yml
 squad-dependabot-auto-merge.yml
 squad-docs.yml
 squad-heartbeat.yml
