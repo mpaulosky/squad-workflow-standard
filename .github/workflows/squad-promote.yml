@@ -272,10 +272,10 @@ jobs:
               body: [
                 'Automated release promotion PR for protected main.',
                 '',
-                `- Trigger: manual \\`squad-promote\\` run after syncing \\`${previewBranch}\\``,
-                `- Behavior: opens or reuses a PR from \\`${previewBranch}\\` into \\`${mainBranch}\\``,
+                '- Trigger: manual `squad-promote` run after syncing `' + previewBranch + '`',
+                '- Behavior: opens or reuses a PR from `' + previewBranch + '` into `' + mainBranch + '`',
                 '- Policy: avoids direct pushes to protected `main`',
-                `- Version: \\`v${version}\\``
+                '- Version: `v' + version + '`'
               ].join('\n')
             });
 
