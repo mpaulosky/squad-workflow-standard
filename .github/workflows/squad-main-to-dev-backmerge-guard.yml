@@ -13,8 +13,6 @@ permissions:
 jobs:
   protect-squad-dir:
     name: Block .squad changes in main -> dev back-merge PRs
-    env:
-      BACKMERGE_BRANCH_PREFIX: automation/backmerge-main-to-dev
     # Trusted source only: automation back-merge prefix or main fallback.
     if: >-
       ${{
@@ -23,7 +21,7 @@ jobs:
         (
           startsWith(
             github.event.pull_request.head.ref,
-            env.BACKMERGE_BRANCH_PREFIX
+            'automation/backmerge-main-to-dev'
           )
           ||
           github.event.pull_request.head.ref == (
