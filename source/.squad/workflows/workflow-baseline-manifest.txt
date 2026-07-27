@@ -20,6 +20,7 @@ squad-main-to-dev-backmerge.yml
 squad-milestone-blog.yml
 squad-milestone-release-decision.yml
 squad-milestone-release.yml
+forbidden-path-policy.json
 squad-paths-guard.yml
 squad-pr-automerge.yml
 squad-preview.yml
