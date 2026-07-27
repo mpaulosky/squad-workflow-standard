@@ -1,5 +1,5 @@
 name: Squad Preview Validation
-# dotnet project — configure build, test, and validation commands below
+# Preview gate for pre-main validation in this .NET workflow-standard repo
 
 "on":
   push:
@@ -14,17 +14,24 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: Build and test
-        run: |
-          # TODO: Add your dotnet build/test commands here
-          # Go:            go test ./...
-          # Python:        pip install -r requirements.txt && pytest
-          # .NET:          dotnet test
-          # Java (Maven):  mvn test
-          # Java (Gradle): ./gradlew test
-          echo "No build commands configured — update squad-preview.yml"
+      - name: Setup .NET SDK from global.json
+        uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
 
-      - name: Validate
+      - name: Show .NET info
+        run: dotnet --info
+
+      - name: Restore solution
+        run: dotnet restore squad-workflow-standard.slnx --nologo
+
+      - name: Build solution
+        run: dotnet build squad-workflow-standard.slnx --configuration Release --no-restore --nologo
+
+      - name: Run tests
+        run: dotnet test tests/SquadWorkflowStandard.Tests/SquadWorkflowStandard.Tests.csproj --configuration Release --no-build --nologo --verbosity normal
+
+      - name: Verify workflow mirror stays in sync
         run: |
-          # TODO: Add pre-release validation commands here
-          echo "No validation commands configured — update squad-preview.yml"
+          # Keep canonical and source template versions identical to prevent drift.
+          diff -u .github/workflows/squad-preview.yml source/workflows/squad-preview.yml
