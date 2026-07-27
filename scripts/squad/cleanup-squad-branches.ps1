@@ -289,7 +289,7 @@ foreach ($branch in ($candidates | Sort-Object)) {
 
 	if ($issueNumber) {
 		try {
-			$issueJson = & gh issue view $issueNumber --repo $repo --json state,url,number 2>$null
+					$issueJson = & gh issue view $issueNumber --repo $repo --json state,url,number 2>$null
 			$issueState = (($issueJson | ConvertFrom-Json).state).ToUpperInvariant()
 		}
 		catch {
