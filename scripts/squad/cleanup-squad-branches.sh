@@ -17,7 +17,7 @@ Options:
   -h, --help                Show this help
 
 Behavior:
-  - Targets branch patterns: squad/* and sprint/*
+  - Targets branch patterns: squad/*, sprint/*, and hotfix/*
   - Never deletes protected branches: main/dev/preview/insiders/default branch
   - Deletes only when branch is eligible:
     * linked PR is merged or closed (and no open PR exists), or
@@ -141,14 +141,14 @@ while IFS= read -r branch; do
   [[ -z "$branch" ]] && continue
   CANDIDATES["$branch"]=1
   LOCAL_EXISTS["$branch"]=1
-done < <(git for-each-ref --format='%(refname:short)' 'refs/heads/squad/*' 'refs/heads/sprint/*')
+done < <(git for-each-ref --format='%(refname:short)' 'refs/heads/squad/*' 'refs/heads/sprint/*' 'refs/heads/hotfix/*')
 
 while IFS= read -r remote_ref; do
   [[ -z "$remote_ref" ]] && continue
   branch="${remote_ref#${REMOTE}/}"
   CANDIDATES["$branch"]=1
   REMOTE_EXISTS["$branch"]=1
-done < <(git for-each-ref --format='%(refname:short)' "refs/remotes/${REMOTE}/squad/*" "refs/remotes/${REMOTE}/sprint/*")
+done < <(git for-each-ref --format='%(refname:short)' "refs/remotes/${REMOTE}/squad/*" "refs/remotes/${REMOTE}/sprint/*" "refs/remotes/${REMOTE}/hotfix/*")
 
 # Parse worktrees and map linked branches to paths.
 wt_path=""
@@ -219,7 +219,7 @@ echo "Orphan threshold (days): $ORPHAN_DAYS"
 echo
 
 if [[ ${#CANDIDATES[@]} -eq 0 ]]; then
-  echo "No candidate squad/* or sprint/* branches found."
+  echo "No candidate squad/*, sprint/*, or hotfix/* branches found."
   exit 0
 fi
 
@@ -311,7 +311,7 @@ while IFS= read -r branch; do
   fi
 
   issue_number=""
-  if [[ "$branch" =~ ^(squad|sprint)/([0-9]+)(-|$) ]]; then
+  if [[ "$branch" =~ ^(squad|sprint|hotfix)/([0-9]+)(-|$) ]]; then
     issue_number="${BASH_REMATCH[2]}"
   fi
 

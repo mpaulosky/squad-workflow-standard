@@ -18,7 +18,12 @@ Options:
   -h, --help                Show this help
 
 Behavior:
+	- Targets branch patterns: squad/*, sprint/*, and hotfix/*
 	- Never deletes protected branches: main/dev/preview/insiders/default branch
+	- Deletes only when branch is eligible:
+	  * linked PR is merged or closed (and no open PR exists), or
+	  * linked issue is closed (and no open PR exists), or
+	  * branch is orphaned (no PR + no issue), older than --orphan-days
 "@
 }
 
@@ -110,14 +115,14 @@ $localExists = @{}
 $remoteExists = @{}
 $worktreesByBranch = @{}
 
-$localBranches = & git for-each-ref --format='%(refname:short)' 'refs/heads/squad/*' 'refs/heads/sprint/*'
+$localBranches = & git for-each-ref --format='%(refname:short)' 'refs/heads/squad/*' 'refs/heads/sprint/*' 'refs/heads/hotfix/*'
 foreach ($branch in $localBranches) {
 	if ([string]::IsNullOrWhiteSpace($branch)) { continue }
 	[void]$candidates.Add($branch)
 	$localExists[$branch] = $true
 }
 
-$remoteRefs = & git for-each-ref --format='%(refname:short)' "refs/remotes/$remote/squad/*" "refs/remotes/$remote/sprint/*"
+$remoteRefs = & git for-each-ref --format='%(refname:short)' "refs/remotes/$remote/squad/*" "refs/remotes/$remote/sprint/*" "refs/remotes/$remote/hotfix/*"
 foreach ($remoteRef in $remoteRefs) {
 	if ([string]::IsNullOrWhiteSpace($remoteRef)) { continue }
 	$branch = $remoteRef.Substring($remote.Length + 1)
@@ -183,7 +188,7 @@ Write-Host "Orphan threshold (days): $orphanDays"
 Write-Host ""
 
 if ($candidates.Count -eq 0) {
-	Write-Host "No candidate squad/* or sprint/* branches found."
+	Write-Host "No candidate squad/*, sprint/*, or hotfix/* branches found."
 	exit 0
 }
 
@@ -278,7 +283,7 @@ foreach ($branch in ($candidates | Sort-Object)) {
 	}
 
 	$issueNumber = ""
-	if ($branch -match '^(squad|sprint)/(\d+)(-|$)') {
+	if ($branch -match '^(squad|sprint|hotfix)/(\d+)(-|$)') {
 		$issueNumber = $Matches[2]
 	}
 

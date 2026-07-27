@@ -46,7 +46,7 @@ permissions:
 
 jobs:
   cleanup:
-    name: Cleanup stale squad/sprint branches and worktrees
+    name: Cleanup stale squad/sprint/hotfix branches and worktrees
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository

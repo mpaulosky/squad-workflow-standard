@@ -170,8 +170,8 @@ Proceed? (yes / no)
 
 ### Cleanup Squad Branches and Worktrees
 
-- **intent:** cleanup branches, cleanup worktrees, prune squad branches, remove sprint branches, cleanup merged branches
-- **summary:** Run branch/worktree cleanup for merged, closed, or orphaned `squad/*` and `sprint/*` branches
+- **intent:** cleanup branches, cleanup worktrees, prune squad branches, remove sprint branches, remove hotfix branches, cleanup merged branches
+- **summary:** Run branch/worktree cleanup for merged, closed, or orphaned `squad/*`, `sprint/*`, and `hotfix/*` branches
 - **action:** shell
 - **command:** bash scripts/squad/cleanup-squad-branches.sh
 - **args:**
