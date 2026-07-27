@@ -34,11 +34,13 @@ selection, PR flow, cleanup, and hard gates.
 - Main-side automation must open or reuse a `preview` -> `main` PR instead of pushing directly to `main`
 - Back-merge sync (`main` -> `dev`) is automated via `squad-main-to-dev-backmerge.yml`:
   - Triggered on push to `main` (and manual dispatch)
-  - Opens a `main` -> `dev` PR only when `main` is ahead
+   - Builds `automation/backmerge-main-to-dev` from `dev`, then merges `main` into it
+   - Preserves `.squad/` from `dev` while composing the back-merge
+   - Opens an `automation/backmerge-main-to-dev` -> `dev` PR only when there are pending changes
   - Reuses existing open back-merge PR (no duplicates)
   - No-ops when `main` and `dev` are already in sync
-   - `.squad/` must remain `dev`-owned; back-merge PRs from `main` must not modify `.squad/`
-   - `squad-main-to-dev-backmerge-guard.yml` enforces this by failing any `main` -> `dev` PR that changes `.squad/`
+   - `.squad/` must remain `dev`-owned; back-merge PRs must not modify `.squad/`
+   - `squad-main-to-dev-backmerge-guard.yml` enforces this by failing back-merge PRs that change `.squad/`
 
 ## GitHub enforcement baseline (branch protection / rulesets)
 
