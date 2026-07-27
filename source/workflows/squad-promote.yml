@@ -104,6 +104,7 @@ jobs:
         env:
           PROMOTION_BRANCH: ${{ steps.prepare_preview_promotion.outputs.promotion_branch }}
         with:
+          github-token: ${{ secrets.SQUAD_TOKEN || secrets.GITHUB_TOKEN }}
           script: |
             const { owner, repo } = context.repo;
             const devBranch = process.env.DEV_BRANCH;
@@ -220,6 +221,7 @@ jobs:
         env:
           RELEASE_VERSION: ${{ steps.validate_release_ready.outputs.version }}
         with:
+          github-token: ${{ secrets.SQUAD_TOKEN || secrets.GITHUB_TOKEN }}
           script: |
             const { owner, repo } = context.repo;
             const mainBranch = process.env.MAIN_BRANCH;
