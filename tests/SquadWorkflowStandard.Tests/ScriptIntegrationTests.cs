@@ -234,6 +234,28 @@ public sealed class ScriptIntegrationTests
     }
 
     [Fact]
+    public void BackmergeGuardWorkflow_ShouldTargetAutomationHeadBranchWithMainFallback()
+    {
+        var sourceWorkflowPath =
+            Path.Combine(RepositoryPaths.Root, "source", "workflows", "squad-main-to-dev-backmerge-guard.yml");
+        var generatedWorkflowPath =
+            Path.Combine(RepositoryPaths.Root, ".github", "workflows", "squad-main-to-dev-backmerge-guard.yml");
+
+        var sourceWorkflow = File.ReadAllText(sourceWorkflowPath);
+        var generatedWorkflow = File.ReadAllText(generatedWorkflowPath);
+
+        generatedWorkflow.Should().Be(sourceWorkflow);
+        sourceWorkflow.Should().Contain("github.event.pull_request.base.ref == (vars.SQUAD_DEV_BRANCH || 'dev')");
+        sourceWorkflow.Should().Contain("startsWith(");
+        sourceWorkflow.Should().Contain("github.event.pull_request.head.ref,");
+        sourceWorkflow.Should().Contain("automation/backmerge-main-to-dev");
+        sourceWorkflow.Should().Contain("vars.SQUAD_MAIN_BRANCH");
+        sourceWorkflow.Should().Contain("github.event.repository.default_branch");
+        sourceWorkflow.Should().Contain("|| 'main'");
+        sourceWorkflow.Should().NotContain("github.event.pull_request.head.ref == 'main'");
+    }
+
+    [Fact]
     public void ProtectedDevBranchWorkflows_ShouldUsePullRequestsInsteadOfDirectPushes()
     {
         var sourceBlogWorkflowPath =
