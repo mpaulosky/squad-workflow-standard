@@ -73,7 +73,8 @@ for ($i = 0; $i -lt $args.Count; $i++) {
         default {
             if ([string]::IsNullOrWhiteSpace($targetRepo)) {
                 $targetRepo = $arg
-            } else {
+            }
+            else {
                 Write-Host "Unexpected argument: $arg"
                 Show-Usage
                 exit 1
@@ -145,7 +146,8 @@ if ($localVersion -ne $canonicalVersion) {
         Write-Host "  3) View diff: diff -u \"
         Write-Host "       $localCanonicalFile \"
         Write-Host "       $workflowStandard"
-    } else {
+    }
+    else {
         Write-Host "  3) View diff: local canonical file missing; sync first"
     }
 }
@@ -153,14 +155,14 @@ if ($localVersion -ne $canonicalVersion) {
 Assert-FileContains -File (Join-Path $targetRepo ".squad/routing.md") -Expected ".squad/workflows/git-gh-process-standard.md" -Message ".squad/routing.md must reference canonical workflow source"
 Assert-FileContains -File (Join-Path $targetRepo ".squad/routing.md") -Expected ".squad/templates/issue-lifecycle.md" -Message ".squad/routing.md must bind issue lifecycle template"
 Assert-FileContains -File (Join-Path $targetRepo ".squad/routing.md") -Expected "single issue uses standard branch flow; 2+" -Message ".squad/routing.md must enforce standard-vs-worktree flow selection"
-Assert-FileContains -File (Join-Path $targetRepo ".squad/routing.md") -Expected 'never push directly to `main` or `dev`' -Message ".squad/routing.md must hard-gate direct main/dev pushes"
+Assert-FileContains -File (Join-Path $targetRepo ".squad/routing.md") -Expected 'never push directly to `main`, `preview`, or `dev`' -Message ".squad/routing.md must hard-gate direct main/preview/dev pushes"
 Assert-FileContains -File (Join-Path $targetRepo ".squad/ceremonies.md") -Expected ".squad/workflows/git-gh-process-standard.md" -Message ".squad/ceremonies.md must reference canonical workflow source"
 Assert-FileContains -File (Join-Path $targetRepo ".squad/templates/issue-lifecycle.md") -Expected "Workflow Standard Binding" -Message ".squad/templates/issue-lifecycle.md must include workflow standard binding section"
 Assert-FileContains -File (Join-Path $targetRepo ".squad/templates/issue-lifecycle.md") -Expected ('Standard version: `{0}`' -f $canonicalVersion) -Message ".squad/templates/issue-lifecycle.md must bind to canonical standard version"
 Assert-FileContains -File (Join-Path $targetRepo ".squad/templates/issue-lifecycle.md") -Expected "Enforcement level: hard gate" -Message ".squad/templates/issue-lifecycle.md must explicitly declare hard gate enforcement"
-Assert-FileContains -File (Join-Path $targetRepo ".squad/templates/issue-lifecycle.md") -Expected 'Default branch policy: feature/work branches -> PR to `dev`; only `dev` -> PR to `main`' -Message ".squad/templates/issue-lifecycle.md must enforce dev-integration and dev-only promotion to main"
+Assert-FileContains -File (Join-Path $targetRepo ".squad/templates/issue-lifecycle.md") -Expected 'Default branch policy: feature/work branches -> PR to `dev`; `dev` -> sanitized promotion branch -> PR to `preview`; `preview` -> PR to `main`' -Message ".squad/templates/issue-lifecycle.md must enforce the protected dev-preview-main promotion flow"
 Assert-FileContains -File (Join-Path $targetRepo ".squad/templates/issue-lifecycle.md") -Expected 'Post-push requirement: after pushing a work branch, immediately open/update a PR to `dev`.' -Message ".squad/templates/issue-lifecycle.md must require immediate work-branch PR creation to dev after push"
-Assert-FileContains -File (Join-Path $targetRepo ".squad/templates/issue-lifecycle.md") -Expected 'Promotion rule: do not auto-open `dev` -> `main` after routine work pushes; promotion PRs are separate.' -Message ".squad/templates/issue-lifecycle.md must prevent auto-follow-on dev-to-main promotion after routine pushes"
+Assert-FileContains -File (Join-Path $targetRepo ".squad/templates/issue-lifecycle.md") -Expected 'Promotion rule: do not auto-open `dev` -> `main` after routine work pushes; promotion flows through a sanitized PR branch into `preview`, then a separate `preview` -> `main` release PR.' -Message ".squad/templates/issue-lifecycle.md must route promotion through protected preview before main"
 Assert-FileContains -File (Join-Path $targetRepo ".squad/skills/git-workflow-standard/SKILL.md") -Expected ('Standard version: `{0}`' -f $canonicalVersion) -Message ".squad/skills/git-workflow-standard/SKILL.md must match canonical standard version"
 
 $configuredHooksPath = (& git -C $targetRepo config --get core.hooksPath 2>$null)
@@ -175,7 +177,8 @@ if ($normalizedHooksPath) {
 if ([string]::IsNullOrWhiteSpace($configuredHooksPath)) {
     $script:hasFailure = $true
     Write-Host "ADAPTER CHECK FAILED: git core.hooksPath is not configured"
-} elseif ($normalizedHooksPath -ne ".github/hooks") {
+}
+elseif ($normalizedHooksPath -ne ".github/hooks") {
     $script:hasFailure = $true
     Write-Host "ADAPTER CHECK FAILED: git core.hooksPath must be '.github/hooks' (found: $configuredHooksPath)"
 }
@@ -185,7 +188,8 @@ if (Test-Path -LiteralPath $workflowBaselineManifest -PathType Leaf) {
     if (-not (Test-Path -LiteralPath $targetWorkflowBaselineManifest -PathType Leaf)) {
         $script:hasFailure = $true
         Write-Host "ADAPTER CHECK FAILED: missing file $targetWorkflowBaselineManifest"
-    } elseif (-not (Test-FilesEqual -PathA $workflowBaselineManifest -PathB $targetWorkflowBaselineManifest)) {
+    }
+    elseif (-not (Test-FilesEqual -PathA $workflowBaselineManifest -PathB $targetWorkflowBaselineManifest)) {
         $script:hasFailure = $true
         Write-Host "ADAPTER CHECK FAILED: workflow baseline manifest drift detected"
     }
@@ -223,7 +227,8 @@ if (Test-Path -LiteralPath $hookBaselineManifest -PathType Leaf) {
     if (-not (Test-Path -LiteralPath $targetHookBaselineManifest -PathType Leaf)) {
         $script:hasFailure = $true
         Write-Host "ADAPTER CHECK FAILED: missing file $targetHookBaselineManifest"
-    } elseif (-not (Test-FilesEqual -PathA $hookBaselineManifest -PathB $targetHookBaselineManifest)) {
+    }
+    elseif (-not (Test-FilesEqual -PathA $hookBaselineManifest -PathB $targetHookBaselineManifest)) {
         $script:hasFailure = $true
         Write-Host "ADAPTER CHECK FAILED: hook baseline manifest drift detected"
     }

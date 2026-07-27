@@ -47,10 +47,13 @@ internal static class RepositoryPaths
     public static string SyncScriptPath => Path.Combine(Root, "scripts", "squad", "sync-git-gh-standard.sh");
     public static string CheckScriptPath => Path.Combine(Root, "scripts", "squad", "check-git-gh-standard.sh");
     public static string CliProjectPath => Path.Combine(Root, "src", "GitGhStandardCli", "GitGhStandardCli.csproj");
+
     public static string CanonicalWorkflowPath =>
         Path.Combine(Root, "source", ".squad", "workflows", "git-gh-process-standard.md");
+
     public static string WorkflowManifestPath =>
         Path.Combine(Root, "source", ".squad", "workflows", "workflow-baseline-manifest.txt");
+
     public static string HookManifestPath =>
         Path.Combine(Root, "source", ".squad", "workflows", "hook-baseline-manifest.txt");
 
@@ -135,7 +138,7 @@ internal sealed class TemporaryTargetRepository : IDisposable
             Source: .squad/workflows/git-gh-process-standard.md
             Template: .squad/templates/issue-lifecycle.md
             Flow policy: single issue uses standard branch flow; 2+ issues require worktree flow
-            Policy: never push directly to `main` or `dev`
+            Policy: never push directly to `main`, `preview`, or `dev`
             """);
 
         File.WriteAllText(
@@ -148,9 +151,9 @@ internal sealed class TemporaryTargetRepository : IDisposable
              ## Workflow Standard Binding
              - Standard version: `{canonicalVersion}`
              - Enforcement level: hard gate
-             - Default branch policy: feature/work branches -> PR to `dev`; only `dev` -> PR to `main`
+             - Default branch policy: feature/work branches -> PR to `dev`; `dev` -> sanitized promotion branch -> PR to `preview`; `preview` -> PR to `main`
              - Post-push requirement: after pushing a work branch, immediately open/update a PR to `dev`.
-             - Promotion rule: do not auto-open `dev` -> `main` after routine work pushes; promotion PRs are separate.
+             - Promotion rule: do not auto-open `dev` -> `main` after routine work pushes; promotion flows through a sanitized PR branch into `preview`, then a separate `preview` -> `main` release PR.
              """);
 
         File.WriteAllText(
