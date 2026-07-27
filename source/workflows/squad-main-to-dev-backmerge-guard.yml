@@ -1,0 +1,46 @@
+---
+name: Squad Back-merge .squad Guard
+
+"on":
+  pull_request:
+    branches: [dev]
+    types: [opened, reopened, synchronize, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  protect-squad-dir:
+    name: Block .squad changes in main -> dev back-merge PRs
+    if: ${{ github.event.pull_request.head.ref == 'main' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail if back-merge PR modifies .squad
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const files = await github.paginate(github.rest.pulls.listFiles, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+              per_page: 100
+            });
+
+            const squadChanges = files
+              .map(file => file.filename)
+              .filter(name => name.startsWith('.squad/'));
+
+            if (squadChanges.length > 0) {
+              core.setFailed([
+                'Back-merge PR from main to dev must not modify .squad/.',
+                'Keep dev-owned squad state intact.',
+                'Resolve by excluding these paths:',
+                ...squadChanges.map(name => `- ${name}`)
+              ].join('\n'));
+              return;
+            }
+
+            core.info(
+              'No .squad changes detected in main -> dev back-merge PR.'
+            );
