@@ -3,7 +3,7 @@ name: Squad PR Auto-Merge
 
 "on":
   pull_request:
-    types: [opened, ready_for_review, reopened]
+    types: [opened, ready_for_review, reopened, edited, synchronize]
     branches: [dev]
 
 permissions:
@@ -16,31 +16,100 @@ jobs:
     runs-on: ubuntu-latest
     if: >-
       github.event.pull_request.draft == false &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
       startsWith(github.event.pull_request.head.ref, 'squad/')
     steps:
       - name: Enable auto-merge (squash)
         uses: actions/github-script@v9
         with:
           script: |
-            const pullRequestId = context.payload.pull_request.node_id;
-            const pullNumber = context.payload.pull_request.number;
+            const pull = context.payload.pull_request;
+            const pullNumber = pull.number;
 
-            await github.graphql(
-              `mutation EnableAutoMerge($pullRequestId: ID!) {
-                 enablePullRequestAutoMerge(input: {
-                   pullRequestId: $pullRequestId,
-                   mergeMethod: SQUASH
-                 }) {
-                   pullRequest {
+            if (pull.merged_at || pull.state !== "open") {
+              core.info(
+                `Skipping PR #${pullNumber}: ` +
+                `state=${pull.state}, merged_at=${pull.merged_at ?? "null"}.`
+              );
+              return;
+            }
+
+            const { owner, repo } = context.repo;
+            const status = await github.graphql(
+              `query AutoMergeStatus(
+                 $owner: String!,
+                 $repo: String!,
+                 $number: Int!
+               ) {
+                 repository(owner: $owner, name: $repo) {
+                   pullRequest(number: $number) {
                      number
+                     state
+                     merged
                      autoMergeRequest {
-                       mergeMethod
                        enabledAt
+                       mergeMethod
                      }
                    }
                  }
                }`,
-              { pullRequestId }
+              { owner, repo, number: pullNumber }
             );
 
-            core.info(`✅ Auto-merge enabled on PR #${pullNumber}`);
+            const currentPr = status.repository.pullRequest;
+            if (!currentPr || currentPr.state !== "OPEN" || currentPr.merged) {
+              core.info(
+                `Skipping PR #${pullNumber}: already closed or merged.`
+              );
+              return;
+            }
+
+            if (currentPr.autoMergeRequest) {
+              core.info(
+                `Auto-merge already enabled on PR #${pullNumber}; ` +
+                `no action needed.`
+              );
+              return;
+            }
+
+            try {
+              await github.graphql(
+                `mutation EnableAutoMerge($pullRequestId: ID!) {
+                   enablePullRequestAutoMerge(input: {
+                     pullRequestId: $pullRequestId,
+                     mergeMethod: SQUASH
+                   }) {
+                     pullRequest {
+                       number
+                       autoMergeRequest {
+                         mergeMethod
+                         enabledAt
+                       }
+                     }
+                   }
+                 }`,
+                { pullRequestId: pull.node_id }
+              );
+            } catch (error) {
+              const messages = Array.isArray(error?.errors)
+                ? error.errors.map((entry) => entry?.message || "")
+                : [];
+              const combinedMessage = [error?.message || "", ...messages]
+                .join("\n")
+                .toLowerCase();
+
+              if (
+                combinedMessage.includes("already merged") ||
+                combinedMessage.includes("already enabled") ||
+                combinedMessage.includes("unstable status")
+              ) {
+                core.warning(
+                  `Skipping PR #${pullNumber}: ${error.message}`
+                );
+                return;
+              }
+
+              throw error;
+            }
+
+            core.info(`Auto-merge enabled on PR #${pullNumber}`);

@@ -13,7 +13,24 @@ permissions:
 jobs:
   protect-squad-dir:
     name: Block .squad changes in main -> dev back-merge PRs
-    if: ${{ github.event.pull_request.head.ref == 'main' }}
+    # Trusted source only: automation back-merge prefix or main fallback.
+    if: >-
+      ${{
+        github.event.pull_request.base.ref == (vars.SQUAD_DEV_BRANCH || 'dev')
+        &&
+        (
+          startsWith(
+            github.event.pull_request.head.ref,
+            'automation/backmerge-main-to-dev'
+          )
+          ||
+          github.event.pull_request.head.ref == (
+            vars.SQUAD_MAIN_BRANCH
+            || github.event.repository.default_branch
+            || 'main'
+          )
+        )
+      }}
     runs-on: ubuntu-latest
     steps:
       - name: Fail if back-merge PR modifies .squad

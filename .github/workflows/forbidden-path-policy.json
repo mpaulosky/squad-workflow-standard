@@ -8,8 +8,13 @@
     "team-docs/",
     "docs/proposals/"
   ],
-  "mainForbiddenPrefixes": [".squad/", "team-docs/"],
-  "devProtectedPrefixes": [".squad/"],
+  "mainForbiddenPrefixes": [
+    ".squad/",
+    "team-docs/"
+  ],
+  "devProtectedPrefixes": [
+    ".squad/"
+  ],
   "mainAllowedSquadDocs": [
     ".squad/skills/build-repair/SKILL.md",
     ".squad/skills/git-workflow-standard/SKILL.md",
