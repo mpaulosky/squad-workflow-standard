@@ -30,4 +30,4 @@ jobs:
             !.github/agents/**
             !.github/skills/**
             !.github/copilot-instructions.md
-          config: '.markdownlint.json'
+          config: ".markdownlint.json"
