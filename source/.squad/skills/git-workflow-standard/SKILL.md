@@ -28,11 +28,13 @@ Source of truth:
 7. After pushing a work branch, immediately open/update PR to `dev`.
 8. Do not auto-open `dev` -> `preview` after routine work pushes; promotion PRs are separate.
 9. Back-merge sync from `main` to `dev` must be handled by `squad-main-to-dev-backmerge.yml` (create/reuse PR, no-op when in sync).
-10. GitHub protections/rulesets must enforce the same model:
+10. Back-merge PRs from `main` to `dev` must not modify `.squad/`; enforce with `squad-main-to-dev-backmerge-guard.yml`.
+11. GitHub protections/rulesets must enforce the same model:
 
 - `dev`, `preview`, and `main` require PRs + checks + approvals
 - `preview` accepts PRs from `automation/promote-preview` only (plus required `squad-preview-guard`)
 - `main` accepts PRs from `preview` only, with any explicit `hotfix/*` exception guarded by `squad-main-guard`
+- `dev` requires `squad-main-to-dev-backmerge-guard` to block `.squad/` mutations in `main` -> `dev` sync PRs
 
 ## Flow Selection
 

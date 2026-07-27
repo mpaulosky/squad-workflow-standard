@@ -74,12 +74,14 @@ standard (`work branches -> dev`, `dev -> preview`, `preview -> main`):
    - Mark CI/test checks as required.
    - Keep `squad-preview-guard` required for PRs into `preview`.
    - Keep `squad-main-guard` required for PRs into `main`.
+   - Keep `squad-main-to-dev-backmerge-guard` required for PRs into `dev`.
 4. **Enforce promotion source branch policy**
    - Allow merges to `preview` from `automation/promote-preview` only
      (ruleset source restriction where available).
    - Allow merges to `main` from `preview` only, plus any explicit
      `hotfix/*` exception you document.
    - Keep `squad-main-to-dev-backmerge` enabled to auto-open/reuse `main` -> `dev` sync PRs when `main` moves ahead.
+    - Reject any `main` -> `dev` back-merge PR that includes `.squad/` changes; keep `.squad/` dev-owned.
 5. **Set contributor defaults to `dev`**
    - PR templates/docs must use `--base dev`.
    - Branch naming must follow `squad/{issue-number}-{kebab-slug}`.

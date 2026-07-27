@@ -37,6 +37,8 @@ selection, PR flow, cleanup, and hard gates.
   - Opens a `main` -> `dev` PR only when `main` is ahead
   - Reuses existing open back-merge PR (no duplicates)
   - No-ops when `main` and `dev` are already in sync
+   - `.squad/` must remain `dev`-owned; back-merge PRs from `main` must not modify `.squad/`
+   - `squad-main-to-dev-backmerge-guard.yml` enforces this by failing any `main` -> `dev` PR that changes `.squad/`
 
 ## GitHub enforcement baseline (branch protection / rulesets)
 
@@ -64,6 +66,9 @@ To enforce this branch model in GitHub, configure protections/rulesets for
      contributor guidance accordingly.
    - Optionally restrict direct branch creation in UI to preserve
      `squad/{issue-number}-{kebab-slug}` convention.
+8. Protect `dev`-owned squad state during back-merge:
+   - Keep `squad-main-to-dev-backmerge-guard.yml` enabled and required for PRs into `dev`.
+   - If a `main` -> `dev` PR includes `.squad/` changes, resolve by excluding those changes before merge.
 
 ## Flow selection
 
