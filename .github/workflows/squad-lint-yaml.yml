@@ -4,9 +4,9 @@ name: Lint YAML
 # No-op update to retrigger required yamllint check context.
 
 "on":
-  push:
-    paths: ['**.yml', '**.yaml']
+
   pull_request:
+    branches-ignore: [main]
     paths: ['**.yml', '**.yaml']
 
 permissions:
