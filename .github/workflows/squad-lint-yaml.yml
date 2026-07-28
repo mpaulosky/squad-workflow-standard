@@ -1,10 +1,11 @@
+---
 name: Lint YAML
 # Validates all workflow and config YAML files
 
 "on":
-  push:
-    paths: ['**.yml', '**.yaml']
+
   pull_request:
+    branches-ignore: [main]
     paths: ['**.yml', '**.yaml']
 
 permissions:

@@ -1,3 +1,4 @@
+---
 name: Test Suite
 
 # NOTE: All test projects now use 'dotnet test' consistently.
@@ -18,11 +19,9 @@ permissions:
         required: false
         type: string
         default: ""
-  push:
-    branches:
-      - dev
-      - main
+
   pull_request:
+    branches-ignore: [main]
     branches:
       - "**"
   workflow_dispatch:
@@ -46,7 +45,8 @@ env:
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
   DOTNET_CLI_TELEMETRY_OPTOUT: true
 
-  # Aspire parameter bindings for E2E.Tests (Parameters: auth0MgmtClientId/Secret)
+  # Aspire parameter bindings for E2E.Tests
+  # (Parameters: auth0MgmtClientId/Secret)
   Auth0__Domain: ${{ secrets.AUTH0_DOMAIN }}
   Auth0__ClientId: ${{ secrets.AUTH0_CLIENT_ID }}
   Auth0__ClientSecret: ${{ secrets.AUTH0_CLIENT_SECRET }}
@@ -55,7 +55,8 @@ env:
   Auth0Management__Domain: ${{ secrets.AUTH0_DOMAIN }}
   Auth0Management__Audience: https://${{ secrets.AUTH0_DOMAIN }}/api/v2/
   Parameters__auth0MgmtClientId: ${{ secrets.AUTH0_MANAGEMENT_CLIENT_ID }}
-  Parameters__auth0MgmtClientSecret: ${{ secrets.AUTH0_MANAGEMENT_CLIENT_SECRET }}
+  Parameters__auth0MgmtClientSecret: >-
+    ${{ secrets.AUTH0_MANAGEMENT_CLIENT_SECRET }}
 
 jobs:
   build:
@@ -78,7 +79,9 @@ jobs:
         uses: actions/cache@v6
         with:
           path: ${{ github.workspace }}/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/Directory.Packages.props') }}
+          key: >-
+            ${{ runner.os }}-nuget-${{
+            hashFiles('**/*.csproj', '**/Directory.Packages.props') }}
           restore-keys: |
             ${{ runner.os }}-nuget-
 
@@ -101,7 +104,9 @@ jobs:
         run: dotnet restore
 
       - name: Build solution
-        run: dotnet build ${{ env.SOLUTION_FILE }} --configuration Release --no-restore
+        run: >-
+          dotnet build "$SOLUTION_FILE" --configuration Release
+          --no-restore
 
       - name: Cache build artifacts
         uses: actions/cache@v6
@@ -109,7 +114,9 @@ jobs:
           path: |
             **/bin/Release/
             **/obj/
-          key: ${{ runner.os }}-build-${{ hashFiles('**/*.csproj', '**/Directory.Packages.props', 'global.json') }}
+          key: >-
+            ${{ runner.os }}-build-${{ hashFiles('**/*.csproj',
+            '**/Directory.Packages.props', 'global.json') }}
           restore-keys: |
             ${{ runner.os }}-build-
 
@@ -165,7 +172,8 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
           project_count=$(echo "$matrix_json" | jq '.include | length')
-          echo "::notice::Discovered ${project_count} test projects under tests/"
+          echo "::notice::Discovered ${project_count} test projects under"
+          echo "::notice::tests/"
 
   test:
     name: "Tests: ${{ matrix.test_name }}"
@@ -194,7 +202,9 @@ jobs:
         uses: actions/cache@v6
         with:
           path: ${{ github.workspace }}/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/Directory.Packages.props') }}
+          key: >-
+            ${{ runner.os }}-nuget-${{
+            hashFiles('**/*.csproj', '**/Directory.Packages.props') }}
           restore-keys: |
             ${{ runner.os }}-nuget-
 
@@ -203,15 +213,19 @@ jobs:
 
       - name: Build test project
         if: ${{ matrix.build_before_test }}
-        run: dotnet build "${{ matrix.project_path }}" --configuration Release --no-restore
+        run: >-
+          dotnet build "${{ matrix.project_path }}" --configuration Release
+          --no-restore
 
       - name: Install Playwright browsers
         if: ${{ matrix.requires_playwright }}
         run: |
           project_dir="$(dirname "${{ matrix.project_path }}")"
-          playwright_script=$(find "$project_dir/bin/Release" -type f -name "playwright.ps1" | head -n 1)
+          playwright_script=$(find "$project_dir/bin/Release" \
+            -type f -name "playwright.ps1" | head -n 1)
           if [ -z "$playwright_script" ]; then
-            echo "::error::Unable to locate playwright.ps1 for ${{ matrix.project_path }}"
+            echo "::error::Unable to locate playwright.ps1 \
+              for ${{ matrix.project_path }}"
             exit 1
           fi
           pwsh "$playwright_script" install chromium --with-deps
@@ -233,7 +247,8 @@ jobs:
             --logger "trx;LogFileName=${{ matrix.test_id }}.trx" \
             --results-directory "$GITHUB_WORKSPACE/test-results" \
             --collect:"XPlat Code Coverage" \
-            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
+            -- DataCollectionRunSettings.DataCollectors.DataCollector.
+            Configuration.Format=cobertura
           exit_code=$?
           if [ $exit_code -ne 0 ]; then
             echo "::error::Test project failed: ${{ matrix.project_path }}"
@@ -284,22 +299,32 @@ jobs:
       - name: Check coverage threshold
         run: |
           if [ -f "./coverage-output/Summary.json" ]; then
-            echo "=== Summary.json raw ===" && cat ./coverage-output/Summary.json | jq . || true
-            coverable_lines=$(jq -r '.summary.coverablelines // .summary.coverableLines // .coverablelines // .coverableLines // 0' ./coverage-output/Summary.json 2>/dev/null || echo "0")
-            coverage=$(jq -r '.summary.linecoverage // .lineCoverage // 0' ./coverage-output/Summary.json 2>/dev/null || echo "0")
+            echo "=== Summary.json raw ==="
+            cat ./coverage-output/Summary.json | jq . || true
+            coverable_lines=$(jq -r '
+              .summary.coverablelines //
+              .summary.coverableLines //
+              .coverablelines //
+              .coverableLines // 0
+            ' ./coverage-output/Summary.json 2>/dev/null || echo "0")
+            coverage=$(jq -r '.summary.linecoverage // .lineCoverage // 0' \
+              ./coverage-output/Summary.json 2>/dev/null || echo "0")
             echo "Line Coverage: $coverage%"
             if [ "$coverable_lines" = "0" ]; then
-              echo "::warning::No coverable lines found in Summary.json — skipping threshold check"
+              echo "::warning::No coverable lines found in Summary.json —" \
+                "skipping threshold check"
             else
               if (( $(echo "$coverage < 80" | bc -l) )); then
-                echo "::error::Code coverage is below 80% threshold: $coverage% (required: 80%)"
+                echo "::error::Code coverage is below 80% threshold:" \
+                  "$coverage% (required: 80%)"
                 exit 1
               else
                 echo "::notice::Coverage gate passed: $coverage% >= 80%"
               fi
             fi
           else
-            echo "::warning::Coverage report not available — skipping threshold check"
+            echo "::warning::Coverage report not available —" \
+              "skipping threshold check"
           fi
 
       - name: Upload coverage reports
@@ -353,15 +378,20 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Job Status" >> $GITHUB_STEP_SUMMARY
           echo "- **Build:** ${{ needs.build.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Discovered Tests:** ${{ needs.discover-tests.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Test Matrix:** ${{ needs.test.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Discovered Tests:**" \
+            "${{ needs.discover-tests.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Test Matrix:**" \
+            "${{ needs.test.result }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Artifacts" >> $GITHUB_STEP_SUMMARY
-          echo "- Test results and coverage reports available in Actions artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "- Test results and coverage reports available in " \
+            "Actions artifacts" >> $GITHUB_STEP_SUMMARY
           echo "- Coverage report: \`coverage-reports\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Discovered Test Projects" >> $GITHUB_STEP_SUMMARY
-          echo '${{ needs.discover-tests.outputs.matrix }}' | jq -r '.include[].project_path | "- " + .' >> $GITHUB_STEP_SUMMARY
+          echo '${{ needs.discover-tests.outputs.matrix }}' | \
+            jq -r '.include[].project_path | "- " + .' >> \
+            $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
           # Set overall status
@@ -369,7 +399,9 @@ jobs:
           discover_status="${{ needs.discover-tests.result }}"
           test_status="${{ needs.test.result }}"
 
-          if [[ "$build_status" == "failure" || "$discover_status" == "failure" || "$test_status" == "failure" ]]; then
+          if [[ "$build_status" == "failure" || \
+            "$discover_status" == "failure" || \
+            "$test_status" == "failure" ]]; then
             echo "❌ **Overall Status:** FAILED" >> $GITHUB_STEP_SUMMARY
           else
             echo "✅ **Overall Status:** PASSED" >> $GITHUB_STEP_SUMMARY
