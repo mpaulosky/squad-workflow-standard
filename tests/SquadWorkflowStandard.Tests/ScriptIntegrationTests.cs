@@ -234,6 +234,28 @@ public sealed class ScriptIntegrationTests
     }
 
     [Fact]
+    public void BackmergeGuardWorkflow_ShouldTargetAutomationHeadBranchWithMainFallback()
+    {
+        var sourceWorkflowPath =
+            Path.Combine(RepositoryPaths.Root, "source", "workflows", "squad-main-to-dev-backmerge-guard.yml");
+        var generatedWorkflowPath =
+            Path.Combine(RepositoryPaths.Root, ".github", "workflows", "squad-main-to-dev-backmerge-guard.yml");
+
+        var sourceWorkflow = File.ReadAllText(sourceWorkflowPath);
+        var generatedWorkflow = File.ReadAllText(generatedWorkflowPath);
+
+        generatedWorkflow.Should().Be(sourceWorkflow);
+        sourceWorkflow.Should().Contain("github.event.pull_request.base.ref == (vars.SQUAD_DEV_BRANCH || 'dev')");
+        sourceWorkflow.Should().Contain("startsWith(");
+        sourceWorkflow.Should().Contain("github.event.pull_request.head.ref,");
+        sourceWorkflow.Should().Contain("automation/backmerge-main-to-dev");
+        sourceWorkflow.Should().Contain("vars.SQUAD_MAIN_BRANCH");
+        sourceWorkflow.Should().Contain("github.event.repository.default_branch");
+        sourceWorkflow.Should().Contain("|| 'main'");
+        sourceWorkflow.Should().NotContain("github.event.pull_request.head.ref == 'main'");
+    }
+
+    [Fact]
     public void ProtectedDevBranchWorkflows_ShouldUsePullRequestsInsteadOfDirectPushes()
     {
         var sourceBlogWorkflowPath =
@@ -368,6 +390,48 @@ public sealed class ScriptIntegrationTests
         sourceMainGuardWorkflow.Should()
             .Contain("must come from ${previewBranch} or hotfix/* branches");
         sourceMainGuardWorkflow.Should().NotContain("source === \"dev\"");
+    }
+
+    [Fact]
+    public void BranchCleanupWorkflow_ShouldBeSourceSyncedAndSupportDispatchAndSchedule()
+    {
+        var sourceWorkflowPath =
+            Path.Combine(RepositoryPaths.Root, "source", "workflows", "squad-branch-worktree-cleanup.yml");
+        var generatedWorkflowPath =
+            Path.Combine(RepositoryPaths.Root, ".github", "workflows", "squad-branch-worktree-cleanup.yml");
+
+        var sourceWorkflow = File.ReadAllText(sourceWorkflowPath);
+        var generatedWorkflow = File.ReadAllText(generatedWorkflowPath);
+
+        generatedWorkflow.Should().Be(sourceWorkflow);
+        sourceWorkflow.Should().Contain("workflow_dispatch:");
+        sourceWorkflow.Should().Contain("schedule:");
+        sourceWorkflow.Should().Contain("scripts/squad/cleanup-squad-branches.sh");
+        sourceWorkflow.Should().Contain("--apply");
+        sourceWorkflow.Should().Contain("--delete-remote");
+        sourceWorkflow.Should().Contain("Cleanup stale squad/sprint/hotfix branches and worktrees");
+    }
+
+    [Fact]
+    public void CleanupScripts_ShouldIncludeHotfixBranchPatternSupport()
+    {
+        var bashScriptPath = Path.Combine(RepositoryPaths.Root, "scripts", "squad", "cleanup-squad-branches.sh");
+        var psScriptPath = Path.Combine(RepositoryPaths.Root, "scripts", "squad", "cleanup-squad-branches.ps1");
+
+        var bashScript = File.ReadAllText(bashScriptPath);
+        var psScript = File.ReadAllText(psScriptPath);
+
+        bashScript.Should().Contain("refs/heads/hotfix/*");
+        bashScript.Should().Contain("refs/remotes/${REMOTE}/hotfix/*");
+        bashScript.Should().Contain("No candidate squad/*, sprint/*, or hotfix/* branches found.");
+        bashScript.Should().Contain("^(squad|sprint|hotfix)/([0-9]+)(-|$)");
+
+        psScript.Should().Contain("refs/heads/hotfix/*");
+        psScript.Should().Contain("refs/remotes/$remote/hotfix/*");
+        psScript.Should().Contain("No candidate squad/*, sprint/*, or hotfix/* branches found.");
+        psScript.Should().Contain("^(squad|sprint|hotfix)/(\\d+)(-|$)");
+        psScript.Should().Contain("--json number,state,mergedAt,closedAt,url");
+        psScript.Should().Contain("--json state,url,number");
     }
 
     [Fact]

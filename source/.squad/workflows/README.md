@@ -72,6 +72,15 @@ standard (`work branches -> dev`, `dev -> preview`, `preview -> main`):
    - Require at least one approval.
 3. **Require status checks on `dev`, `preview`, and `main`**
    - Mark CI/test checks as required.
+   - Use unique check names to avoid ambiguous required-check resolution.
+   - Apply this recommended required-check matrix:
+
+| Base branch | Recommended required checks | Purpose |
+| --- | --- | --- |
+| `dev` | `Squad CI`, `Test Report Summary`, `markdownlint`, `yamllint`, `guard-main-paths`, `Block .squad changes in main -> dev back-merge PRs` | Keeps issue PRs validated and blocks `.squad/` mutations in automated `main` -> `dev` back-merge PRs. |
+| `preview` | `Squad CI`, `Test Report Summary`, `markdownlint`, `yamllint`, `guard-preview-source` | Keeps promotion PRs validated and enforces `automation/promote-preview` as the only allowed source into `preview`. |
+| `main` | `Squad CI`, `Test Report Summary`, `markdownlint`, `yamllint`, `guard-main-source`, `guard-main-paths` | Keeps release PRs validated, enforces source policy (`preview` or `hotfix/*`), and blocks forbidden team-state paths. |
+
    - Keep `squad-preview-guard` required for PRs into `preview`.
    - Keep `squad-main-guard` required for PRs into `main`.
    - Keep `squad-main-to-dev-backmerge-guard` required for PRs into `dev`.
@@ -81,7 +90,7 @@ standard (`work branches -> dev`, `dev -> preview`, `preview -> main`):
    - Allow merges to `main` from `preview` only, plus any explicit
      `hotfix/*` exception you document.
    - Keep `squad-main-to-dev-backmerge` enabled to auto-open/reuse `main` -> `dev` sync PRs when `main` moves ahead.
-    - Reject any `main` -> `dev` back-merge PR that includes `.squad/` changes; keep `.squad/` dev-owned.
+   - Reject any `main` -> `dev` back-merge PR that includes `.squad/` changes; keep `.squad/` dev-owned.
 5. **Set contributor defaults to `dev`**
    - PR templates/docs must use `--base dev`.
    - Branch naming must follow `squad/{issue-number}-{kebab-slug}`.

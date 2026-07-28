@@ -92,7 +92,9 @@ else
 fi
 
 echo -e "\n${CYAN}🧪 Running test suite...${RESET}"
-dotnet test squad-workflow-standard.slnx --nologo
+# Prevent git hook context from leaking into child git commands invoked by tests.
+env -u GIT_DIR -u GIT_WORK_TREE -u GIT_INDEX_FILE -u GIT_PREFIX \
+  dotnet test squad-workflow-standard.slnx --nologo
 echo -e "${GREEN}✅ Test suite OK.${RESET}"
 
 echo -e "\n${GREEN}━━━ All gates passed — pushing ✅ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}\n"

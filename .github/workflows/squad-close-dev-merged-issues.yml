@@ -1,0 +1,100 @@
+---
+name: Squad Close Dev-Merged Issues
+
+"on":
+  pull_request:
+    branches: [dev]
+    types: [closed]
+
+permissions:
+  issues: write
+  pull-requests: read
+
+jobs:
+  close-linked-issues:
+    name: Close linked issues for merged dev PRs
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Close same-repo issues referenced in PR body
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const prBody = pr.body || '';
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            // Supported close keywords in PR descriptions.
+            const closeRefPattern = /\b(close[sd]?|fix(?:e[sd])?|resolve[sd]?)\b\s*:?\s*(?:(?<owner>[A-Za-z0-9_.-]+)\/(?<repo>[A-Za-z0-9_.-]+))?#(?<issue>\d+)\b/gi;
+            const issueNumbers = new Set();
+            const normalizedOwner = owner.toLowerCase();
+            const normalizedRepo = repo.toLowerCase();
+
+            for (const match of prBody.matchAll(closeRefPattern)) {
+              const refOwner = (match.groups?.owner || '').toLowerCase();
+              const refRepo = (match.groups?.repo || '').toLowerCase();
+              const issueNumber = Number.parseInt(match.groups?.issue || '', 10);
+
+              if (!Number.isInteger(issueNumber) || issueNumber <= 0) {
+                continue;
+              }
+
+              const isCrossRepo =
+                (refOwner && refOwner !== normalizedOwner) ||
+                (refRepo && refRepo !== normalizedRepo);
+
+              if (isCrossRepo) {
+                core.info(`Skipping cross-repo issue reference: ${match[0]}`);
+                continue;
+              }
+
+              issueNumbers.add(issueNumber);
+            }
+
+            if (issueNumbers.size === 0) {
+              core.info(`No same-repo close-keyword issue references found in PR #${pr.number}.`);
+              return;
+            }
+
+            for (const issueNumber of [...issueNumbers].sort((a, b) => a - b)) {
+              try {
+                const { data: issue } = await github.rest.issues.get({
+                  owner,
+                  repo,
+                  issue_number: issueNumber,
+                });
+
+                if (issue.pull_request) {
+                  core.info(`Skipping #${issueNumber}: reference points to a pull request.`);
+                  continue;
+                }
+
+                if (issue.state === 'closed') {
+                  core.info(`Skipping #${issueNumber}: issue is already closed.`);
+                  continue;
+                }
+
+                await github.rest.issues.update({
+                  owner,
+                  repo,
+                  issue_number: issueNumber,
+                  state: 'closed',
+                });
+
+                await github.rest.issues.createComment({
+                  owner,
+                  repo,
+                  issue_number: issueNumber,
+                  body: [
+                    `Closed automatically after #${pr.number} merged into \\`dev\\`.`,
+                    '',
+                    `Linked pull request: #${pr.number}`,
+                  ].join('\n'),
+                });
+
+                core.info(`Closed issue #${issueNumber} from PR #${pr.number}.`);
+              } catch (error) {
+                core.warning(`Failed to process issue #${issueNumber}: ${error.message}`);
+              }
+            }

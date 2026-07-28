@@ -1,5 +1,5 @@
 name: Squad Preview Validation
-# dotnet project — configure build, test, and validation commands below
+# Preview gate for pre-main validation in this .NET workflow-standard repo
 
 on:
   push:
@@ -14,17 +14,65 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: Build and test
-        run: |
-          # TODO: Add your dotnet build/test commands here
-          # Go:            go test ./...
-          # Python:        pip install -r requirements.txt && pytest
-          # .NET:          dotnet test
-          # Java (Maven):  mvn test
-          # Java (Gradle): ./gradlew test
-          echo "No build commands configured — update squad-preview.yml"
+      - name: Setup .NET SDK from global.json
+        uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
 
-      - name: Validate
+      - name: Show .NET info
+        run: dotnet --info
+
+      - name: Restore solution
+        run: dotnet restore squad-workflow-standard.slnx --nologo
+
+      - name: Build solution
+        run: dotnet build squad-workflow-standard.slnx --configuration Release --no-restore --nologo
+
+      - name: Run tests
+        run: dotnet test tests/SquadWorkflowStandard.Tests/SquadWorkflowStandard.Tests.csproj --configuration Release --no-build --nologo --verbosity normal
+
+      - name: Verify preview-branch workflow parity (normalized YAML)
         run: |
-          # TODO: Add pre-release validation commands here
-          echo "No validation commands configured — update squad-preview.yml"
+          # Keep canonical and source template workflows semantically identical while tolerating YAML style differences.
+          python3 <<'PY'
+          import json
+          from pathlib import Path
+
+          import yaml
+
+
+          def normalize_yaml(value):
+              if isinstance(value, dict):
+                  return {
+                      str(key): normalize_yaml(value[key])
+                      for key in sorted(value.keys(), key=lambda k: str(k))
+                  }
+              if isinstance(value, list):
+                  return [normalize_yaml(item) for item in value]
+              return value
+
+
+          canonical = normalize_yaml(
+              yaml.load(
+                Path('.github/workflows/squad-preview.yml').read_text(),
+                Loader=yaml.BaseLoader,
+              )
+          )
+          source = normalize_yaml(
+              yaml.load(
+                Path('source/workflows/squad-preview.yml').read_text(),
+                Loader=yaml.BaseLoader,
+              )
+          )
+
+          if canonical == source:
+              print('Preview-branch workflow parity check passed: normalized YAML content matches.')
+              raise SystemExit(0)
+
+          print('Preview-branch workflow parity check failed: normalized YAML content differs.')
+          Path('/tmp/preview-workflow-canonical.json').write_text(json.dumps(canonical, indent=2, sort_keys=True))
+          Path('/tmp/preview-workflow-source.json').write_text(json.dumps(source, indent=2, sort_keys=True))
+          raise SystemExit(1)
+          PY
+
+          diff -u /tmp/preview-workflow-canonical.json /tmp/preview-workflow-source.json

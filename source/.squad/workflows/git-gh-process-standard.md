@@ -34,11 +34,13 @@ selection, PR flow, cleanup, and hard gates.
 - Main-side automation must open or reuse a `preview` -> `main` PR instead of pushing directly to `main`
 - Back-merge sync (`main` -> `dev`) is automated via `squad-main-to-dev-backmerge.yml`:
   - Triggered on push to `main` (and manual dispatch)
-  - Opens a `main` -> `dev` PR only when `main` is ahead
+   - Builds `automation/backmerge-main-to-dev` from `dev`, then merges `main` into it
+   - Preserves `.squad/` from `dev` while composing the back-merge
+   - Opens an `automation/backmerge-main-to-dev` -> `dev` PR only when there are pending changes
   - Reuses existing open back-merge PR (no duplicates)
   - No-ops when `main` and `dev` are already in sync
-   - `.squad/` must remain `dev`-owned; back-merge PRs from `main` must not modify `.squad/`
-   - `squad-main-to-dev-backmerge-guard.yml` enforces this by failing any `main` -> `dev` PR that changes `.squad/`
+   - `.squad/` must remain `dev`-owned; back-merge PRs must not modify `.squad/`
+   - `squad-main-to-dev-backmerge-guard.yml` enforces this by failing back-merge PRs that change `.squad/`
 
 ## GitHub enforcement baseline (branch protection / rulesets)
 
@@ -99,10 +101,11 @@ gh pr ready
 Cleanup after merge:
 
 ```bash
-git checkout dev
-git pull origin dev
-git branch -d squad/{issue-number}-{kebab-slug}
-git push origin --delete squad/{issue-number}-{kebab-slug}
+# Dry-run (recommended first)
+bash scripts/squad/cleanup-squad-branches.sh --repo {owner/repo}
+
+# Apply local + remote cleanup
+bash scripts/squad/cleanup-squad-branches.sh --repo {owner/repo} --apply --delete-remote
 ```
 
 If the repo uses an orphan state branch, remove it after its state has been
@@ -141,10 +144,11 @@ the `preview` -> `main` release PR path.
 Cleanup after merge:
 
 ```bash
-git worktree remove ../{repo-name}-{issue-number}
-git worktree prune
-git branch -d squad/{issue-number}-{kebab-slug}
-git push origin --delete squad/{issue-number}-{kebab-slug}
+# Dry-run (recommended first)
+bash scripts/squad/cleanup-squad-branches.sh --repo {owner/repo}
+
+# Apply local + remote cleanup (adds stale worktree removal + prune)
+bash scripts/squad/cleanup-squad-branches.sh --repo {owner/repo} --apply --delete-remote
 ```
 
 ## Required pre-push behavior
