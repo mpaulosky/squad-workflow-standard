@@ -87,9 +87,9 @@ jobs:
                   repo,
                   issue_number: issueNumber,
                   body: [
-                    'Closed automatically after #' + pr.number + ' merged into `dev`.',
+                    `Closed automatically after #${pr.number} merged into \\`dev\\`.`,
                     '',
-                    'Linked pull request: #' + pr.number,
+                    `Linked pull request: #${pr.number}`,
                   ].join('\n'),
                 });
 
