@@ -20,6 +20,7 @@ env:
   PREVIEW_BRANCH: ${{ vars.SQUAD_PREVIEW_BRANCH || 'preview' }}
   PREVIEW_PROMOTION_BRANCH: ${{ vars.SQUAD_PREVIEW_PROMOTION_BRANCH || 'automation/promote-preview' }}
   MAIN_BRANCH: ${{ vars.SQUAD_MAIN_BRANCH || github.event.repository.default_branch || 'main' }}
+  FORBIDDEN_PATH_POLICY_FILE: .github/workflows/forbidden-path-policy.json
   # Use a PAT when available so bot-opened PRs trigger CI checks automatically.
   # GITHUB_TOKEN suppresses pull_request events on its own PRs (GitHub loop guard).
   # Store a classic PAT with repo scope as secret SQUAD_TOKEN to enable auto-checks.
@@ -50,7 +51,8 @@ jobs:
           echo "=== ${PREVIEW_PROMOTION_BRANCH} HEAD ==="
           git log "origin/${PREVIEW_PROMOTION_BRANCH}" -1 --oneline || echo "(branch does not exist yet)"
           echo "=== Files that would be stripped ==="
-          git diff "origin/${PREVIEW_BRANCH}..origin/${DEV_BRANCH}" --name-only | grep -E "^(\.(ai-team|squad|ai-team-templates|squad-templates)|team-docs/|docs/proposals/)" || echo "(none)"
+          FORBIDDEN_REGEX="$(node -e "process.stdout.write(require('./${FORBIDDEN_PATH_POLICY_FILE}').forbiddenPathRegex)")"
+          git diff "origin/${PREVIEW_BRANCH}..origin/${DEV_BRANCH}" --name-only | grep -E "${FORBIDDEN_REGEX}" || echo "(none)"
 
       - name: Prepare sanitized preview promotion branch
         if: ${{ inputs.dry_run == 'false' }}
@@ -59,21 +61,11 @@ jobs:
           git switch -C "${PREVIEW_PROMOTION_BRANCH}" "origin/${PREVIEW_BRANCH}"
           git merge "origin/${DEV_BRANCH}" --no-commit --no-ff -X theirs || true
 
+          mapfile -t FORBIDDEN_PATHS < <(node -e "require('./${FORBIDDEN_PATH_POLICY_FILE}').forbiddenPathPrefixes.forEach((path) => console.log(path))")
+
           # Strip forbidden paths before opening the protected preview PR.
-          git rm -rf --cached --ignore-unmatch \
-            .ai-team/ \
-            .squad/ \
-            .ai-team-templates/ \
-            .squad-templates/ \
-            team-docs/ \
-            "docs/proposals/" || true
-          rm -rf \
-            .ai-team/ \
-            .squad/ \
-            .ai-team-templates/ \
-            .squad-templates/ \
-            team-docs/ \
-            docs/proposals/ || true
+          git rm -rf --cached --ignore-unmatch "${FORBIDDEN_PATHS[@]}" || true
+          rm -rf "${FORBIDDEN_PATHS[@]}" || true
 
           UNMERGED="$(git diff --name-only --diff-filter=U || true)"
           if [[ -n "${UNMERGED}" ]]; then
@@ -208,7 +200,8 @@ jobs:
           echo "✅ Version ${VERSION} validated"
 
           # Verify no forbidden files on preview
-          FORBIDDEN=$(git ls-files | grep -E "^(\.(ai-team|squad|ai-team-templates|squad-templates)/|team-docs/|docs/proposals/)" || true)
+          FORBIDDEN_REGEX="$(node -e "process.stdout.write(require('./${FORBIDDEN_PATH_POLICY_FILE}').forbiddenPathRegex)")"
+          FORBIDDEN=$(git ls-files | grep -E "${FORBIDDEN_REGEX}" || true)
           if [ -n "$FORBIDDEN" ]; then
             echo "::error::Forbidden files found on ${PREVIEW_BRANCH}: $FORBIDDEN"
             exit 1

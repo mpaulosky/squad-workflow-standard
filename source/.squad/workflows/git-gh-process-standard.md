@@ -101,10 +101,11 @@ gh pr ready
 Cleanup after merge:
 
 ```bash
-git checkout dev
-git pull origin dev
-git branch -d squad/{issue-number}-{kebab-slug}
-git push origin --delete squad/{issue-number}-{kebab-slug}
+# Dry-run (recommended first)
+bash scripts/squad/cleanup-squad-branches.sh --repo {owner/repo}
+
+# Apply local + remote cleanup
+bash scripts/squad/cleanup-squad-branches.sh --repo {owner/repo} --apply --delete-remote
 ```
 
 If the repo uses an orphan state branch, remove it after its state has been
@@ -143,10 +144,11 @@ the `preview` -> `main` release PR path.
 Cleanup after merge:
 
 ```bash
-git worktree remove ../{repo-name}-{issue-number}
-git worktree prune
-git branch -d squad/{issue-number}-{kebab-slug}
-git push origin --delete squad/{issue-number}-{kebab-slug}
+# Dry-run (recommended first)
+bash scripts/squad/cleanup-squad-branches.sh --repo {owner/repo}
+
+# Apply local + remote cleanup (adds stale worktree removal + prune)
+bash scripts/squad/cleanup-squad-branches.sh --repo {owner/repo} --apply --delete-remote
 ```
 
 ## Required pre-push behavior

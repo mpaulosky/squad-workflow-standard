@@ -70,21 +70,19 @@ Do not auto-open `dev` -> `preview` from this step; preview/main promotion PRs r
 Standard:
 
 ```bash
-git checkout dev
-git pull origin dev
-git branch -d squad/{issue-number}-{kebab-slug}
-git push origin --delete squad/{issue-number}-{kebab-slug}
-git branch -d hotfix/{slug}  # if a hotfix branch was used
-git push origin --delete hotfix/{slug}  # if a hotfix branch was used
+# Dry-run (recommended first)
+bash scripts/squad/cleanup-squad-branches.sh --repo {owner/repo}
+
+# Apply local + remote cleanup
+bash scripts/squad/cleanup-squad-branches.sh --repo {owner/repo} --apply --delete-remote
 ```
 
 Worktree:
 
 ```bash
-git worktree remove ../{repo-name}-{issue-number}
-git worktree prune
-git branch -d squad/{issue-number}-{kebab-slug}
-git push origin --delete squad/{issue-number}-{kebab-slug}
-git branch -d hotfix/{slug}  # if a hotfix branch was used
-git push origin --delete hotfix/{slug}  # if a hotfix branch was used
+# Dry-run (recommended first)
+bash scripts/squad/cleanup-squad-branches.sh --repo {owner/repo}
+
+# Apply local + remote cleanup (including linked worktree cleanup)
+bash scripts/squad/cleanup-squad-branches.sh --repo {owner/repo} --apply --delete-remote
 ```

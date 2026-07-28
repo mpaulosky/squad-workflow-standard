@@ -3,9 +3,7 @@ name: Lint Markdown
 
 on:
   push:
-    branches-ignore: [main]
   pull_request:
-    branches-ignore: [main]
 
 permissions:
   contents: read
@@ -30,4 +28,4 @@ jobs:
             !.github/agents/**
             !.github/skills/**
             !.github/copilot-instructions.md
-          config: '.markdownlint.json'
+          config: ".markdownlint.json"
