@@ -1,0 +1,10 @@
+# Centrally managed .squad/skills/ baseline.
+# One skill directory name per line. The sync tool copies each named
+# directory (and all files within it) from this repo's source/.squad/skills/
+# into the target repo's .squad/skills/, overwriting if content differs.
+#
+# These are team-earned / project-level squad skills (not .github/skills/).
+# The build-repair skill points to the authoritative prompt in .github/prompts/.
+
+build-repair
+git-workflow-standard

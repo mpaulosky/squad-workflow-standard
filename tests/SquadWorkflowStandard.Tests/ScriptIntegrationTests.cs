@@ -413,6 +413,23 @@ public sealed class ScriptIntegrationTests
     }
 
     [Fact]
+    public void CloseDevMergedIssuesWorkflow_ShouldUseParseSafeCommentBodyStrings()
+    {
+        var sourceWorkflowPath =
+            Path.Combine(RepositoryPaths.Root, "source", "workflows", "squad-close-dev-merged-issues.yml");
+        var generatedWorkflowPath =
+            Path.Combine(RepositoryPaths.Root, ".github", "workflows", "squad-close-dev-merged-issues.yml");
+
+        var sourceWorkflow = File.ReadAllText(sourceWorkflowPath);
+        var generatedWorkflow = File.ReadAllText(generatedWorkflowPath);
+
+        generatedWorkflow.Should().Be(sourceWorkflow);
+        sourceWorkflow.Should().Contain("'Closed automatically after #' + pr.number + ' merged into `dev`.'");
+        sourceWorkflow.Should().Contain("'Linked pull request: #' + pr.number");
+        sourceWorkflow.Should().NotContain(@"merged into \`dev\`.");
+    }
+
+    [Fact]
     public void CleanupScripts_ShouldIncludeHotfixBranchPatternSupport()
     {
         var bashScriptPath = Path.Combine(RepositoryPaths.Root, "scripts", "squad", "cleanup-squad-branches.sh");
