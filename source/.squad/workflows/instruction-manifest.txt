@@ -1,0 +1,14 @@
+# Centrally managed .github/instructions/ baseline.
+# One filename per line. The sync tool copies each named file from this
+# repo's .github/instructions/ into the target repo's .github/instructions/,
+# overwriting if content differs.
+#
+# NOTE: .github/copilot-instructions.md (the top-level squad-init default)
+# is intentionally NOT in this list — it is a preserved, user-owned file.
+# Only .github/instructions/copilot-instructions.md (this list) is managed.
+
+blazor.instructions.md
+copilot-instructions.md
+git-commit-instructions.md
+markdown.instructions.md
+mongo-dba.instructions.md

@@ -1,0 +1,43 @@
+# Centrally managed .github/skills/ baseline.
+# One skill directory name per line. The sync tool copies each named
+# directory (and all files within it) from this repo's .github/skills/
+# into the target repo's .github/skills/, overwriting if content differs.
+# squad-init installs a subset of these; entries present in both repos
+# are upgraded to the canonical version here.
+
+agent-collaboration
+agent-conduct
+bunit-test-migration
+ci-validation-gates
+client-compatibility
+coordinator-init-mode
+coordinator-response-mode
+coordinator-source-of-truth
+cross-squad
+cross-squad-communication
+docs-standards
+error-recovery
+gh-auth-isolation
+github-issues
+git-workflow
+grill-me
+grill-with-docs
+iterative-retrieval
+microsoft-docs
+nuget-manager
+refactor
+reflect
+reskill
+reviewer-protocol
+secret-handling
+session-recovery
+solution-scaffolder
+squad
+squad-conventions
+squad-help
+squad-version-check
+tailwind-migration
+tdd
+test-discipline
+tiered-memory
+vertical-slice

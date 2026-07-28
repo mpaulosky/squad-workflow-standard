@@ -1,71 +1,133 @@
 # squad-workflow-standard
 
-Canonical distribution repository for Squad Git/GitHub workflow standards.  
-This repo publishes the standard pack that other repositories sync and enforce.
+Canonical distribution repository for Squad augmentation assets.  
+This repo publishes the standard pack that other repositories sync after `git init` + `squad init`.
 
-## What this repository does
+## Purpose
 
-1. Defines the canonical workflow policy
-   (branch model, PR flow, hard gates, cleanup).
-2. Distributes policy assets into target repositories.
-3. Validates drift and enforcement wiring in target repositories.
-4. Ships a centrally managed GitHub Actions baseline for squad
-   automation/linting/release ceremonies.
+After a new project runs `git init` and `squad init`, this standard syncs:
+
+- The full **Squad augmentation layer** (skills, instructions, prompts, agents)
+- The **git/GitHub workflow standard** (branch policy, PR flow, hard gates)
+- A baseline of **GitHub Actions workflows** for CI/CD, labeling, and release automation
+- **Git hooks** enforcing the branch policy
+
+It standardizes how Squad works across all projects in the same portfolio while preserving every file that belongs to the local project.
+
+## What squad init installs vs what this adds
+
+| Asset | `squad init` installs | This standard adds |
+|---|---|---|
+| `.github/workflows/` | 4 (heartbeat, triage, issue-assign, sync-labels) | +31 (CI, release, lint, policy guards, …) |
+| `.github/skills/` | 19 skills | +17 additional skills; upgrades shared 19 to canonical versions |
+| `.github/instructions/` | none | 5 instruction files |
+| `.github/prompts/` | none | 14 prompt files |
+| `.github/agents/` | `squad.agent.md` | +`beast.agent.md` |
+| `.squad/skills/` | `git-workflow-standard/` | +`build-repair/` |
+
+## Managed vs preserved file boundary
+
+### Managed — canonical source always wins on sync
+
+- All files listed in the manifest files under `source/.squad/workflows/`
+- `source/.squad/workflows/git-gh-process-standard.md`
+- `source/.squad/skills/git-workflow-standard/SKILL.md`
+- `source/.squad/skills/build-repair/SKILL.md`
+
+### Preserved — never touched (user-owned adapters)
+
+```
+.squad/routing.md
+.squad/ceremonies.md
+.squad/templates/issue-lifecycle.md
+.squad/team.md
+.squad/decisions.md
+.squad/agents/**              ← all agent charters and histories
+.squad/templates/**           ← managed by squad upgrade, not this standard
+.github/copilot-instructions.md   ← top-level project-specific config
+```
+
+A re-sync is always safe: user-owned files are never overwritten.
 
 ## Project structure
 
-- `source/.squad/workflows/git-gh-process-standard.md`:
-  Canonical process standard (`Standard-Version` source of truth).
-- `source/.squad/workflows/README.md`:
-  Rollout/retrofit playbook for adopting the standard in target repos.
-- `source/.squad/workflows/workflow-baseline-manifest.txt`:
-  List of centrally managed workflow files to sync into target repos.
-- `source/.squad/workflows/hook-baseline-manifest.txt`:
-  List of centrally managed hook files to sync into target repos.
-- `source/.squad/skills/git-workflow-standard/SKILL.md`:
-  Skill-facing executable guidance bound to the same standard version.
-- `scripts/squad/sync-git-gh-standard.sh`:
-  Syncs standard assets + baseline workflows into a target repo.
-- `scripts/squad/check-git-gh-standard.sh`:
-  Checks version drift and required adapter/enforcement bindings.
-- `source/workflows/*.yml`:
-  Canonical workflow YAML source that syncs into target
-  `.github/workflows/`.
-- `source/hooks/*`:
-  Canonical hook source that syncs into target `.github/hooks/`.
+```
+source/.squad/workflows/
+  git-gh-process-standard.md       ← canonical workflow policy (Standard-Version source of truth)
+  README.md                        ← rollout/retrofit playbook
+  workflow-baseline-manifest.txt   ← GitHub Actions YAMLs to sync
+  hook-baseline-manifest.txt       ← git hooks to sync
+  skill-manifest.txt               ← .github/skills/ directories to sync
+  instruction-manifest.txt         ← .github/instructions/ files to sync
+  prompt-manifest.txt              ← .github/prompts/ files to sync
+  agent-manifest.txt               ← .github/agents/ files to sync (beast.agent.md only)
+  squad-skill-manifest.txt         ← .squad/skills/ directories to sync
 
-## Core functionality
+source/.squad/skills/
+  git-workflow-standard/SKILL.md   ← skill bound to the process standard version
+  build-repair/SKILL.md            ← iterative build-repair skill
 
-### 1. Standard pack publishing
+.github/skills/                    ← source of truth for skill distribution (Option B)
+.github/instructions/              ← source of truth for instruction distribution
+.github/prompts/                   ← source of truth for prompt distribution
+.github/agents/                    ← source of truth for agent distribution
 
-The canonical pack consists of:
+source/workflows/                  ← canonical workflow YAML source
+source/hooks/                      ← canonical hook source
 
-- process standard + rollout README
-- skill binding file
-- baseline workflow + hook manifests
-- workflow YAML files listed in the manifest
-- hook files listed in the hook manifest
+scripts/squad/
+  sync-git-gh-standard.sh          ← bash sync script
+  check-git-gh-standard.sh         ← bash check script
+  sync-git-gh-standard.ps1         ← PowerShell sync script
+  check-git-gh-standard.ps1        ← PowerShell check script
 
-### 2. Target-repo synchronization
+src/GitGhStandardCli/             ← C# CLI (primary implementation)
+  Commands/
+    SyncCommand.cs
+    CheckCommand.cs
+  Models/
+    AssetCategory.cs               ← 7 category records with path metadata
+    SyncOptions.cs
+    CheckResult.cs
+  Services/
+    ManifestReader.cs
+    FileSync.cs                    ← copy-if-distinct + EnsureExecutable
+    PreservedPathGuard.cs          ← hard-coded never-touch guard (compiled)
+    DirectoryEnsurer.cs
+```
 
-`sync-git-gh-standard.sh` copies canonical assets into a target repository and writes:
+## How to use
 
-- `.squad/workflows/.git-gh-standard-version`
+### Prerequisites
 
-It also syncs all workflow files listed in `workflow-baseline-manifest.txt`.
-It also syncs all hook files listed in `hook-baseline-manifest.txt`.
-It sets `core.hooksPath=.github/hooks` in the target repo and ensures the synced
-hooks are executable.
+The C# CLI requires .NET 10+. The bash/PS1 scripts work without .NET.
 
-### 3. Drift + enforcement validation
+### Sync assets into a target repo
 
-`check-git-gh-standard.sh` verifies:
+```bash
+# C# CLI (primary, cross-platform)
+dotnet run --project src/GitGhStandardCli -- \
+  sync-git-gh-standard /absolute/path/to/target-repo \
+  --source /path/to/squad-workflow-standard
 
-- local standard version matches canonical `Standard-Version`
-- required adapter files exist and contain required hard-gate bindings
-- baseline workflow files match canonical copies
-- required hook activation is present (`core.hooksPath=.github/hooks`)
-- required hook files are executable
+# Bash fallback
+bash scripts/squad/sync-git-gh-standard.sh /absolute/path/to/target-repo
+
+# PowerShell fallback
+pwsh scripts/squad/sync-git-gh-standard.ps1 /absolute/path/to/target-repo
+```
+
+### Validate drift and enforcement
+
+```bash
+# C# CLI
+dotnet run --project src/GitGhStandardCli -- \
+  check-git-gh-standard /absolute/path/to/target-repo \
+  --source /path/to/squad-workflow-standard
+
+# Bash fallback
+bash scripts/squad/check-git-gh-standard.sh /absolute/path/to/target-repo
+```
 
 Exit codes are automation-safe:
 
@@ -74,93 +136,48 @@ Exit codes are automation-safe:
 - `3` = version drift detected
 - `4` = enforcement/adapter mismatch
 
-### 4. Baseline GitHub automation
-
-The workflow set includes:
-
-- linting (`squad-lint-yaml.yml`, `squad-lint-markdown.yml`)
-- test/release templates (`squad-ci.yml`, `squad-test.yml`, `squad-release.yml`)
-- policy guards (`squad-main-guard.yml`)
-- labeling/triage/assignment automation
-- project board automation/audit
-- milestone/release blog orchestration
-- CodeQL + code metrics + Dependabot auto-merge variants
-
-## How to use this repository
-
-### Prerequisites
-
-- `bash`
-- `git`
-- `gh` (for PR-driven workflows in target repos)
-
-### Sync the standard into a target repo
+### Dry-run sync (C# CLI only)
 
 ```bash
-bash scripts/squad/sync-git-gh-standard.sh /absolute/path/to/target-repo
+dotnet run --project src/GitGhStandardCli -- \
+  sync-git-gh-standard /absolute/path/to/target-repo \
+  --source /path/to/squad-workflow-standard \
+  --dry-run
 ```
 
-```powershell
-pwsh scripts/squad/sync-git-gh-standard.ps1 /absolute/path/to/target-repo
-```
+Prints what would be copied without writing any files.
 
-Optional canonical source override:
+### Optional source override (bash)
 
 ```bash
 bash scripts/squad/sync-git-gh-standard.sh \
   /absolute/path/to/target-repo \
   --source-repo /absolute/path/to/canonical-repo
-```
 
-or set:
-
-```bash
+# or
 export SQUAD_STANDARD_SOURCE_REPO=/absolute/path/to/canonical-repo
-```
-
-### Validate drift and enforcement in a target repo
-
-```bash
-bash scripts/squad/check-git-gh-standard.sh /absolute/path/to/target-repo
-```
-
-```powershell
-pwsh scripts/squad/check-git-gh-standard.ps1 /absolute/path/to/target-repo
-```
-
-### Configure GitHub branch protections/rulesets in target repos
-
-For the standard policy (work branches -> `dev`, only `dev` -> `main`), set:
-
-- protected `dev` and `main` branches (no direct pushes)
-- PR required + approval required on both
-- required status checks on both
-- `squad-main-guard` as required check for `main`
-- source restriction for `main` to `dev` only (where rulesets support it)
-- after pushing a work branch, immediately open/update PR to `dev`
-- do not auto-open `dev -> main` after routine work pushes (promotion PRs are separate)
-
-### Optional .NET CLI wrapper (coexists with scripts)
-
-```bash
-dotnet run --project src/GitGhStandardCli -- sync-git-gh-standard /absolute/path/to/target-repo
-dotnet run --project src/GitGhStandardCli -- \
-  check-git-gh-standard /absolute/path/to/target-repo
 ```
 
 ### Typical operator flow
 
-1. Update canonical files in this repo.
-2. Commit and push changes.
-3. Run `sync-git-gh-standard.sh` for each target repo.
-4. Run `check-git-gh-standard.sh` for each target repo.
-5. Resolve any drift/enforcement failures before issue-work PRs proceed.
+1. Update canonical assets in this repo (skills, workflows, process doc, etc.)
+2. Commit and push.
+3. Run `sync-git-gh-standard` for each target repo.
+4. Run `check-git-gh-standard` for each target repo.
+5. Resolve any drift/enforcement failures before gated issue work proceeds.
 
-### Local linting (matching CI tools)
+### Local linting
 
 ```bash
 npx --yes markdownlint-cli2 "**/*.md"
 ```
 
-YAML linting is enforced in CI via `squad-lint-yaml.yml`
-(yamllint rules embedded in workflow config).
+YAML linting is enforced in CI via `squad-lint-yaml.yml`.
+
+## Implementation notes
+
+- **Skills/instructions/prompts/agents** are read directly from `.github/` in this repo (no `source/skills/` mirror). The manifests control which files are distributed. This is Option B — single source of truth, no dual maintenance.
+- **`squad.agent.md`** is intentionally excluded from the agent manifest — `squad init`/`squad upgrade` own it. Only `beast.agent.md` is distributed.
+- **`PreservedPathGuard`** is a compiled C# guard — the never-touch list cannot be bypassed by a future manifest accident.
+- **Hook executability** is restored on every sync via `FileSync.EnsureExecutable` (C# uses `File.SetUnixFileMode`; bash uses `chmod +x`).
+
