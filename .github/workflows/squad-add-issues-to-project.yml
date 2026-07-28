@@ -1,6 +1,7 @@
+---
 name: Add Issues to Project
 
-on:
+"on":
   issues:
     types: [opened, reopened]
 
@@ -26,7 +27,7 @@ jobs:
       - name: Add issue to MyBlog project board
         uses: actions/github-script@v9
         with:
-          github-token: ${{ secrets.GH_PROJECT_TOKEN }}
+          github-token: ${{ github.token }}
           script: |
             const issue = context.payload.issue;
 
@@ -79,7 +80,8 @@ jobs:
               core.info(`✅ Issue #${issue.number} added to project → Backlog`);
             } catch (err) {
               if (err.message.includes('403')) {
-                const tokenMsg = "Access denied (403). Create a PAT with 'project' scope " +
+                const tokenMsg =
+                  "Access denied (403). Create a PAT with 'repo' scope " +
                   "and store as secrets.GH_PROJECT_TOKEN";
                 core.warning(tokenMsg);
               } else {
