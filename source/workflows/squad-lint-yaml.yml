@@ -3,10 +3,8 @@ name: Lint YAML
 
 on:
   push:
-    branches-ignore: [main]
     paths: ['**.yml', '**.yaml']
   pull_request:
-    branches-ignore: [main]
     paths: ['**.yml', '**.yaml']
 
 permissions:
