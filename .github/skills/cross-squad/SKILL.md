@@ -1,6 +1,6 @@
 ---
 name: "cross-squad"
-description: "Coordinating work across multiple Squad instances — discovery, delegation, and disambiguation when the user says 'squad' (the product) vs casual English 'group of agents'."
+description: "Coordinate work across multiple Squad instances — discovery, delegation, and disambiguation when 'squad' means the product vs casual English. WHEN: \"spawn a squad\", \"another squad\", \"peer squad\", \"coordinate squads\", \"cross-squad work\"."
 domain: "orchestration"
 confidence: "medium"
 source: "manual"

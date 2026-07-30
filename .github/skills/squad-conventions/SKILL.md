@@ -1,6 +1,6 @@
 ---
 name: "squad-conventions"
-description: "Core conventions and patterns used in the Squad codebase"
+description: "Apply core conventions and patterns used in the Squad codebase for consistent implementation across all Squad agents and tooling. WHEN: \"squad conventions\", \"Squad codebase patterns\", \"squad coding standards\", \"squad patterns\"."
 domain: "project-conventions"
 confidence: "high"
 source: "manual"

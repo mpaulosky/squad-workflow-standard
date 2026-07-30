@@ -1,6 +1,6 @@
 ---
 name: "cross-squad-communication"
-description: "Protocol for sending queries, delegating tasks, and sharing context between independent Squad instances across different repositories"
+description: "Send queries, delegate tasks, and share context between independent Squad instances across repos using sync CLI, git-async, or GH-issue protocols. WHEN: \"communicate between squads\", \"cross-squad query\", \"delegate to squad\", \"squad sync\", \"peer squad message\"."
 domain: "multi-repo coordination"
 confidence: "medium"
 source: "Ported from tamirdresher/squad-skills (plugins/cross-squad-communication). Companion to the registry-aware cross-squad skill — this one teaches the actual communication protocols once a peer is discovered. Pattern 0 (synchronous CLI) is the only end-to-end-validated pattern; Patterns 1, 2, 3 are documented from design but require live validation against your own setup before relying on them in production. See the Validation Status section at the bottom of this skill."

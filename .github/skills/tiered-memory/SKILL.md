@@ -1,6 +1,6 @@
 ---
 name: tiered-memory
-description: Three-tier agent memory model (hot/cold/wiki) for context reduction per spawn
+description: "Apply the three-tier agent memory model (hot/cold/wiki) for context reduction per spawn to keep agent prompts lean and efficient. WHEN: \"tiered memory\", \"hot cold wiki memory\", \"context reduction\", \"memory model\", \"lean spawn context\"."
 domain: memory-management, performance
 confidence: design (runtime not yet implemented)
 source: design proposal

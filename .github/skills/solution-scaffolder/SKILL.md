@@ -1,6 +1,6 @@
 ---
 name: solution-scaffolder
-description: 'Create new .NET solutions with complete project structure, configurations, and conventions based on the squad-workflow-standard architecture. Guides users through interactive prompts to scaffold solutions following SOLID principles, clean architecture, and established coding standards.'
+description: "Scaffold new .NET solutions with complete project structure, configurations, and conventions following SOLID principles and clean architecture. WHEN: \"create .NET solution\", \"scaffold project\", \"new solution\", \"new .NET project\", \"solution structure\"."
 ---
 
 # Solution Scaffolder
