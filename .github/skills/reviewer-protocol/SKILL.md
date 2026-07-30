@@ -1,6 +1,6 @@
 ---
 name: "reviewer-protocol"
-description: "Reviewer rejection workflow and strict lockout semantics"
+description: "Apply reviewer rejection workflow and strict lockout semantics — when a reviewer rejects work, a different agent must own the revision. WHEN: \"reviewer rejects\", \"rejection workflow\", \"reviewer lockout\", \"different agent revision\", \"reviewer protocol\"."
 domain: "orchestration"
 confidence: "high"
 source: "extracted"

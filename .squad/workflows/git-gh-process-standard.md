@@ -33,10 +33,14 @@ selection, PR flow, cleanup, and hard gates.
 - Preview-side automation must open or reuse an `automation/promote-preview` -> `preview` PR instead of pushing directly to `preview`
 - Main-side automation must open or reuse a `preview` -> `main` PR instead of pushing directly to `main`
 - Back-merge sync (`main` -> `dev`) is automated via `squad-main-to-dev-backmerge.yml`:
-   - Triggered on push to `main` (and manual dispatch)
-   - Opens a `main` -> `dev` PR only when `main` is ahead
-   - Reuses existing open back-merge PR (no duplicates)
-   - No-ops when `main` and `dev` are already in sync
+  - Triggered on push to `main` (and manual dispatch)
+   - Builds `automation/backmerge-main-to-dev` from `dev`, then merges `main` into it
+   - Preserves `.squad/` from `dev` while composing the back-merge
+   - Opens an `automation/backmerge-main-to-dev` -> `dev` PR only when there are pending changes
+  - Reuses existing open back-merge PR (no duplicates)
+  - No-ops when `main` and `dev` are already in sync
+   - `.squad/` must remain `dev`-owned; back-merge PRs must not modify `.squad/`
+   - `squad-main-to-dev-backmerge-guard.yml` enforces this by failing back-merge PRs that change `.squad/`
 
 ## GitHub enforcement baseline (branch protection / rulesets)
 
@@ -49,21 +53,24 @@ To enforce this branch model in GitHub, configure protections/rulesets for
 4. Require status checks before merge (at minimum: CI/test workflows used in the
    repo).
 5. Restrict `preview` merge source to the sanctioned promotion branch:
-    - Keep `squad-preview-guard.yml` enabled and required for `preview`.
-    - In rulesets, limit allowed source branch pattern for `preview` to
-       `automation/promote-preview` when your ruleset plan supports source-branch
-       restrictions.
+   - Keep `squad-preview-guard.yml` enabled and required for `preview`.
+   - In rulesets, limit allowed source branch pattern for `preview` to
+     `automation/promote-preview` when your ruleset plan supports source-branch
+     restrictions.
 6. Restrict `main` merge source to `preview` for release PRs:
    - Keep `squad-main-guard.yml` enabled and required for `main`.
-    - In rulesets, limit allowed source branch pattern for `main` to `preview`
-       when your ruleset plan supports source-branch restrictions.
-    - If the repo uses emergency hotfix branches, document the explicit
-       `hotfix/*` exception alongside that ruleset.
+   - In rulesets, limit allowed source branch pattern for `main` to `preview`
+     when your ruleset plan supports source-branch restrictions.
+   - If the repo uses emergency hotfix branches, document the explicit
+     `hotfix/*` exception alongside that ruleset.
 7. Ensure issue/work branches merge into `dev`, not `preview` or `main`:
    - Set repository defaults/templates (`gh pr create --base dev`) and
      contributor guidance accordingly.
    - Optionally restrict direct branch creation in UI to preserve
      `squad/{issue-number}-{kebab-slug}` convention.
+8. Protect `dev`-owned squad state during back-merge:
+   - Keep `squad-main-to-dev-backmerge-guard.yml` enabled and required for PRs into `dev`.
+   - If a `main` -> `dev` PR includes `.squad/` changes, resolve by excluding those changes before merge.
 
 ## Flow selection
 
@@ -94,10 +101,11 @@ gh pr ready
 Cleanup after merge:
 
 ```bash
-git checkout dev
-git pull origin dev
-git branch -d squad/{issue-number}-{kebab-slug}
-git push origin --delete squad/{issue-number}-{kebab-slug}
+# Dry-run (recommended first)
+bash scripts/squad/cleanup-squad-branches.sh --repo {owner/repo}
+
+# Apply local + remote cleanup
+bash scripts/squad/cleanup-squad-branches.sh --repo {owner/repo} --apply --delete-remote
 ```
 
 If the repo uses an orphan state branch, remove it after its state has been
@@ -136,10 +144,11 @@ the `preview` -> `main` release PR path.
 Cleanup after merge:
 
 ```bash
-git worktree remove ../{repo-name}-{issue-number}
-git worktree prune
-git branch -d squad/{issue-number}-{kebab-slug}
-git push origin --delete squad/{issue-number}-{kebab-slug}
+# Dry-run (recommended first)
+bash scripts/squad/cleanup-squad-branches.sh --repo {owner/repo}
+
+# Apply local + remote cleanup (adds stale worktree removal + prune)
+bash scripts/squad/cleanup-squad-branches.sh --repo {owner/repo} --apply --delete-remote
 ```
 
 ## Required pre-push behavior

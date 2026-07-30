@@ -1,4 +1,5 @@
 ---
+# yamllint disable rule:line-length
 name: Add Issues to Project
 
 "on":
@@ -27,7 +28,7 @@ jobs:
       - name: Add issue to MyBlog project board
         uses: actions/github-script@v9
         with:
-          github-token: ${{ github.token }}
+          github-token: ${{ secrets.GH_PROJECT_TOKEN }}
           script: |
             const issue = context.payload.issue;
 
@@ -80,8 +81,7 @@ jobs:
               core.info(`✅ Issue #${issue.number} added to project → Backlog`);
             } catch (err) {
               if (err.message.includes('403')) {
-                const tokenMsg =
-                  "Access denied (403). Create a PAT with 'repo' scope " +
+                const tokenMsg = "Access denied (403). Create a PAT with 'project' scope " +
                   "and store as secrets.GH_PROJECT_TOKEN";
                 core.warning(tokenMsg);
               } else {

@@ -1,36 +1,34 @@
 ---
-
-name: '.NET code metrics'
+name: ".NET code metrics"
 
 "on":
   push:
     branches:
       - main
     paths:
-      - '!./CODE_METRICS.md'  # ignore this file
+      - "!./CODE_METRICS.md"  # ignore this file
 
   pull_request:
     branches:
       - "**"
     paths:
-      - '!./CODE_METRICS.md'  # ignore this file
+      - "!./CODE_METRICS.md"  # ignore this file
 
   workflow_dispatch:
     inputs:
       reason:
-        description: 'The reason for running the workflow'
+        description: "The reason for running the workflow"
         required: true
-        default: 'Manual run'
+        default: "Manual run"
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v7
 
-      - name: 'Print manual run reason'
+      - name: "Print manual run reason"
         if: ${{ github.event_name == 'workflow_dispatch' }}
         run: |
           echo 'Reason: ${{ github.event.inputs.reason }}'
@@ -38,7 +36,7 @@ jobs:
         id: dotnet-code-metrics
         uses: dotnet/samples/github-actions/DotNet.GitHubAction@main
         env:
-          GREETINGS: 'Hello, .NET developers!'  # ${{ secrets.GITHUB_TOKEN }}
+          GREETINGS: "Hello, .NET developers!"  # ${{ secrets.GITHUB_TOKEN }}
         with:
           owner: ${{ github.repository_owner }}
           name: ${{ github.repository }}
@@ -47,8 +45,8 @@ jobs:
 
       - name: Create pull request
         uses: peter-evans/create-pull-request@v8.1.1
-        if: ${{ steps.dotnet-code-metrics.outputs.updated-metrics == 'true' }}
+        if: ${{ steps.dotnet-code-metrics.outputs.updated-metrics }} == 'true'
         with:
-          title: '${{ steps.dotnet-code-metrics.outputs.summary-title }}'
-          body: '${{ steps.dotnet-code-metrics.outputs.summary-details }}'
-          commit-message: '.NET code metrics, automated pull request.'
+          title: "${{ steps.dotnet-code-metrics.outputs.summary-title }}"
+          body: "${{ steps.dotnet-code-metrics.outputs.summary-details }}"
+          commit-message: ".NET code metrics, automated pull request."

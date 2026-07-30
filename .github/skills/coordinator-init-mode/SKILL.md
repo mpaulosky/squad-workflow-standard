@@ -1,6 +1,6 @@
 ---
 name: "coordinator-init-mode"
-description: "The complete two-phase Init Mode protocol the Squad coordinator runs when no team exists yet in the current repo. Phase 1 = propose the team (no files created, wait for user confirm). Phase 2 = create .squad/ scaffolding, casting state, .gitattributes for merge drivers, and the always-on built-ins (Scribe, Ralph, Rai, Fact Checker). Loaded on demand when the coordinator detects no .squad/team.md exists."
+description: "Apply the two-phase Init Mode protocol when no Squad team exists — Phase 1 proposes the team, Phase 2 creates .squad/ scaffolding and built-ins. WHEN: \"no team.md exists\", \"fresh repo setup\", \"squadify repo\", \"init mode\", \"create squad team\"."
 allowedTools: []
 confidence: high
 domain: squad-internals

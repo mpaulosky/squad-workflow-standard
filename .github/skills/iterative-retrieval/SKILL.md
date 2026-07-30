@@ -1,6 +1,6 @@
 ---
 name: "iterative-retrieval"
-description: "Max-3-cycle protocol for agent sub-tasks with WHY context and coordinator validation. Use when spawning sub-agents to complete scoped work."
+description: "Apply the max-3-cycle protocol for agent sub-tasks with WHY context and coordinator validation to structure autonomous work. WHEN: \"spawn sub-agent\", \"iterative retrieval\", \"structured sub-task\", \"agent loop\", \"sub-agent handoff\"."
 domain: "agent-coordination"
 confidence: "high"
 license: MIT

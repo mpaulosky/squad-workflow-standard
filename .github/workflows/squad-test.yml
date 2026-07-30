@@ -19,9 +19,11 @@ permissions:
         required: false
         type: string
         default: ""
-
+  push:
+    branches:
+      - dev
+      - main
   pull_request:
-    branches-ignore: [main]
     branches:
       - "**"
   workflow_dispatch:
@@ -71,7 +73,7 @@ jobs:
           fetch-depth: 0
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v6
+        uses: actions/setup-dotnet@v5
         with:
           global-json-file: global.json
 
@@ -105,7 +107,7 @@ jobs:
 
       - name: Build solution
         run: >-
-          dotnet build "$SOLUTION_FILE" --configuration Release
+          dotnet build ${{ env.SOLUTION_FILE }} --configuration Release
           --no-restore
 
       - name: Cache build artifacts
@@ -175,6 +177,34 @@ jobs:
           echo "::notice::Discovered ${project_count} test projects under"
           echo "::notice::tests/"
 
+  skill-routing-frontmatter:
+    name: Skill Routing Frontmatter
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs:
+      - build
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Run skill routing harness tests
+        run: |
+          test_project="tests/SquadWorkflowStandard.Tests/SquadWorkflowStandard.Tests.csproj"
+          dotnet test \
+            "$test_project" \
+            --filter "FullyQualifiedName~SkillRoutingFrontmatterTests" \
+            --configuration Release \
+            --verbosity minimal
+
   test:
     name: "Tests: ${{ matrix.test_name }}"
     runs-on: ubuntu-latest
@@ -182,6 +212,7 @@ jobs:
     needs:
       - build
       - discover-tests
+      - skill-routing-frontmatter
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.discover-tests.outputs.matrix) }}
@@ -194,7 +225,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v6
+        uses: actions/setup-dotnet@v5
         with:
           global-json-file: global.json
 
@@ -240,6 +271,9 @@ jobs:
             no_build_arg="--no-build"
           fi
 
+          coverage_arg="DataCollectionRunSettings.DataCollectors.DataCollector."
+          coverage_arg+="Configuration.Format=cobertura"
+
           dotnet test "${{ matrix.project_path }}" \
             --configuration Release \
             $no_build_arg \
@@ -247,8 +281,7 @@ jobs:
             --logger "trx;LogFileName=${{ matrix.test_id }}.trx" \
             --results-directory "$GITHUB_WORKSPACE/test-results" \
             --collect:"XPlat Code Coverage" \
-            -- DataCollectionRunSettings.DataCollectors.DataCollector.
-            Configuration.Format=cobertura
+            -- "$coverage_arg"
           exit_code=$?
           if [ $exit_code -ne 0 ]; then
             echo "::error::Test project failed: ${{ matrix.project_path }}"
@@ -275,7 +308,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v6
+        uses: actions/setup-dotnet@v5
         with:
           global-json-file: global.json
 
@@ -298,33 +331,34 @@ jobs:
 
       - name: Check coverage threshold
         run: |
+          summary_json="./coverage-output/Summary.json"
           if [ -f "./coverage-output/Summary.json" ]; then
             echo "=== Summary.json raw ==="
-            cat ./coverage-output/Summary.json | jq . || true
-            coverable_lines=$(jq -r '
-              .summary.coverablelines //
-              .summary.coverableLines //
-              .coverablelines //
-              .coverableLines // 0
-            ' ./coverage-output/Summary.json 2>/dev/null || echo "0")
-            coverage=$(jq -r '.summary.linecoverage // .lineCoverage // 0' \
-              ./coverage-output/Summary.json 2>/dev/null || echo "0")
+            cat "$summary_json" | jq . || true
+            coverable_expr='.summary.coverablelines // '
+            coverable_expr+='.summary.coverableLines // '
+            coverable_expr+='.coverablelines // .coverableLines // 0'
+            coverable_lines=$(jq -r "$coverable_expr" \
+              "$summary_json" 2>/dev/null || echo "0")
+            coverage_expr='.summary.linecoverage // .lineCoverage // 0'
+            coverage=$(jq -r "$coverage_expr" \
+              "$summary_json" 2>/dev/null || echo "0")
             echo "Line Coverage: $coverage%"
             if [ "$coverable_lines" = "0" ]; then
-              echo "::warning::No coverable lines found in Summary.json —" \
-                "skipping threshold check"
+              echo "::warning::No coverable lines found in Summary.json"
+              echo "::warning::Skipping threshold check"
             else
               if (( $(echo "$coverage < 80" | bc -l) )); then
-                echo "::error::Code coverage is below 80% threshold:" \
-                  "$coverage% (required: 80%)"
+                echo "::error::Code coverage is below 80% threshold"
+                echo "::error::$coverage% (required: 80%)"
                 exit 1
               else
                 echo "::notice::Coverage gate passed: $coverage% >= 80%"
               fi
             fi
           else
-            echo "::warning::Coverage report not available —" \
-              "skipping threshold check"
+            echo "::warning::Coverage report not available"
+            echo "::warning::Skipping threshold check"
           fi
 
       - name: Upload coverage reports
@@ -374,24 +408,23 @@ jobs:
       - name: Generate job summary
         if: always()
         run: |
+          summary="$GITHUB_STEP_SUMMARY"
           echo "## Test Execution Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Job Status" >> $GITHUB_STEP_SUMMARY
           echo "- **Build:** ${{ needs.build.result }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Discovered Tests:**" \
-            "${{ needs.discover-tests.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Test Matrix:**" \
-            "${{ needs.test.result }}" >> $GITHUB_STEP_SUMMARY
+            "${{ needs.discover-tests.result }}" >> "$summary"
+          echo "- **Test Matrix:** ${{ needs.test.result }}" >> "$summary"
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Artifacts" >> $GITHUB_STEP_SUMMARY
-          echo "- Test results and coverage reports available in " \
-            "Actions artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "- Test and coverage reports are in" \
+            "Actions artifacts" >> "$summary"
           echo "- Coverage report: \`coverage-reports\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Discovered Test Projects" >> $GITHUB_STEP_SUMMARY
-          echo '${{ needs.discover-tests.outputs.matrix }}' | \
-            jq -r '.include[].project_path | "- " + .' >> \
-            $GITHUB_STEP_SUMMARY
+          echo '${{ needs.discover-tests.outputs.matrix }}' \
+            | jq -r '.include[].project_path | "- " + .' >> "$summary"
           echo "" >> $GITHUB_STEP_SUMMARY
 
           # Set overall status
@@ -399,9 +432,9 @@ jobs:
           discover_status="${{ needs.discover-tests.result }}"
           test_status="${{ needs.test.result }}"
 
-          if [[ "$build_status" == "failure" || \
-            "$discover_status" == "failure" || \
-            "$test_status" == "failure" ]]; then
+          if [[ "$build_status" == "failure" \
+            || "$discover_status" == "failure" \
+            || "$test_status" == "failure" ]]; then
             echo "❌ **Overall Status:** FAILED" >> $GITHUB_STEP_SUMMARY
           else
             echo "✅ **Overall Status:** PASSED" >> $GITHUB_STEP_SUMMARY

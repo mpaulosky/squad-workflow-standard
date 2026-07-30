@@ -1,6 +1,6 @@
 ---
 name: "coordinator-source-of-truth"
-description: "The complete file-by-file source-of-truth hierarchy for Squad: which files are authoritative, which are derived/append-only, who may write each one, who may read each one, and the precedence rules when they conflict. Squad coordinator loads this on demand when it needs to resolve a write conflict, decide where a piece of state belongs, or answer a 'who owns this file' question."
+description: "Resolve the file-by-file source-of-truth hierarchy for Squad — who writes each file, authoritative vs derived, and precedence rules for conflicts. WHEN: \"who owns this file\", \"write conflict\", \"state hierarchy\", \"source of truth\", \"who can write\"."
 allowedTools: []
 confidence: high
 domain: squad-internals

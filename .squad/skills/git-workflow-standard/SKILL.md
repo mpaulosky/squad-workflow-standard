@@ -1,6 +1,6 @@
 ---
 name: "git-workflow-standard"
-description: "Canonical issue-to-branch/worktree-to-PR git + gh workflow with hard gates"
+description: 'Canonical issue-to-branch/worktree-to-PR git + gh workflow with hard gates. WHEN: "standard branch flow", "worktree flow", "open PR to dev". INVOKES: git checkout/switch/worktree, gh pr create, cleanup scripts.'
 domain: "version-control"
 confidence: "high"
 source: "team-decision"
@@ -28,11 +28,13 @@ Source of truth:
 7. After pushing a work branch, immediately open/update PR to `dev`.
 8. Do not auto-open `dev` -> `preview` after routine work pushes; promotion PRs are separate.
 9. Back-merge sync from `main` to `dev` must be handled by `squad-main-to-dev-backmerge.yml` (create/reuse PR, no-op when in sync).
-10. GitHub protections/rulesets must enforce the same model:
+10. Back-merge PRs from `main` to `dev` must not modify `.squad/`; enforce with `squad-main-to-dev-backmerge-guard.yml`.
+11. GitHub protections/rulesets must enforce the same model:
 
 - `dev`, `preview`, and `main` require PRs + checks + approvals
 - `preview` accepts PRs from `automation/promote-preview` only (plus required `squad-preview-guard`)
 - `main` accepts PRs from `preview` only, with any explicit `hotfix/*` exception guarded by `squad-main-guard`
+- `dev` requires `squad-main-to-dev-backmerge-guard` to block `.squad/` mutations in `main` -> `dev` sync PRs
 
 ## Flow Selection
 
@@ -68,21 +70,19 @@ Do not auto-open `dev` -> `preview` from this step; preview/main promotion PRs r
 Standard:
 
 ```bash
-git checkout dev
-git pull origin dev
-git branch -d squad/{issue-number}-{kebab-slug}
-git push origin --delete squad/{issue-number}-{kebab-slug}
-git branch -d hotfix/{slug}  # if a hotfix branch was used
-git push origin --delete hotfix/{slug}  # if a hotfix branch was used
+# Dry-run (recommended first)
+bash scripts/squad/cleanup-squad-branches.sh --repo {owner/repo}
+
+# Apply local + remote cleanup
+bash scripts/squad/cleanup-squad-branches.sh --repo {owner/repo} --apply --delete-remote
 ```
 
 Worktree:
 
 ```bash
-git worktree remove ../{repo-name}-{issue-number}
-git worktree prune
-git branch -d squad/{issue-number}-{kebab-slug}
-git push origin --delete squad/{issue-number}-{kebab-slug}
-git branch -d hotfix/{slug}  # if a hotfix branch was used
-git push origin --delete hotfix/{slug}  # if a hotfix branch was used
+# Dry-run (recommended first)
+bash scripts/squad/cleanup-squad-branches.sh --repo {owner/repo}
+
+# Apply local + remote cleanup (including linked worktree cleanup)
+bash scripts/squad/cleanup-squad-branches.sh --repo {owner/repo} --apply --delete-remote
 ```

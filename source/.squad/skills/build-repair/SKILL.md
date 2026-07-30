@@ -1,10 +1,7 @@
 ---
 name: build-repair
 confidence: high
-description: >
-  Iterative validation and repair process for this workflow-standard repository.
-  Run this before any push or when build/tests are broken.
-  The authoritative prompt is .github/prompts/build-repair.prompt.md.
+description: 'Iterative validation and repair workflow for this repository. WHEN: "build is broken", "run build-repair", "before git push". INVOKES: dotnet restore/build/test, markdownlint, sync/check scripts.'
 ---
 
 ## Build Repair Skill

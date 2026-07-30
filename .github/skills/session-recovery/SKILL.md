@@ -1,6 +1,6 @@
 ---
 name: "session-recovery"
-description: "Find and resume interrupted Copilot CLI sessions using session_store queries"
+description: "Find and resume interrupted Copilot CLI sessions using session_store SQL queries to restore prior context and work continuity. WHEN: \"recover session\", \"interrupted session\", \"resume session\", \"find previous session\", \"session lost\"."
 domain: "workflow-recovery"
 confidence: "high"
 source: "earned"
