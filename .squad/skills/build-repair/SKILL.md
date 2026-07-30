@@ -1,7 +1,7 @@
 ---
 name: build-repair
 confidence: high
-description: "Iterative validation and repair workflow for this repository. WHEN: \"build is broken\", \"run build-repair\", \"before git push\". INVOKES: dotnet restore/build/test, markdownlint, sync/check scripts."
+description: 'Iterative validation and repair workflow for this repository. WHEN: "build is broken", "run build-repair", "before git push". INVOKES: dotnet restore/build/test, markdownlint, sync/check scripts.'
 ---
 
 ## Build Repair Skill
