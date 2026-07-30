@@ -1,6 +1,6 @@
 ---
 name: "agent-conduct"
-description: "Shared hard rules enforced across all squad agents"
+description: "Enforce shared hard rules across all Squad agents — product isolation, peer quality checks, and conduct guardrails. WHEN: \"agent rules\", \"conduct enforcement\", \"squad guardrails\", \"product isolation rule\", \"peer quality check\"."
 domain: "team-governance"
 confidence: "high"
 source: "reskill extraction — Product Isolation Rule and Peer Quality Check appeared in all 20 agent charters"

@@ -1,3 +1,5 @@
+---
+# yamllint disable rule:line-length
 # Creates a blog brief issue for Bilbo whenever a GitHub Release is published.
 # Mirrors milestone-blog.yml but fires on release events instead of milestone close.
 name: Release Blog Brief
@@ -71,7 +73,7 @@ jobs:
           - Write the post to \`docs/blog/${PUBLISH_DATE}-release-${SLUG}.md\`
           - Update \`docs/blog/index.md\` to add the new post at the top of the Recent Posts table
           - Follow existing post style (see \`docs/blog/2026-04-04-release-v0-7-0.md\`)
-          - Open a PR targeting \`main\` when complete
+          - Open a PR targeting \`dev\` when complete
           - Close this issue in the PR description with \`Closes #<this-issue>\`"
 
           gh issue create \

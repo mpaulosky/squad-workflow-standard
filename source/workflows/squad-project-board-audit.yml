@@ -1,11 +1,13 @@
+---
+# yamllint disable rule:line-length
 name: Project Board Audit
 
 # Audit for status drift between project board and issue/PR states
 # Updated: 2026-05-11 to use new project (PVT_kwHOA5k0b84BXZpa)
-on:
+"on":
   workflow_dispatch:
   schedule:
-    - cron: '17 13 * * 1'
+    - cron: "17 13 * * 1"
 
 permissions:
   issues: read

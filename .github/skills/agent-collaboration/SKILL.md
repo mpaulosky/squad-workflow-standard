@@ -1,6 +1,6 @@
 ---
 name: "agent-collaboration"
-description: "Standard collaboration patterns for all squad agents — worktree awareness, decisions, cross-agent communication"
+description: "Apply standard collaboration patterns for Squad agents — worktree awareness, decisions inbox, and cross-agent communication. WHEN: \"worktree coordination\", \"cross-agent communication\", \"multi-agent handoffs\", \"agent collaboration patterns\"."
 domain: "team-workflow"
 confidence: "high"
 source: "extracted from charter boilerplate — identical content in 18+ agent charters"

@@ -1,0 +1,1 @@
+dotnet run --project src/GitGhStandardCli sync-git-gh-standard ~/home/teqs/github/squad-init/ --source ~/home/teqs/github/squad-workflow-standard/

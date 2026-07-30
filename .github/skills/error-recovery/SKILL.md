@@ -1,6 +1,6 @@
 ---
 name: "error-recovery"
-description: "Standard recovery patterns for all squad agents. When something fails, adapt — don't just report the failure."
+description: "Apply standard recovery patterns when an agent task fails — adapt and continue rather than just reporting the failure. WHEN: \"agent fails\", \"error recovery\", \"task failed\", \"adapt after failure\", \"something went wrong\"."
 domain: "reliability, agent-coordination"
 confidence: "high"
 license: MIT
