@@ -1,3 +1,9 @@
+---
+name: labels-feature-patterns
+description: '**WORKFLOW SKILL** - Apply MyBlog label conventions across model, handlers, autocomplete API, URL filters, and tests. WHEN: "add labels feature", "label autocomplete endpoint", "label URL filter behavior". INVOKES: .NET test suite, bUnit patterns, API handler updates.'
+confidence: medium
+---
+
 # Labels Feature Patterns (Sprint 6)
 
 **Confidence:** medium

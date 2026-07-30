@@ -1,3 +1,5 @@
+---
+# yamllint disable rule:line-length
 name: Squad Preview Validation
 # Preview gate for pre-main validation in this .NET workflow-standard repo
 

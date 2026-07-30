@@ -1,6 +1,6 @@
 ---
 name: "blazor-tailwind-theme-persistence"
-description: "Persistent dark/light + color theme across Blazor enhanced navigation using Tailwind CSS classes, localStorage, MutationObserver, and a themeManager JS object."
+description: '**WORKFLOW SKILL** - Apply persistent Blazor Tailwind theme behavior across navigation and storage. WHEN: "Tailwind dark mode toggle", "localStorage theme mismatch", "themeManager JS interop". INVOKES: Blazor component updates, JavaScript interop, browser verification.'
 domain: "frontend, blazor, tailwind, theming"
 confidence: "high"
 source: "earned — feature/tailwind-migration branch, confirmed working by user"
@@ -47,9 +47,14 @@ Valid themes are enumerated in the IIFE so validation is fast with no network ca
 
 ```js
 if (!localStorage.getItem(STORAGE_KEY)) {
-  var oldColor = (localStorage.getItem("colorTheme") || "theme-blue").replace("theme-", "");
-  if (["red", "blue", "green", "yellow"].indexOf(oldColor) === -1) oldColor = "blue";
-  var brightness = localStorage.getItem("darkMode") === "true" ? "dark" : "light";
+  var oldColor = (localStorage.getItem("colorTheme") || "theme-blue").replace(
+    "theme-",
+    "",
+  );
+  if (["red", "blue", "green", "yellow"].indexOf(oldColor) === -1)
+    oldColor = "blue";
+  var brightness =
+    localStorage.getItem("darkMode") === "true" ? "dark" : "light";
   localStorage.setItem(STORAGE_KEY, "theme-" + oldColor + "-" + brightness);
 }
 ```
@@ -132,7 +137,9 @@ var _reapplying = false;
 window._themeObserver = new MutationObserver(function () {
   if (_reapplying) return;
   var html = document.documentElement;
-  var hasTheme = VALID_THEMES.some(function (t) { return html.classList.contains(t); });
+  var hasTheme = VALID_THEMES.some(function (t) {
+    return html.classList.contains(t);
+  });
   if (!hasTheme) {
     _reapplying = true;
     applyThemeFromStorage();
@@ -141,7 +148,7 @@ window._themeObserver = new MutationObserver(function () {
 });
 window._themeObserver.observe(document.documentElement, {
   attributes: true,
-  attributeFilter: ["class"]
+  attributeFilter: ["class"],
 });
 ```
 
@@ -185,12 +192,12 @@ CSS (tailwind.css / input.css):
 
 **Key commits on `feature/tailwind-migration`:**
 
-| SHA     | What                                           |
-| --------- | ------------------------------------------------ |
-| 8105239 | Move IIFE to `<head>` — FOUC prevention        |
-| 4c41df0 | Footer color consistency                       |
-| c56ac47 | MutationObserver + delayed retry               |
-| ed53a8d | Docs / orchestration log                       |
+| SHA     | What                                    |
+| ------- | --------------------------------------- |
+| 8105239 | Move IIFE to `<head>` — FOUC prevention |
+| 4c41df0 | Footer color consistency                |
+| c56ac47 | MutationObserver + delayed retry        |
+| ed53a8d | Docs / orchestration log                |
 
 ## Anti-Patterns
 

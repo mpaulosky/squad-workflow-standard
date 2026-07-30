@@ -1,6 +1,6 @@
 ---
 name: "squad-conventions"
-description: "Core conventions and patterns used in the Squad codebase"
+description: '**WORKFLOW SKILL** - Apply core Squad conventions for architecture, dependency discipline, and test style. WHEN: "Squad coding conventions", "zero dependency rule", "align implementation to standards". INVOKES: repository convention checks, Node built-in tooling patterns, standards review pass.'
 domain: "project-conventions"
 confidence: "high"
 source: "manual"
@@ -59,7 +59,7 @@ function fatal(msg) {
 }
 
 // File path construction (Windows-safe)
-const agentDest = path.join(dest, '.github', 'agents', 'squad.agent.md');
+const agentDest = path.join(dest, ".github", "agents", "squad.agent.md");
 
 // Skip-if-exists pattern
 if (!fs.existsSync(ceremoniesDest)) {

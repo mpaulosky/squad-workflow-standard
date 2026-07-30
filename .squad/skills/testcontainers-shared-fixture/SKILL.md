@@ -1,10 +1,7 @@
 ---
 name: testcontainers-shared-fixture
 confidence: high
-description: >
-  MyBlog integration-test convention for sharing one MongoDbFixture per xUnit
-  domain collection in tests/Integration.Tests while keeping per-test database
-  isolation.
+description: '**WORKFLOW SKILL** - Optimize MyBlog Mongo integration tests with one shared fixture per xUnit collection. WHEN: "slow tests from per-class containers", "share MongoDbFixture across tests", "xUnit ICollectionFixture for MongoDB". INVOKES: xUnit collection fixtures, MongoDbFixture lifecycle, integration test tuning.'
 ---
 
 ## MyBlog Testcontainers Shared Fixture

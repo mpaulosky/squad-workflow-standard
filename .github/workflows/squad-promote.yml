@@ -1,4 +1,5 @@
 ---
+# yamllint disable rule:line-length
 name: Squad Promote
 
 "on":
@@ -16,17 +17,14 @@ permissions:
   pull-requests: write
 
 env:
-  DEV_BRANCH: dev
-  PREVIEW_BRANCH: preview
-  PREVIEW_PROMOTION_BRANCH: automation/promote-preview
-  MAIN_BRANCH: main
+  DEV_BRANCH: ${{ vars.SQUAD_DEV_BRANCH || 'dev' }}
+  PREVIEW_BRANCH: ${{ vars.SQUAD_PREVIEW_BRANCH || 'preview' }}
+  PREVIEW_PROMOTION_BRANCH: ${{ vars.SQUAD_PREVIEW_PROMOTION_BRANCH || 'automation/promote-preview' }}
+  MAIN_BRANCH: ${{ vars.SQUAD_MAIN_BRANCH || github.event.repository.default_branch || 'main' }}
   FORBIDDEN_PATH_POLICY_FILE: .github/workflows/forbidden-path-policy.json
-  # Use a PAT when available so bot-opened PRs trigger CI checks
-  # automatically.
-  # GITHUB_TOKEN suppresses pull_request events on its own PRs
-  # (GitHub loop guard).
-  # Store a classic PAT with repo scope as secret SQUAD_TOKEN to enable
-  # auto-checks.
+  # Use a PAT when available so bot-opened PRs trigger CI checks automatically.
+  # GITHUB_TOKEN suppresses pull_request events on its own PRs (GitHub loop guard).
+  # Store a classic PAT with repo scope as secret SQUAD_TOKEN to enable auto-checks.
   GH_TOKEN: ${{ secrets.SQUAD_TOKEN || secrets.GITHUB_TOKEN }}
 
 jobs:
@@ -49,18 +47,13 @@ jobs:
 
       - name: Show current state (dry run info)
         run: |
-          echo "=== ${DEV_BRANCH} HEAD ===" && \
-            git log "origin/${DEV_BRANCH}" -1 --oneline
-          echo "=== ${PREVIEW_BRANCH} HEAD ===" && \
-            git log "origin/${PREVIEW_BRANCH}" -1 --oneline
+          echo "=== ${DEV_BRANCH} HEAD ===" && git log "origin/${DEV_BRANCH}" -1 --oneline
+          echo "=== ${PREVIEW_BRANCH} HEAD ===" && git log "origin/${PREVIEW_BRANCH}" -1 --oneline
           echo "=== ${PREVIEW_PROMOTION_BRANCH} HEAD ==="
-          git log "origin/${PREVIEW_PROMOTION_BRANCH}" -1 --oneline || \
-            echo "(branch does not exist yet)"
+          git log "origin/${PREVIEW_PROMOTION_BRANCH}" -1 --oneline || echo "(branch does not exist yet)"
           echo "=== Files that would be stripped ==="
-          FORBIDDEN_REGEX="$(node -e \
-            "process.stdout.write(require('./${FORBIDDEN_PATH_POLICY_FILE}').forbiddenPathRegex)")"
-          git diff "origin/${PREVIEW_BRANCH}..origin/${DEV_BRANCH}" \
-            --name-only | grep -E "${FORBIDDEN_REGEX}" || echo "(none)"
+          FORBIDDEN_REGEX="$(node -e "process.stdout.write(require('./${FORBIDDEN_PATH_POLICY_FILE}').forbiddenPathRegex)")"
+          git diff "origin/${PREVIEW_BRANCH}..origin/${DEV_BRANCH}" --name-only | grep -E "${FORBIDDEN_REGEX}" || echo "(none)"
 
       - name: Prepare sanitized preview promotion branch
         if: ${{ inputs.dry_run == 'false' }}
@@ -69,11 +62,7 @@ jobs:
           git switch -C "${PREVIEW_PROMOTION_BRANCH}" "origin/${PREVIEW_BRANCH}"
           git merge "origin/${DEV_BRANCH}" --no-commit --no-ff -X theirs || true
 
-          mapfile -t FORBIDDEN_PATHS < <(
-            node -e \
-              "require('./${FORBIDDEN_PATH_POLICY_FILE}').forbiddenPathPrefixes" +
-              ".forEach((path) => console.log(path))"
-          )
+          mapfile -t FORBIDDEN_PATHS < <(node -e "require('./${FORBIDDEN_PATH_POLICY_FILE}').forbiddenPathPrefixes.forEach((path) => console.log(path))")
 
           # Strip forbidden paths before opening the protected preview PR.
           git rm -rf --cached --ignore-unmatch "${FORBIDDEN_PATHS[@]}" || true
@@ -81,40 +70,32 @@ jobs:
 
           UNMERGED="$(git diff --name-only --diff-filter=U || true)"
           if [[ -n "${UNMERGED}" ]]; then
-            echo "::error::Sanitized ${DEV_BRANCH} -> ${PREVIEW_BRANCH} " \
-              "promotion branch still has merge conflicts."
+            echo "::error::Sanitized ${DEV_BRANCH} -> ${PREVIEW_BRANCH} promotion branch still has merge conflicts."
             printf '%s\n' "${UNMERGED}"
             exit 1
           fi
 
-          VERSION="$(node -e \
-            "console.log(require('./package.json').version)" \
-            2>/dev/null || echo manual)"
+          VERSION="$(node -e "console.log(require('./package.json').version)" 2>/dev/null || echo manual)"
           if [[ "${VERSION}" == "manual" ]]; then
-            COMMIT_MESSAGE="chore: promote ${DEV_BRANCH} → \
-              ${PREVIEW_BRANCH} (sanitized)"
+            COMMIT_MESSAGE="chore: promote ${DEV_BRANCH} → ${PREVIEW_BRANCH} (sanitized)"
           else
-            COMMIT_MESSAGE="chore: promote ${DEV_BRANCH} → \
-              ${PREVIEW_BRANCH} (v${VERSION}, sanitized)"
+            COMMIT_MESSAGE="chore: promote ${DEV_BRANCH} → ${PREVIEW_BRANCH} (v${VERSION}, sanitized)"
           fi
 
           if ! git diff --cached --quiet; then
             git commit -m "${COMMIT_MESSAGE}"
           else
-            echo "ℹ️ No sanitized commit needed; promotion branch matches " \
-              "${PREVIEW_BRANCH}"
+            echo "ℹ️ No sanitized commit needed; promotion branch matches ${PREVIEW_BRANCH}"
           fi
 
           git push --force-with-lease origin "${PREVIEW_PROMOTION_BRANCH}"
-          echo "promotion_branch=${PREVIEW_PROMOTION_BRANCH}" >> \
-            "$GITHUB_OUTPUT"
+          echo "promotion_branch=${PREVIEW_PROMOTION_BRANCH}" >> "$GITHUB_OUTPUT"
 
       - name: Create or reuse sanitized dev → preview promotion PR
         if: ${{ inputs.dry_run == 'false' }}
         uses: actions/github-script@v9
         env:
-          PROMOTION_BRANCH: >-
-            ${{ steps.prepare_preview_promotion.outputs.promotion_branch }}
+          PROMOTION_BRANCH: ${{ steps.prepare_preview_promotion.outputs.promotion_branch }}
         with:
           github-token: ${{ secrets.SQUAD_TOKEN || secrets.GITHUB_TOKEN }}
           script: |
@@ -147,24 +128,15 @@ jobs:
                   pull_number: openPrs.data[0].number,
                   state: 'closed'
                 });
-                core.info(
-                  `Closed stale promotion PR #${openPrs.data[0].number} ` +
-                  `because ${promotionBranch} is in sync with ${previewBranch}.`
-                );
+                core.info(`Closed stale promotion PR #${openPrs.data[0].number} because ${promotionBranch} is in sync with ${previewBranch}.`);
               } else {
-                core.info(
-                  `No-op: ${previewBranch} is already up to date with ` +
-                  `${promotionBranch}.`
-                );
+                core.info(`No-op: ${previewBranch} is already up to date with ${promotionBranch}.`);
               }
               return;
             }
 
             if (openPrs.data.length > 0) {
-              core.info(
-                `Existing preview promotion PR found: ` +
-                `#${openPrs.data[0].number}`
-              );
+              core.info(`Existing preview promotion PR found: #${openPrs.data[0].number}`);
               return;
             }
 
@@ -173,16 +145,14 @@ jobs:
               repo,
               base: previewBranch,
               head: promotionBranch,
-              title: `chore: promote ${devBranch} → ${previewBranch} ` +
-                `via sanitized PR`,
+              title: `chore: promote ${devBranch} → ${previewBranch} via sanitized PR`,
               body: [
                 'Automated promotion PR for protected preview.',
                 '',
                 `- Source branch: \`${devBranch}\``,
                 `- Promotion branch: \`${promotionBranch}\``,
                 `- Target branch: \`${previewBranch}\``,
-                '- Behavior: merges dev into a preview-derived branch, ' +
-                'strips forbidden paths, and opens or reuses a PR',
+                '- Behavior: merges dev into a preview-derived branch, strips forbidden paths, and opens or reuses a PR',
                 '- Policy: avoids direct pushes to protected `preview`'
               ].join('\n')
             });
@@ -213,26 +183,18 @@ jobs:
 
       - name: Show current state
         run: |
-          echo "=== ${PREVIEW_BRANCH} HEAD ===" && \
-            git log "origin/${PREVIEW_BRANCH}" -1 --oneline
-          echo "=== ${MAIN_BRANCH} HEAD ===" && \
-            git log "origin/${MAIN_BRANCH}" -1 --oneline
-          VERSION="$(node -e \
-            "console.log('v' + require('./package.json').version)" \
-            2>/dev/null || echo 'v(no package.json)')"
+          echo "=== ${PREVIEW_BRANCH} HEAD ===" && git log "origin/${PREVIEW_BRANCH}" -1 --oneline
+          echo "=== ${MAIN_BRANCH} HEAD ===" && git log "origin/${MAIN_BRANCH}" -1 --oneline
+          VERSION="$(node -e "console.log('v' + require('./package.json').version)" 2>/dev/null || echo 'v(no package.json)')"
           echo "=== Version === ${VERSION}"
 
       - name: Validate preview is release-ready
         id: validate_release_ready
         run: |
           git checkout "${PREVIEW_BRANCH}"
-          VERSION=$(node -e \
-            "console.log(require('./package.json').version)" \
-            2>/dev/null || echo "manual")
-          if [[ "${VERSION}" != "manual" ]] && \
-            ! grep -q "## \[$VERSION\]" CHANGELOG.md 2>/dev/null; then
-            echo "::error::Version $VERSION not found in CHANGELOG.md — " \
-              "update before releasing"
+          VERSION=$(node -e "console.log(require('./package.json').version)" 2>/dev/null || echo "manual")
+          if [[ "${VERSION}" != "manual" ]] && ! grep -q "## \[$VERSION\]" CHANGELOG.md 2>/dev/null; then
+            echo "::error::Version $VERSION not found in CHANGELOG.md — update before releasing"
             exit 1
           fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
@@ -242,8 +204,7 @@ jobs:
           FORBIDDEN_REGEX="$(node -e "process.stdout.write(require('./${FORBIDDEN_PATH_POLICY_FILE}').forbiddenPathRegex)")"
           FORBIDDEN=$(git ls-files | grep -E "${FORBIDDEN_REGEX}" || true)
           if [ -n "$FORBIDDEN" ]; then
-            echo "::error::Forbidden files found on ${PREVIEW_BRANCH}: " \
-              "$FORBIDDEN"
+            echo "::error::Forbidden files found on ${PREVIEW_BRANCH}: $FORBIDDEN"
             exit 1
           fi
           echo "✅ No forbidden files on ${PREVIEW_BRANCH}"
@@ -272,8 +233,7 @@ jobs:
             } catch (error) {
               if (error.status === 404) {
                 core.info(
-                  `No-op: ${mainBranch} and/or ${previewBranch} ` +
-                  `branch not found.`
+                  `No-op: ${mainBranch} and/or ${previewBranch} branch not found.`
                 );
                 return;
               }
@@ -282,8 +242,7 @@ jobs:
 
             if (compare.data.ahead_by === 0) {
               core.info(
-                `No-op: ${mainBranch} is already up to date with ` +
-                `${previewBranch}.`
+                `No-op: ${mainBranch} is already up to date with ${previewBranch}.`
               );
               return;
             }
@@ -309,15 +268,12 @@ jobs:
               repo,
               base: mainBranch,
               head: previewBranch,
-              title: `chore: promote ${previewBranch} → ${mainBranch} ` +
-                `(v${version})`,
+              title: `chore: promote ${previewBranch} → ${mainBranch} (v${version})`,
               body: [
                 'Automated release promotion PR for protected main.',
                 '',
-                '- Trigger: manual `squad-promote` run after syncing ' +
-                `'${previewBranch}'`,
-                '- Behavior: opens or reuses a PR from `' + previewBranch +
-                '` into `' + mainBranch + '`',
+                '- Trigger: manual `squad-promote` run after syncing `' + previewBranch + '`',
+                '- Behavior: opens or reuses a PR from `' + previewBranch + '` into `' + mainBranch + '`',
                 '- Policy: avoids direct pushes to protected `main`',
                 '- Version: `v' + version + '`'
               ].join('\n')

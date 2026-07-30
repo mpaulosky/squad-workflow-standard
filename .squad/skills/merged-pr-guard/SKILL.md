@@ -1,3 +1,9 @@
+---
+name: merged-pr-guard
+description: '**WORKFLOW SKILL** - Prevent commits to stale squad branches by checking merged PR state first. WHEN: "commit blocked by merged PR", "stale squad branch commit", "branch already merged". INVOKES: git branch inspection, gh pr list status checks.'
+confidence: high
+---
+
 # Skill: Merged-PR Branch Guard
 
 ## Confidence

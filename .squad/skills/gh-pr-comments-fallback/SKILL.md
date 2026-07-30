@@ -1,6 +1,6 @@
 ---
 name: gh-pr-comments-fallback
-description: Reliable PR comment retrieval when gh pr view --comments fails on deprecated GraphQL fields
+description: '**WORKFLOW SKILL** - Recover PR comment evidence when gh pr view --comments fails. WHEN: "gh pr comments failed", "GraphQL deprecation in PR view", "collect reviewer comment evidence". INVOKES: gh api issue comments, review comments, and reviews endpoints.'
 domain: github-workflow
 confidence: high
 source: earned

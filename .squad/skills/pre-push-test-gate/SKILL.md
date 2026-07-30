@@ -1,11 +1,7 @@
 ---
 name: pre-push-test-gate
 confidence: high
-description: >
-  Enforces build cleanliness and test passage before any git push.
-  Delegates to the build-repair prompt (.github/prompts/build-repair.prompt.md)
-  as the authoritative gate. Established after the Shared project test batch
-  (04714a4) shipped two broken tests directly to main.
+description: '**WORKFLOW SKILL** - Enforce pre-push build, test, and lint gates before any branch push. WHEN: "before git push", "pre-push gate failed", "local tests must pass". INVOKES: build-repair prompt, dotnet test/build commands, markdown lint checks.'
 ---
 
 ## Pre-Push Test Gate
@@ -92,8 +88,8 @@ fi
 
 ### Failure Taxonomy (known patterns)
 
-| Symptom | Root Cause | Fix |
-| --------- | ----------- | ----- |
-| `DateTime` equality failure in `*.Empty` tests | `Empty` property calls `DateTime.UtcNow` each time — two calls produce different values | Assert individual fields, not whole-record equality |
-| Unexpected trailing `_` in slug tests | `GenerateSlug` appends `_` when string ends with punctuation AND has internal punctuation | Verify actual output against implementation before asserting |
-| Record equality fails on nested DTO | Nested DTO `Empty` also uses `UtcNow` — same root cause | Flatten assertions to field-level |
+| Symptom                                        | Root Cause                                                                                | Fix                                                          |
+| ---------------------------------------------- | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| `DateTime` equality failure in `*.Empty` tests | `Empty` property calls `DateTime.UtcNow` each time — two calls produce different values   | Assert individual fields, not whole-record equality          |
+| Unexpected trailing `_` in slug tests          | `GenerateSlug` appends `_` when string ends with punctuation AND has internal punctuation | Verify actual output against implementation before asserting |
+| Record equality fails on nested DTO            | Nested DTO `Empty` also uses `UtcNow` — same root cause                                   | Flatten assertions to field-level                            |

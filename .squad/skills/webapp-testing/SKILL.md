@@ -1,9 +1,6 @@
 ---
 name: webapp-testing
-description: >
-  MyBlog guidance for running-browser verification of the Blazor UI after bUnit
-  coverage exists, especially for JS interop, Auth0 redirects, and AppHost smoke
-  checks.
+description: '**WORKFLOW SKILL** - Run MyBlog browser verification after bUnit coverage for JS interop, Auth0 redirects, and AppHost behavior. WHEN: "verify Blazor UI in browser", "JS interop runtime testing", "AppHost smoke test". INVOKES: Playwright/AppHost tests, runtime environment checks, browser interaction workflows.'
 ---
 
 ## MyBlog Web Application Testing

@@ -1,6 +1,6 @@
 ---
 name: static-config-pattern
-description: Convert compile-time constants into runtime-configurable static properties while preserving defaults, startup configuration, and test isolation.
+description: '**WORKFLOW SKILL** - Convert compile-time constants into runtime static settings while preserving defaults and test isolation. WHEN: "replace const with runtime config", "static configuration refactor", "reset static state for tests". INVOKES: static property refactor steps, startup configuration hooks, test reset helpers.'
 domain: dotnet
 confidence: low
 source: earned

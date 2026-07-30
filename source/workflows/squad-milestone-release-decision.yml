@@ -1,3 +1,5 @@
+---
+# yamllint disable rule:line-length
 # Step 2 of the Milestone Review → Release/Blog ceremony.
 # Fires when Ralph labels a "Milestone Review" issue with:
 #   - "release-candidate" → triggers squad-milestone-release.yml + Bilbo release brief
@@ -8,7 +10,7 @@
 # blog-readme-sync.yml updates README when index.md is pushed to main.
 name: Milestone Release Decision
 
-on:
+"on":
   issues:
     types: [labeled]
 

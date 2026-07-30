@@ -1,6 +1,6 @@
 ---
 name: "post-build-validation"
-description: "Validate side effects after build/deploy operations with graceful degradation"
+description: '**WORKFLOW SKILL** - Validate post-build and post-deploy side effects with resilient checks. WHEN: "validate deployment side effects", "post-build verification needed", "external API drift after deploy". INVOKES: health-check routines, log/telemetry review, follow-up verification tasks.'
 domain: "error-handling, resilience, observability"
 confidence: "low"
 source: "earned"

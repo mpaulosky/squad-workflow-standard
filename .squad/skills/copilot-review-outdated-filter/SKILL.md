@@ -1,6 +1,6 @@
 ---
 name: copilot-review-outdated-filter
-description: Filter outdated Copilot review suggestions after merge conflicts or rebases to focus on still-applicable feedback
+description: '**WORKFLOW SKILL** - Filter stale Copilot review threads after rebases or conflict resolution to focus only on still-applicable feedback. WHEN: "outdated Copilot review comments", "filter stale PR suggestions", "post-rebase review cleanup", "is_outdated review threads", "review feedback triage". INVOKES: github-github-mcp-server-pull_request_read, PR thread filtering workflow, review evidence checks. FOR SINGLE OPERATIONS: inspect one thread manually when only a single suggestion needs validation.'
 domain: github-workflow
 confidence: high
 source: earned
@@ -49,12 +49,12 @@ Review threads have three key fields:
 
 ```javascript
 // Keep only non-outdated, unresolved threads
-const actionable = review_threads.filter(t => 
-  !t.is_outdated && !t.is_resolved
+const actionable = review_threads.filter(
+  (t) => !t.is_outdated && !t.is_resolved,
 );
 
 // Count what you're skipping
-const outdated = review_threads.filter(t => t.is_outdated).length;
+const outdated = review_threads.filter((t) => t.is_outdated).length;
 console.log(`Skipped ${outdated} outdated suggestions`);
 ```
 
@@ -78,10 +78,12 @@ In PR comment or commit message:
 **Skipped:** {M} outdated suggestions after {conflict-resolution|rebase}
 
 ### Fixed Items
+
 1. {file}: {what was changed}
 2. ...
 
 ### Skipped (outdated)
+
 - {M} review threads marked stale after {commit SHA}
 ```
 
@@ -98,14 +100,14 @@ In PR comment or commit message:
 const threads = pullRequest.getReviewComments();
 
 // Filter
-const current = threads.filter(t => !t.is_outdated);
-const stale = threads.filter(t => t.is_outdated);
+const current = threads.filter((t) => !t.is_outdated);
+const stale = threads.filter((t) => t.is_outdated);
 
 console.log(`${current.length} still apply, ${stale.length} outdated`);
 // Output: "2 still apply, 24 outdated"
 
 // Fix only current ones
-current.forEach(thread => {
+current.forEach((thread) => {
   // Apply suggestion to current file state
   applyFix(thread.path, thread.body);
 });

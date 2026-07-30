@@ -1,10 +1,7 @@
 ---
 name: mongodb-filter-pattern
 confidence: medium
-description: >
-  MyBlog-specific pattern for extending read-side Mongo queries through
-  GetBlogPostsQuery, GetBlogPostsHandler, IBlogPostRepository, and
-  MongoDbBlogPostRepository using MongoDB.EntityFrameworkCore conventions.
+description: '**WORKFLOW SKILL** - Extend MyBlog read-side Mongo filtering through query contracts, handlers, repository interfaces, and MongoDbBlogPostRepository conventions. WHEN: "add MongoDB list filter", "GetBlogPostsQuery filter change", "handler-level Mongo filtering", "repository filter extension", "cache key update for filters". INVOKES: query/handler updates, repository contract updates, cache-key validation tests. FOR SINGLE OPERATIONS: patch one filter expression directly when contracts and caching remain unchanged.'
 ---
 
 ## MongoDB Filter Pattern (MyBlog)
@@ -21,14 +18,14 @@ This skill defines the filter pattern that actually fits MyBlog.
 
 ### Current list-query path
 
-| Layer | Canonical file | Owner | Current behavior |
-| --- | --- | --- | --- |
-| Query contract | `src/Web/Features/BlogPosts/List/GetBlogPostsQuery.cs` | Sam | Query has no filter properties yet. |
-| Handler | `src/Web/Features/BlogPosts/List/GetBlogPostsHandler.cs` | Sam | Uses a fixed cache key `blog:all`; maps domain entities to DTOs. |
-| Repository contract | `src/Domain/Interfaces/IBlogPostRepository.cs` | Sam | `GetAllAsync(CancellationToken)` returns domain entities directly. |
-| Repository implementation | `src/Web/Data/MongoDbBlogPostRepository.cs` | Sam | Uses EF Core LINQ over `BlogDbContext`, ordered by `CreatedAt` descending. |
-| Unit tests | `tests/Unit.Tests/Handlers/GetBlogPostsHandlerTests.cs` | Gimli | Verifies cache hit/miss behavior and repository calls. |
-| Integration tests | `tests/Integration.Tests/BlogPosts/MongoDbBlogPostRepositoryTests.cs` | Gimli | Verifies ordering, persistence, delete, and concurrency behavior against real Mongo. |
+| Layer                     | Canonical file                                                        | Owner | Current behavior                                                                     |
+| ------------------------- | --------------------------------------------------------------------- | ----- | ------------------------------------------------------------------------------------ |
+| Query contract            | `src/Web/Features/BlogPosts/List/GetBlogPostsQuery.cs`                | Sam   | Query has no filter properties yet.                                                  |
+| Handler                   | `src/Web/Features/BlogPosts/List/GetBlogPostsHandler.cs`              | Sam   | Uses a fixed cache key `blog:all`; maps domain entities to DTOs.                     |
+| Repository contract       | `src/Domain/Interfaces/IBlogPostRepository.cs`                        | Sam   | `GetAllAsync(CancellationToken)` returns domain entities directly.                   |
+| Repository implementation | `src/Web/Data/MongoDbBlogPostRepository.cs`                           | Sam   | Uses EF Core LINQ over `BlogDbContext`, ordered by `CreatedAt` descending.           |
+| Unit tests                | `tests/Unit.Tests/Handlers/GetBlogPostsHandlerTests.cs`               | Gimli | Verifies cache hit/miss behavior and repository calls.                               |
+| Integration tests         | `tests/Integration.Tests/BlogPosts/MongoDbBlogPostRepositoryTests.cs` | Gimli | Verifies ordering, persistence, delete, and concurrency behavior against real Mongo. |
 
 ### Use this skill when
 

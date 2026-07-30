@@ -1,3 +1,9 @@
+---
+name: auth0-management-security
+description: '**WORKFLOW SKILL** - Enforce MyBlog Auth0 security for scopes, secrets, and role administration. WHEN: "Auth0 secret handling", "Auth0 scope review", "Auth0 CI secrets setup". INVOKES: dotnet user-secrets, GitHub Actions secrets, security checklist.'
+confidence: high
+---
+
 # Auth0 Management API Security Patterns (MyBlog)
 
 **Confidence:** high  
@@ -37,12 +43,12 @@ Secrets are stored locally at `~/.microsoft/usersecrets/<UserSecretsId>/secrets.
 
 Request only the Management API scopes needed for MyBlog operations:
 
-| Scope | Purpose | Used By |
-| --- | --- | --- |
-| `read:users` | Read user profiles (email, name, metadata) | GetUsersWithRolesQuery |
-| `read:roles` | List available role definitions | GetAvailableRolesQuery |
-| `create:role_members` | Assign a user to a role | AssignRoleCommand |
-| `delete:role_members` | Remove a user from a role | RemoveRoleCommand |
+| Scope                 | Purpose                                    | Used By                |
+| --------------------- | ------------------------------------------ | ---------------------- |
+| `read:users`          | Read user profiles (email, name, metadata) | GetUsersWithRolesQuery |
+| `read:roles`          | List available role definitions            | GetAvailableRolesQuery |
+| `create:role_members` | Assign a user to a role                    | AssignRoleCommand      |
+| `delete:role_members` | Remove a user from a role                  | RemoveRoleCommand      |
 
 **Do NOT request** `create:users`, `delete:users`, or `create:roles` unless needed. The M2M app in `docs/AUTH0_SETUP.md` is already configured with only the above scopes.
 
@@ -54,11 +60,11 @@ Request only the Management API scopes needed for MyBlog operations:
 
 Current implementations in MyBlog:
 
-| Endpoint | Handler | Guard |
-| --- | --- | --- |
-| `/admin/users` (list) | GetUsersWithRolesQuery | Checked in ManageRoles.razor |
-| `/admin/users/{id}/roles/assign` | AssignRoleCommand | Checked in ManageRoles.razor |
-| `/admin/users/{id}/roles/remove` | RemoveRoleCommand | Checked in ManageRoles.razor |
+| Endpoint                         | Handler                | Guard                        |
+| -------------------------------- | ---------------------- | ---------------------------- |
+| `/admin/users` (list)            | GetUsersWithRolesQuery | Checked in ManageRoles.razor |
+| `/admin/users/{id}/roles/assign` | AssignRoleCommand      | Checked in ManageRoles.razor |
+| `/admin/users/{id}/roles/remove` | RemoveRoleCommand      | Checked in ManageRoles.razor |
 
 **Never allow user-role operations from non-admin endpoints.** If you add new routes:
 

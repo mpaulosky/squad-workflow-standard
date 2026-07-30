@@ -1,3 +1,9 @@
+---
+name: auth0-management-api
+description: '**WORKFLOW SKILL** - Implement MyBlog Auth0 role workflows with secure M2M token handling. WHEN: "Auth0 role assignment", "Auth0 M2M token flow", "list users with roles". INVOKES: Auth0 Management API, dotnet CLI, GitHub Actions secrets.'
+confidence: high
+---
+
 # Auth0 Management API Integration Pattern (MyBlog)
 
 **Confidence:** high  
@@ -37,12 +43,12 @@ ManageRoles.razor (UI for admin)
 
 All handlers in UserManagementHandler follow consistent patterns:
 
-| Handler | Queries | Operations |
-| --- | --- | --- |
-| GetUsersWithRolesQuery | GetAllAsync, GetRolesAsync per user | Read-only |
-| GetAvailableRolesQuery | Roles.GetAllAsync | Read-only |
-| AssignRoleCommand | Users.AssignRolesAsync | Write |
-| RemoveRoleCommand | Users.RemoveRolesAsync | Write |
+| Handler                | Queries                             | Operations |
+| ---------------------- | ----------------------------------- | ---------- |
+| GetUsersWithRolesQuery | GetAllAsync, GetRolesAsync per user | Read-only  |
+| GetAvailableRolesQuery | Roles.GetAllAsync                   | Read-only  |
+| AssignRoleCommand      | Users.AssignRolesAsync              | Write      |
+| RemoveRoleCommand      | Users.RemoveRolesAsync              | Write      |
 
 #### PaginationInfo
 

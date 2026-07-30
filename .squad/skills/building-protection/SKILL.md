@@ -1,6 +1,6 @@
 ---
 name: "building-protection"
-description: "Prevents subsystems from modifying blocks within placed building volumes using 3D bounding box clipping"
+description: '**WORKFLOW SKILL** - Protect placed structures by enforcing 3D bounding-box clipping and shared exclusion zones across world-editing subsystems. WHEN: "protect placed buildings", "bounding box clipping", "prevent terrain overwrite", "subsystem world edit collision", "building exclusion zone". INVOKES: protection-service registration, world-modification guard checks, subsystem integration tests. FOR SINGLE OPERATIONS: update one bounding-box value directly when only a single structure footprint changes.'
 domain: "minecraft-world-building"
 confidence: "medium"
 source: "earned"

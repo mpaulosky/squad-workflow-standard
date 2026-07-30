@@ -1,10 +1,7 @@
 ---
 name: issue-branch-alignment
 confidence: high
-description: >
-  Prevents issue work from starting on the wrong branch and documents the safe
-  stash-and-rehome recovery flow when dirty changes already exist on `dev` or
-  another branch.
+description: '**WORKFLOW SKILL** - Keep issue work on the correct squad branch/worktree and recover dirty checkouts safely. WHEN: "wrong branch for issue work", "stash and rehome changes", "issue branch mismatch". INVOKES: git branch/worktree checks, stash workflow, branch retargeting.'
 ---
 
 ## Issue Branch Alignment

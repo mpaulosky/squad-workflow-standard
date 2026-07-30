@@ -1,6 +1,6 @@
 ---
 name: microsoft-code-reference
-description: DevOps-focused Microsoft API reference for NuGet, Aspire AppHost, GitHub Actions, and .NET SDK verification. Use to verify NuGet package versions, Aspire resource APIs, .NET SDK/target framework compatibility, GitHub Actions SDK calls, and troubleshoot integration issues in CI/CD and app configuration.
+description: '**WORKFLOW SKILL** - Ground MyBlog DevOps decisions in Microsoft API references for NuGet, Aspire, Actions, and .NET SDKs. WHEN: "verify NuGet package version", "Aspire API signature check", "Microsoft docs CI troubleshooting". INVOKES: Microsoft Learn MCP docs search/fetch, code sample lookup, CI configuration review.'
 compatibility: Requires Microsoft Learn MCP Server (https://learn.microsoft.com/api/mcp)
 owner: Boromir (DevOps)
 scope: MyBlog CI/CD, Aspire AppHost, NuGet package management, GitHub Actions workflows
@@ -9,27 +9,27 @@ scope: MyBlog CI/CD, Aspire AppHost, NuGet package management, GitHub Actions wo
 # Microsoft Code Reference — DevOps Focus
 
 **Owner:** Boromir (DevOps)  
-**Scope:** MyBlog CI/CD, Aspire AppHost, NuGet management, GitHub Actions workflows, .NET SDK integration  
+**Scope:** MyBlog CI/CD, Aspire AppHost, NuGet management, GitHub Actions workflows, .NET SDK integration
 
 Verify Microsoft APIs, NuGet packages, Aspire resource naming, and GitHub Actions SDK calls to prevent version mismatches, incorrect resource wiring, and CI/CD failures.
 
 ## Common DevOps Use Cases
 
-| Scenario | Root Problem | Query | Expected Outcome |
-| ---------- | -------------- | ------- | ------------------ |
-| AppHost resource won't start | Wrong method name or parameter | `"Aspire.Hosting MongoDB AddMongoDB"` | Confirm `AddMongoDB(name)` signature |
-| NuGet version conflict | Version mismatch or package targeting wrong framework | `"NuGet Aspire.Hosting.MongoDB version"` | Verify latest stable version and confirm package targets .NET 10 per global.json |
-| GitHub Actions checkout fails | Outdated action or incorrect parameters | `"GitHub Actions checkout v4 fetch-depth"` | Confirm v4 supports `fetch-depth: 0` |
-| .NET SDK/target framework incompatibility | .NET SDK mismatch (global.json) or package incompatibility | `".NET 10 Aspire 13 compatibility"` | Verify Aspire 13.x works with .NET 10 per global.json |
-| AppHost resource naming mismatch | Inconsistent resource naming between AppHost and ServiceDefaults | `"Aspire resource naming conventions"` | Ensure resource names match across `AddMongoDB("mongodb")` and service wiring |
+| Scenario                                  | Root Problem                                                     | Query                                      | Expected Outcome                                                                 |
+| ----------------------------------------- | ---------------------------------------------------------------- | ------------------------------------------ | -------------------------------------------------------------------------------- |
+| AppHost resource won't start              | Wrong method name or parameter                                   | `"Aspire.Hosting MongoDB AddMongoDB"`      | Confirm `AddMongoDB(name)` signature                                             |
+| NuGet version conflict                    | Version mismatch or package targeting wrong framework            | `"NuGet Aspire.Hosting.MongoDB version"`   | Verify latest stable version and confirm package targets .NET 10 per global.json |
+| GitHub Actions checkout fails             | Outdated action or incorrect parameters                          | `"GitHub Actions checkout v4 fetch-depth"` | Confirm v4 supports `fetch-depth: 0`                                             |
+| .NET SDK/target framework incompatibility | .NET SDK mismatch (global.json) or package incompatibility       | `".NET 10 Aspire 13 compatibility"`        | Verify Aspire 13.x works with .NET 10 per global.json                            |
+| AppHost resource naming mismatch          | Inconsistent resource naming between AppHost and ServiceDefaults | `"Aspire resource naming conventions"`     | Ensure resource names match across `AddMongoDB("mongodb")` and service wiring    |
 
 ## Tools
 
-| Need | Tool | Example |
-| ------ | ------ | --------- |
-| Aspire SDK method/resource lookup | `microsoft_docs_search` | `"Aspire.Hosting AddMongoDB resource name"` |
-| NuGet package version & compatibility | `microsoft_code_sample_search` | `query: "Aspire.Hosting.MongoDB net10", language: "csharp"` |
-| Full API reference (overloads, parameters) | `microsoft_docs_fetch` | Fetch URL from `microsoft_docs_search` |
+| Need                                       | Tool                           | Example                                                     |
+| ------------------------------------------ | ------------------------------ | ----------------------------------------------------------- |
+| Aspire SDK method/resource lookup          | `microsoft_docs_search`        | `"Aspire.Hosting AddMongoDB resource name"`                 |
+| NuGet package version & compatibility      | `microsoft_code_sample_search` | `query: "Aspire.Hosting.MongoDB net10", language: "csharp"` |
+| Full API reference (overloads, parameters) | `microsoft_docs_fetch`         | Fetch URL from `microsoft_docs_search`                      |
 
 ## NuGet Package Verification
 
@@ -134,14 +134,14 @@ Use `global.json` (currently `sdk.version: 10.0.100`) as source of truth for .NE
 
 ## Error Troubleshooting
 
-| Error | Query |
-| ------- | ------- |
-| `Resource not found in distributed application` | `"Aspire.Hosting resource naming lifecycle"` |
-| `Cannot convert resource to reference type` | `"Aspire WithReference type compatibility"` |
-| NuGet restore fails with version conflict | `"NuGet [PackageName] conflicts v[X] vs v[Y]"` |
-| AppHost won't start: method not found | `"Aspire.Hosting [MethodName] signature"` → fetch full page |
-| GitHub Actions workflow syntax error | `"GitHub Actions [feature] [version]"` |
-| Test project target mismatch | `".NET 10 xUnit test support"` |
+| Error                                           | Query                                                       |
+| ----------------------------------------------- | ----------------------------------------------------------- |
+| `Resource not found in distributed application` | `"Aspire.Hosting resource naming lifecycle"`                |
+| `Cannot convert resource to reference type`     | `"Aspire WithReference type compatibility"`                 |
+| NuGet restore fails with version conflict       | `"NuGet [PackageName] conflicts v[X] vs v[Y]"`              |
+| AppHost won't start: method not found           | `"Aspire.Hosting [MethodName] signature"` → fetch full page |
+| GitHub Actions workflow syntax error            | `"GitHub Actions [feature] [version]"`                      |
+| Test project target mismatch                    | `".NET 10 xUnit test support"`                              |
 
 ## Validation Workflow for DevOps Changes
 

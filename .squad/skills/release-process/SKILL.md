@@ -1,6 +1,6 @@
 ---
 name: "release-process"
-description: "MyBlog-specific release coordination for dev→main promotion, manual tagging, and hotfix backports."
+description: '**WORKFLOW SKILL** - Coordinate MyBlog releases from dev promotion through main merge, tagging, and hotfix backports. WHEN: "prepare MyBlog release PR", "tag release on main", "hotfix backport to dev". INVOKES: gh PR/release commands, git tagging/backport flow, MyBlog release playbook.'
 domain: "release-workflow"
 confidence: "high"
 status: "active"

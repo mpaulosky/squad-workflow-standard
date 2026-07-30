@@ -1,6 +1,8 @@
+---
+# yamllint disable rule:line-length
 name: Project Board Automation
 
-on:
+"on":
   pull_request:
     types: [opened, reopened, ready_for_review, converted_to_draft, closed]
 

@@ -1,10 +1,7 @@
 ---
 name: unit-test-conventions
 confidence: high
-description: >
-  MyBlog unit test authoring conventions for domain entities, handlers, helpers,
-  and components. Covers file headers, AAA pattern, mocking patterns,
-  FluentAssertions, and bUnit component testing.
+description: '**WORKFLOW SKILL** - Enforce MyBlog unit-test conventions for domain, handlers, helpers, and components. WHEN: "write MyBlog unit tests", "AAA pattern enforcement", "bUnit convention alignment". INVOKES: unit test project patterns, bUnit testing guidance, mocking and assertion conventions.'
 ---
 
 ## MyBlog Unit Test Conventions

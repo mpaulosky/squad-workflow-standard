@@ -1,3 +1,9 @@
+---
+name: copilot-sdk-csharp-usage
+description: '**WORKFLOW SKILL** - Integrate GitHub Copilot SDK for C# in .NET apps with sessions, streaming, and tool wiring. WHEN: "Copilot SDK C# integration", "CopilotClient setup", "BYOK provider configuration". INVOKES: dotnet CLI, Copilot SDK APIs.'
+confidence: low
+---
+
 # GitHub Copilot SDK for C# Skill
 
 ## Overview

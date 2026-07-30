@@ -1,9 +1,7 @@
 ---
 name: self-authored-pr-gate
 confidence: high
-description: >
-  Lead-gate workflow for PRs where the reviewer account is also the PR author
-  and GitHub blocks self-approval.
+description: '**WORKFLOW SKILL** - Run governance checks when GitHub blocks self-approval on a PR. WHEN: "cannot approve own pull request", "422 self approval blocked", "self-authored PR gate". INVOKES: CI status verification, Copilot and Codecov checks, reviewer evidence workflow.'
 domain: "PR governance, code review, CI/CD"
 source: "earned"
 ---

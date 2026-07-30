@@ -1,6 +1,6 @@
 ---
 name: "release-process-base"
-description: "Generic, framework-agnostic release workflow patterns: version bumping, branch merging, tagging, and CI/CD architecture. Parameterized for .NET, Node.js, Python, Java, and other ecosystems. Use this as a template; bind to your project via .release-config.json or project playbook."
+description: '**WORKFLOW SKILL** - Apply framework-agnostic release patterns for versioning, branch promotion, tagging, and CI/CD. WHEN: "design release workflow", "release process template needed", "version bump and tagging flow". INVOKES: gh release/PR checks, git merge/tag commands, release playbook binding.'
 domain: "release-workflow"
 confidence: "high"
 source: "abstracted from BlazorWebFormsComponents"
@@ -145,15 +145,15 @@ gh release create {TAG_PREFIX}{VERSION} \
 
 Depending on your `.github/workflows/` configuration, the `published` release event may trigger:
 
-| Capability | Typical Workflow | Role |
-| ------------ | ------------------ | ------ |
-| Build Verification | `release.yml` or `build.yml` | Verify build succeeds on release tag |
-| Package Publishing | `publish-nuget.yml`, `publish-npm.yml` | Publish to NuGet, npm, PyPI, etc. |
-| Container Publishing | `publish-container.yml` | Build and push Docker/OCI image to registry |
-| Documentation Deploy | `docs.yml` | Build docs and deploy to GitHub Pages or docs site |
-| Artifact Archiving | `archive-release.yml` | Attach binaries, source archives to release |
-| Notification | (webhook or action) | Slack, email, Discord notification |
-| Deployment | `deploy-prod.yml` | Auto-deploy to production (if desired) |
+| Capability           | Typical Workflow                       | Role                                               |
+| -------------------- | -------------------------------------- | -------------------------------------------------- |
+| Build Verification   | `release.yml` or `build.yml`           | Verify build succeeds on release tag               |
+| Package Publishing   | `publish-nuget.yml`, `publish-npm.yml` | Publish to NuGet, npm, PyPI, etc.                  |
+| Container Publishing | `publish-container.yml`                | Build and push Docker/OCI image to registry        |
+| Documentation Deploy | `docs.yml`                             | Build docs and deploy to GitHub Pages or docs site |
+| Artifact Archiving   | `archive-release.yml`                  | Attach binaries, source archives to release        |
+| Notification         | (webhook or action)                    | Slack, email, Discord notification                 |
+| Deployment           | `deploy-prod.yml`                      | Auto-deploy to production (if desired)             |
 
 **Your playbook must specify:** Which workflows are configured for your project.
 

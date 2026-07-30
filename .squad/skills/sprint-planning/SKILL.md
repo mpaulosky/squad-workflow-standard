@@ -1,6 +1,6 @@
 ---
 name: "sprint-planning"
-description: "Convert a plan.md into GitHub milestones, sprint issues, a project board, and worktrees for isolated sprint execution"
+description: '**WORKFLOW SKILL** - Convert plan.md work into sprint milestones, issues, board state, and worktrees. WHEN: "plan to sprint breakdown", "create sprint milestones and issues", "setup sprint worktrees". INVOKES: gh api, gh issue create, gh project, git worktree orchestration.'
 domain: "planning, sprint, github-projects, worktrees"
 confidence: "high"
 source: "manual"

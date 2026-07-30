@@ -1,3 +1,4 @@
+---
 # Syncs README.md (root) -> docs/README.md via a PR back to protected main.
 # Keeps the docs folder reference copy in sync without direct pushes to main.
 name: Sync README to docs
@@ -18,7 +19,9 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  MAIN_BRANCH: ${{ vars.SQUAD_MAIN_BRANCH || github.event.repository.default_branch || 'main' }}
+  MAIN_BRANCH: >-
+    ${{ vars.SQUAD_MAIN_BRANCH ||
+    github.event.repository.default_branch || 'main' }}
 
 jobs:
   sync:

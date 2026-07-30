@@ -1,10 +1,7 @@
 ---
 name: mongodb-dba-patterns
 confidence: medium
-description: >
-  MyBlog-specific MongoDB operations guidance for Aspire-managed local runtime,
-  MongoDB.EntityFrameworkCore mappings, repository ownership, and shared-environment
-  DBA work that still needs explicit review before production use.
+description: '**WORKFLOW SKILL** - Apply MyBlog MongoDB DBA practices for Aspire runtime, EF mappings, and production safety. WHEN: "MyBlog MongoDB operations review", "Aspire MongoDB configuration", "MongoDB security hardening". INVOKES: MongoDB extension workflows, Aspire resource validation, repo ownership checks.'
 ---
 
 ## MongoDB DBA Patterns (MyBlog)
@@ -18,14 +15,14 @@ live conventions versus future-only operator notes.
 
 ### Current MyBlog MongoDB map
 
-| Area | Canonical files | Owner | Current rule |
-| --- | --- | --- | --- |
-| Local runtime wiring | `src/AppHost/AppHost.cs`, `src/Web/Program.cs` | Boromir + Sam | AppHost defines `mongodb` and database `myblog`; Web consumes it through `AddMongoDBClient("myblog")`. |
-| EF Core mapping | `src/Web/Data/BlogDbContext.cs` | Sam | `BlogPost` maps to collection `blogposts`; `Version` is the optimistic concurrency token. |
-| Repository layer | `src/Domain/Interfaces/IBlogPostRepository.cs`, `src/Web/Data/MongoDbBlogPostRepository.cs` | Sam | Repositories return domain entities; handlers wrap results in `Result` / `Result<T>`. |
-| Read-side caching | `src/Web/Features/BlogPosts/List/GetBlogPostsHandler.cs`, `src/Web/Features/BlogPosts/Edit/EditBlogPostHandler.cs` | Sam | Mongo-backed reads are cached at handler level, not in the repository. |
-| Integration proof | `tests/Integration.Tests/Infrastructure/MongoDbFixture.cs`, `tests/Integration.Tests/BlogPosts/MongoDbBlogPostRepositoryTests.cs` | Gimli | Testcontainers-backed Mongo is the canonical verification path for persistence behavior. |
-| Secrets / external hardening | runtime config + deployment pipeline | Frodo + Boromir | User Secrets / secret stores own credentials; never commit connection strings with secrets. |
+| Area                         | Canonical files                                                                                                                   | Owner           | Current rule                                                                                           |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | --------------- | ------------------------------------------------------------------------------------------------------ |
+| Local runtime wiring         | `src/AppHost/AppHost.cs`, `src/Web/Program.cs`                                                                                    | Boromir + Sam   | AppHost defines `mongodb` and database `myblog`; Web consumes it through `AddMongoDBClient("myblog")`. |
+| EF Core mapping              | `src/Web/Data/BlogDbContext.cs`                                                                                                   | Sam             | `BlogPost` maps to collection `blogposts`; `Version` is the optimistic concurrency token.              |
+| Repository layer             | `src/Domain/Interfaces/IBlogPostRepository.cs`, `src/Web/Data/MongoDbBlogPostRepository.cs`                                       | Sam             | Repositories return domain entities; handlers wrap results in `Result` / `Result<T>`.                  |
+| Read-side caching            | `src/Web/Features/BlogPosts/List/GetBlogPostsHandler.cs`, `src/Web/Features/BlogPosts/Edit/EditBlogPostHandler.cs`                | Sam             | Mongo-backed reads are cached at handler level, not in the repository.                                 |
+| Integration proof            | `tests/Integration.Tests/Infrastructure/MongoDbFixture.cs`, `tests/Integration.Tests/BlogPosts/MongoDbBlogPostRepositoryTests.cs` | Gimli           | Testcontainers-backed Mongo is the canonical verification path for persistence behavior.               |
+| Secrets / external hardening | runtime config + deployment pipeline                                                                                              | Frodo + Boromir | User Secrets / secret stores own credentials; never commit connection strings with secrets.            |
 
 ### Use this skill when
 
@@ -166,7 +163,10 @@ MyBlog rules:
 Recommended current review candidate if the list grows materially:
 
 ```javascript
-db.blogposts.createIndex({ CreatedAt: -1 }, { name: "idx_blogposts_created_desc" })
+db.blogposts.createIndex(
+  { CreatedAt: -1 },
+  { name: "idx_blogposts_created_desc" },
+);
 ```
 
 This is a **candidate**, not a declared current production index.
