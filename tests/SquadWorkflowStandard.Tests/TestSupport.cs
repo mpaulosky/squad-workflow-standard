@@ -57,6 +57,21 @@ internal static class RepositoryPaths
     public static string HookManifestPath =>
         Path.Combine(Root, "source", ".squad", "workflows", "hook-baseline-manifest.txt");
 
+    public static string SkillManifestPath =>
+        Path.Combine(Root, "source", ".squad", "workflows", "skill-manifest.txt");
+
+    public static string InstructionManifestPath =>
+        Path.Combine(Root, "source", ".squad", "workflows", "instruction-manifest.txt");
+
+    public static string PromptManifestPath =>
+        Path.Combine(Root, "source", ".squad", "workflows", "prompt-manifest.txt");
+
+    public static string AgentManifestPath =>
+        Path.Combine(Root, "source", ".squad", "workflows", "agent-manifest.txt");
+
+    public static string SquadSkillManifestPath =>
+        Path.Combine(Root, "source", ".squad", "workflows", "squad-skill-manifest.txt");
+
     public static string GetCanonicalVersion()
     {
         var versionLine = File.ReadLines(CanonicalWorkflowPath)

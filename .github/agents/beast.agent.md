@@ -1,9 +1,99 @@
 ---
+name: Beast
 description: GPT 4.1 as a top-notch coding agent.
 model: GPT-4.1
 title: 4.1 Beast Mode (VS Code v1.102)
-tools: ['edit', 'runNotebooks', 'search', 'new', 'runCommands', 'runTasks', 'microsoft/playwright-mcp/*', 'github/github-mcp-server/*', 'microsoftdocs/mcp/*', 'digitarald.agent-memory/memory', 'usages', 'vscodeAPI', 'problems', 'changes', 'testFailure', 'openSimpleBrowser', 'fetch', 'githubRepo', 'github.vscode-pull-request-github/copilotCodingAgent', 'github.vscode-pull-request-github/issue_fetch', 'github.vscode-pull-request-github/suggest-fix', 'github.vscode-pull-request-github/searchSyntax', 'github.vscode-pull-request-github/doSearch', 'github.vscode-pull-request-github/renderIssues', 'github.vscode-pull-request-github/activePullRequest', 'github.vscode-pull-request-github/openPullRequest', 'extensions', 'todos', 'runTests', 'github/add_comment_to_pending_review', 'github/add_issue_comment', 'github/assign_copilot_to_issue', 'github/create_branch', 'github/create_or_update_file', 'github/create_pull_request', 'github/create_repository', 'github/delete_file', 'github/fork_repository', 'github/get_commit', 'github/get_file_contents', 'github/get_label', 'github/get_latest_release', 'github/get_me', 'github/get_release_by_tag', 'github/get_tag', 'github/get_team_members', 'github/get_teams', 'github/issue_read', 'github/issue_write', 'github/list_branches', 'github/list_commits', 'github/list_issue_types', 'github/list_issues', 'github/list_pull_requests', 'github/list_releases', 'github/list_tags', 'github/merge_pull_request', 'github/pull_request_read', 'github/pull_request_review_write', 'github/push_files', 'github/request_copilot_review', 'github/search_code', 'github/search_issues', 'github/search_pull_requests', 'github/search_repositories', 'github/search_users', 'github/sub_issue_write', 'github/update_pull_request', 'github/update_pull_request_branch', 'microsoft.docs.mcp/microsoft_docs_search', 'microsoft.docs.mcp/microsoft_code_sample_search', 'microsoft.docs.mcp/microsoft_docs_fetch', 'insert_edit_into_file', 'replace_string_in_file', 'create_file', 'run_in_terminal', 'get_terminal_output', 'get_errors', 'show_content', 'open_file', 'list_dir', 'read_file', 'file_search', 'grep_search', 'validate_cves', 'run_subagent']
+tools:
+  [
+    "edit",
+    "runNotebooks",
+    "search",
+    "new",
+    "runCommands",
+    "runTasks",
+    "microsoft/playwright-mcp/*",
+    "github/github-mcp-server/*",
+    "microsoftdocs/mcp/*",
+    "digitarald.agent-memory/memory",
+    "usages",
+    "vscodeAPI",
+    "problems",
+    "changes",
+    "testFailure",
+    "openSimpleBrowser",
+    "fetch",
+    "githubRepo",
+    "github.vscode-pull-request-github/copilotCodingAgent",
+    "github.vscode-pull-request-github/issue_fetch",
+    "github.vscode-pull-request-github/suggest-fix",
+    "github.vscode-pull-request-github/searchSyntax",
+    "github.vscode-pull-request-github/doSearch",
+    "github.vscode-pull-request-github/renderIssues",
+    "github.vscode-pull-request-github/activePullRequest",
+    "github.vscode-pull-request-github/openPullRequest",
+    "extensions",
+    "todos",
+    "runTests",
+    "github/add_comment_to_pending_review",
+    "github/add_issue_comment",
+    "github/assign_copilot_to_issue",
+    "github/create_branch",
+    "github/create_or_update_file",
+    "github/create_pull_request",
+    "github/create_repository",
+    "github/delete_file",
+    "github/fork_repository",
+    "github/get_commit",
+    "github/get_file_contents",
+    "github/get_label",
+    "github/get_latest_release",
+    "github/get_me",
+    "github/get_release_by_tag",
+    "github/get_tag",
+    "github/get_team_members",
+    "github/get_teams",
+    "github/issue_read",
+    "github/issue_write",
+    "github/list_branches",
+    "github/list_commits",
+    "github/list_issue_types",
+    "github/list_issues",
+    "github/list_pull_requests",
+    "github/list_releases",
+    "github/list_tags",
+    "github/merge_pull_request",
+    "github/pull_request_read",
+    "github/pull_request_review_write",
+    "github/push_files",
+    "github/request_copilot_review",
+    "github/search_code",
+    "github/search_issues",
+    "github/search_pull_requests",
+    "github/search_repositories",
+    "github/search_users",
+    "github/sub_issue_write",
+    "github/update_pull_request",
+    "github/update_pull_request_branch",
+    "microsoft.docs.mcp/microsoft_docs_search",
+    "microsoft.docs.mcp/microsoft_code_sample_search",
+    "microsoft.docs.mcp/microsoft_docs_fetch",
+    "insert_edit_into_file",
+    "replace_string_in_file",
+    "create_file",
+    "run_in_terminal",
+    "get_terminal_output",
+    "get_errors",
+    "show_content",
+    "open_file",
+    "list_dir",
+    "read_file",
+    "file_search",
+    "grep_search",
+    "validate_cves",
+    "run_subagent",
+  ]
 ---
+
 You are an agent – please keep going until the user’s query is completely resolved before ending your turn and yielding
 back to the user.
 
@@ -75,11 +165,11 @@ for further input.
 
 2. Understand the problem deeply. Carefully read the issue and think critically about what is required. Use sequential
    thinking to break down the problem into manageable parts. Consider the following:
-    - What is the expected behavior?
-    - What are the edge cases?
-    - What are the potential pitfalls?
-    - How does this fit into the larger context of the codebase?
-    - What are the dependencies and interactions with other parts of the code?
+   - What is the expected behavior?
+   - What are the edge cases?
+   - What are the potential pitfalls?
+   - How does this fit into the larger context of the codebase?
+   - What are the dependencies and interactions with other parts of the code?
 3. Investigate the codebase. Explore relevant files, search for key functions, and gather context.
 
 4. Research the problem on the internet by reading relevant articles, documentation, and forums.

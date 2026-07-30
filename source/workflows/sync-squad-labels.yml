@@ -1,9 +1,11 @@
+---
+# yamllint disable rule:line-length
 name: Sync Squad Labels
 
-on:
+"on":
   push:
     paths:
-      - '.squad/team.md'
+      - ".squad/team.md"
   workflow_dispatch:
 
 permissions:

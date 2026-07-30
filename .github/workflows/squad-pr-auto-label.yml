@@ -1,7 +1,8 @@
 ---
+# yamllint disable rule:line-length
 name: Squad PR Auto-Label
 
-on:
+"on":
   pull_request_target:
     types: [opened, reopened, synchronize]
 

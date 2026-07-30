@@ -1,6 +1,6 @@
 ---
 name: refactor
-description: 'Surgical code refactoring to improve maintainability without changing behavior. Covers extracting functions, renaming variables, breaking down god functions, improving type safety, eliminating code smells, and applying design patterns. Less drastic than repo-rebuilder; use for gradual improvements.'
+description: "Surgically refactor code to improve maintainability without changing behavior — extracting functions, renaming, eliminating code smells, and applying design patterns. WHEN: \"refactor code\", \"extract function\", \"code smells\", \"improve maintainability\", \"rename variable\"."
 license: MIT
 ---
 

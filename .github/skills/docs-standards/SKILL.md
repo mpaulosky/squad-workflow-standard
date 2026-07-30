@@ -1,6 +1,6 @@
 ---
 name: "docs-standards"
-description: "Microsoft Style Guide + Squad-specific documentation patterns"
+description: "Apply Microsoft Style Guide and Squad-specific documentation patterns for consistent, professional writing across the team. WHEN: \"write documentation\", \"docs standards\", \"Microsoft Style Guide\", \"documentation patterns\", \"style guide\"."
 domain: "documentation"
 confidence: "high"
 source: "earned (PAO charter, multiple doc PR reviews)"

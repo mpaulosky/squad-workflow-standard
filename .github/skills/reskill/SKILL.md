@@ -1,6 +1,6 @@
 ---
 name: "reskill"
-description: "Team-wide charter and history optimization through skill extraction"
+description: "Optimize team-wide charters and history through skill extraction — reducing per-agent context overhead by capturing shared patterns as reusable skills. WHEN: \"team reskill\", \"optimize charters\", \"extract skills\", \"slim down charters\", \"reduce context overhead\"."
 domain: "team-optimization"
 confidence: "high"
 source: "manual — Brady directive to reduce per-agent context overhead"

@@ -1,6 +1,6 @@
 ---
 name: secret-handling
-description: Never read .env files or write secrets to .squad/ committed files
+description: "Prevent secrets from being read from .env files or committed to .squad/ files — secure credential handling across all Squad agents. WHEN: \"handle secrets\", \".env file\", \"secure credentials\", \"avoid committing secrets\", \"secret safety\"."
 domain: security, file-operations, team-collaboration
 confidence: high
 source: earned (issue #267 — credential leak incident)

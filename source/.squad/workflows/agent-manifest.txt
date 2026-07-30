@@ -1,0 +1,10 @@
+# Centrally managed .github/agents/ baseline.
+# One filename per line. The sync tool copies each named file from this
+# repo's .github/agents/ into the target repo's .github/agents/,
+# overwriting if content differs.
+#
+# NOTE: squad.agent.md is intentionally NOT listed here — it is installed
+# and upgraded by 'squad init' / 'squad upgrade' and must not be overwritten
+# by this standard pack.
+
+beast.agent.md

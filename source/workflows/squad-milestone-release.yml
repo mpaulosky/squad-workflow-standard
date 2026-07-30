@@ -1,16 +1,17 @@
+---
 name: Squad Milestone Release
 
-on:
+"on":
   workflow_dispatch:
     inputs:
       bump:
-        description: 'Version bump type'
+        description: "Version bump type"
         required: true
         default: minor
         type: choice
         options: [minor, patch, major]
       milestone_number:
-        description: 'Milestone number (optional, for reference in tag message)'
+        description: "Milestone number (optional, for reference in tag message)"
         required: false
         type: string
 
@@ -35,7 +36,7 @@ jobs:
       - name: Install GitVersion
         uses: gittools/actions/gitversion/setup@v4.7.0
         with:
-          versionSpec: '6.x'
+          versionSpec: "6.x"
 
       - name: Determine current version
         id: gitversion
@@ -52,8 +53,9 @@ jobs:
           MINOR: ${{ steps.gitversion.outputs.minor }}
           PATCH: ${{ steps.gitversion.outputs.patch }}
         run: |
-          # Base off last tag to avoid double-counting GitVersion's auto-increment
-          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          # Base off last tag to avoid double-counting GitVersion increments.
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null \
+            || echo "v0.0.0")
           BASE=${LAST_TAG#v}
           BMAJ=$(echo "$BASE" | cut -d. -f1)
           BMIN=$(echo "$BASE" | cut -d. -f2)
@@ -68,7 +70,7 @@ jobs:
           fi
 
           echo "next_version=$NEXT_VERSION" >> "$GITHUB_OUTPUT"
-          echo "tag=v$NEXT_VERSION"         >> "$GITHUB_OUTPUT"
+          echo "tag=v$NEXT_VERSION" >> "$GITHUB_OUTPUT"
           echo "Bumping $BUMP: $BASE → $NEXT_VERSION"
 
       - name: Create and push release tag

@@ -1,6 +1,6 @@
 ---
 name: "test-discipline"
-description: "Update tests when changing APIs — no exceptions"
+description: "Update tests whenever APIs change — no exceptions — to maintain test coverage discipline across all code changes. WHEN: \"update tests\", \"test discipline\", \"API changed\", \"tests need updating\", \"don't skip tests\"."
 domain: "quality"
 confidence: "high"
 source: "earned (Fenster/Hockney incident, test assertion sync violations)"

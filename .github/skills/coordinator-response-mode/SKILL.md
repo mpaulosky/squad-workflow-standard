@@ -1,6 +1,6 @@
 ---
 name: "coordinator-response-mode"
-description: "Selecting WHO handles work is the Routing table; selecting HOW they handle it (Direct, Lightweight, Standard, Full) is Response Mode. This skill contains the complete decision table, exemplar prompts for each mode, the Lightweight spawn template, and the upgrade rules. Squad coordinator loads this on demand once routing has identified the agent — to pick the right ceremony level for the task."
+description: "Select the response mode (Direct, Lightweight, Standard, Full) after routing — provides the decision table, exemplar prompts, and Lightweight spawn template. WHEN: \"pick response mode\", \"lightweight spawn\", \"full ceremony\", \"response mode selection\", \"how to spawn\"."
 allowedTools: []
 confidence: high
 domain: squad-internals
