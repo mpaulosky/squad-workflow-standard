@@ -1,6 +1,6 @@
 ---
 name: "squad-version-check"
-description: "Internals of how @bradygaster/squad-cli stamps its version, how `squad upgrade` works (what it preserves vs overwrites), and how to probe the npm registry for the latest version from a coordinator prompt."
+description: "Probe the npm registry for the latest Squad CLI version and explain how squad upgrade stamps versions and what it preserves vs overwrites. WHEN: \"squad version\", \"squad upgrade\", \"check squad version\", \"latest squad version\", \"squad npm version\"."
 allowedTools: []
 confidence: medium
 domain: squad-internals

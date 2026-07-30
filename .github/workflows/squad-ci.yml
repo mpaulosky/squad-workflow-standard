@@ -1,5 +1,4 @@
 ---
-
 name: Squad CI
 # Fast restore/build gate for feature branches and PRs into protected branches
 # (`dev` and `main` in the standard model).

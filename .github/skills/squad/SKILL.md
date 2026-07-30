@@ -1,7 +1,6 @@
 ---
 name: squad
-description: >-
-  Squad's command catalog and interactive menu. Invoke via /squad (slash command) or natural language ("squad commands", "what can squad do", "show me squad options"). Presents categorized operations (Install & Upgrade, Team Management, Issues & PRs, Plugins & Skills, Model & Cost, Sessions & State) as an interactive picker. Routes to the right squad CLI command or the Squad coordinator agent.
+description: "Show Squad's command catalog as an interactive menu — invoked via /squad slash command or natural language. WHEN: \"squad commands\", \"what can squad do\", \"show squad options\", \"squad menu\", \"squad help\"."
 user-invocable: true
 allowedTools: []
 ---

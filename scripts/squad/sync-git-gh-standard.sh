@@ -92,6 +92,11 @@ WORKFLOW_README="$SOURCE_REPO/source/.squad/workflows/README.md"
 WORKFLOW_SKILL="$SOURCE_REPO/source/.squad/skills/git-workflow-standard/SKILL.md"
 WORKFLOW_BASELINE_MANIFEST="$SOURCE_REPO/source/.squad/workflows/workflow-baseline-manifest.txt"
 HOOK_BASELINE_MANIFEST="$SOURCE_REPO/source/.squad/workflows/hook-baseline-manifest.txt"
+SKILL_MANIFEST="$SOURCE_REPO/source/.squad/workflows/skill-manifest.txt"
+INSTRUCTION_MANIFEST="$SOURCE_REPO/source/.squad/workflows/instruction-manifest.txt"
+PROMPT_MANIFEST="$SOURCE_REPO/source/.squad/workflows/prompt-manifest.txt"
+AGENT_MANIFEST="$SOURCE_REPO/source/.squad/workflows/agent-manifest.txt"
+SQUAD_SKILL_MANIFEST="$SOURCE_REPO/source/.squad/workflows/squad-skill-manifest.txt"
 
 for required_file in "$WORKFLOW_STANDARD" "$WORKFLOW_README" "$WORKFLOW_SKILL"; do
   if [[ ! -f "$required_file" ]]; then
@@ -114,6 +119,11 @@ copy_if_distinct \
 
 SYNCED_WORKFLOW_COUNT=0
 SYNCED_HOOK_COUNT=0
+SYNCED_SKILL_COUNT=0
+SYNCED_INSTRUCTION_COUNT=0
+SYNCED_PROMPT_COUNT=0
+SYNCED_AGENT_COUNT=0
+SYNCED_SQUAD_SKILL_COUNT=0
 
 if [[ -f "$WORKFLOW_BASELINE_MANIFEST" ]]; then
   copy_if_distinct \
@@ -166,6 +176,121 @@ if [[ -f "$HOOK_BASELINE_MANIFEST" ]]; then
   done < "$HOOK_BASELINE_MANIFEST"
 fi
 
+# --- Skills (.github/skills/ directories) ---
+sync_directory_manifest() {
+  local manifest="$1"
+  local source_root="$2"
+  local target_root="$3"
+  local count_var="$4"
+  local count=0
+
+  if [[ ! -f "$manifest" ]]; then
+    return
+  fi
+
+  mkdir -p "$TARGET_REPO/$(dirname "${manifest#"$SOURCE_REPO/"}")"
+  copy_if_distinct "$manifest" "$TARGET_REPO/${manifest#"$SOURCE_REPO/"}"
+
+  while IFS= read -r entry || [[ -n "$entry" ]]; do
+    entry="$(printf '%s' "$entry" | tr -d '\r')"
+    if [[ -z "$entry" || "${entry:0:1}" == "#" ]]; then
+      continue
+    fi
+
+    local source_dir="$source_root/$entry"
+    local target_dir="$target_root/$entry"
+
+    if [[ ! -d "$source_dir" ]]; then
+      echo "WARN: Missing source directory: $source_dir"
+      continue
+    fi
+
+    mkdir -p "$target_dir"
+    while IFS= read -r -d '' source_file; do
+      local relative="${source_file#"$source_dir/"}"
+      local target_file="$target_dir/$relative"
+      mkdir -p "$(dirname "$target_file")"
+      copy_if_distinct "$source_file" "$target_file"
+      count=$((count + 1))
+    done < <(find "$source_dir" -type f -print0)
+  done < "$manifest"
+
+  printf -v "$count_var" '%d' "$count"
+}
+
+# --- File-based manifests (.github/instructions/, .github/prompts/, .github/agents/) ---
+sync_file_manifest() {
+  local manifest="$1"
+  local source_root="$2"
+  local target_root="$3"
+  local count_var="$4"
+  local count=0
+
+  if [[ ! -f "$manifest" ]]; then
+    return
+  fi
+
+  mkdir -p "$TARGET_REPO/$(dirname "${manifest#"$SOURCE_REPO/"}")"
+  copy_if_distinct "$manifest" "$TARGET_REPO/${manifest#"$SOURCE_REPO/"}"
+
+  mkdir -p "$target_root"
+
+  while IFS= read -r entry || [[ -n "$entry" ]]; do
+    entry="$(printf '%s' "$entry" | tr -d '\r')"
+    if [[ -z "$entry" || "${entry:0:1}" == "#" ]]; then
+      continue
+    fi
+
+    local source_file="$source_root/$entry"
+    local target_file="$target_root/$entry"
+
+    if [[ ! -f "$source_file" ]]; then
+      echo "WARN: Missing source file: $source_file"
+      continue
+    fi
+
+    copy_if_distinct "$source_file" "$target_file"
+    count=$((count + 1))
+  done < "$manifest"
+
+  printf -v "$count_var" '%d' "$count"
+}
+
+mkdir -p "$TARGET_REPO/.github/skills"
+sync_directory_manifest \
+  "$SKILL_MANIFEST" \
+  "$SOURCE_REPO/.github/skills" \
+  "$TARGET_REPO/.github/skills" \
+  SYNCED_SKILL_COUNT
+
+mkdir -p "$TARGET_REPO/.github/instructions"
+sync_file_manifest \
+  "$INSTRUCTION_MANIFEST" \
+  "$SOURCE_REPO/.github/instructions" \
+  "$TARGET_REPO/.github/instructions" \
+  SYNCED_INSTRUCTION_COUNT
+
+mkdir -p "$TARGET_REPO/.github/prompts"
+sync_file_manifest \
+  "$PROMPT_MANIFEST" \
+  "$SOURCE_REPO/.github/prompts" \
+  "$TARGET_REPO/.github/prompts" \
+  SYNCED_PROMPT_COUNT
+
+mkdir -p "$TARGET_REPO/.github/agents"
+sync_file_manifest \
+  "$AGENT_MANIFEST" \
+  "$SOURCE_REPO/.github/agents" \
+  "$TARGET_REPO/.github/agents" \
+  SYNCED_AGENT_COUNT
+
+mkdir -p "$TARGET_REPO/.squad/skills"
+sync_directory_manifest \
+  "$SQUAD_SKILL_MANIFEST" \
+  "$SOURCE_REPO/source/.squad/skills" \
+  "$TARGET_REPO/.squad/skills" \
+  SYNCED_SQUAD_SKILL_COUNT
+
 # Enforce hooks activation in the target repo.
 git -C "$TARGET_REPO" config core.hooksPath .github/hooks
 
@@ -202,5 +327,12 @@ EOF
 fi
 
 cat <<EOF
+Augmentation assets synced:
+  Skills:       $SYNCED_SKILL_COUNT file(s) → $TARGET_REPO/.github/skills
+  Instructions: $SYNCED_INSTRUCTION_COUNT file(s) → $TARGET_REPO/.github/instructions
+  Prompts:      $SYNCED_PROMPT_COUNT file(s) → $TARGET_REPO/.github/prompts
+  Agents:       $SYNCED_AGENT_COUNT file(s) → $TARGET_REPO/.github/agents
+  Squad skills: $SYNCED_SQUAD_SKILL_COUNT file(s) → $TARGET_REPO/.squad/skills
+
 Next step: run scripts/squad/check-git-gh-standard.sh $TARGET_REPO
 EOF

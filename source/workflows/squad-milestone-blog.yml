@@ -1,3 +1,5 @@
+---
+# yamllint disable rule:line-length
 # Step 1 of the Milestone Review → Release/Blog ceremony.
 # When a milestone closes, Ralph reviews the work and decides:
 #   - label "release-candidate" → full release flow (tag + GitHub Release + Bilbo release blog)
@@ -5,7 +7,7 @@
 # milestone-release-decision.yml watches for those labels and executes the chosen path.
 name: Milestone Review — Release or Blog
 
-on:
+"on":
   milestone:
     types: [closed]
 

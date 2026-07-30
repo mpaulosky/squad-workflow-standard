@@ -1,6 +1,6 @@
 ---
 name: github-issues
-description: 'Create, update, and manage GitHub issues using MCP tools. Use this skill when users want to create bug reports, feature requests, or task issues, update existing issues, add labels/assignees/milestones, or manage issue workflows. Triggers on requests like "create an issue", "file a bug", "request a feature", "update issue X", or any GitHub issue management task.'
+description: "Create, update, and manage GitHub issues using MCP tools for bug reports, feature requests, and task tracking across workflows. WHEN: \"create an issue\", \"file a bug\", \"request a feature\", \"update issue\", \"GitHub issue management\"."
 ---
 
 # GitHub Issues

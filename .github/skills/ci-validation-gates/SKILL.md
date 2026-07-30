@@ -1,6 +1,6 @@
 ---
 name: "ci-validation-gates"
-description: "Defensive CI/CD patterns: semver validation, token checks, retry logic, draft detection — earned from v0.8.22"
+description: "Apply defensive CI/CD patterns for semver validation, token checks, retry logic, and draft PR detection — earned from v0.8.22. WHEN: \"CI validation gates\", \"semver check\", \"token check in CI\", \"draft detection\", \"retry logic CI\"."
 domain: "ci-cd"
 confidence: "high"
 source: "extracted from Drucker and Trejo charters — earned knowledge from v0.8.22 release incident"

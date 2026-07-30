@@ -1,6 +1,6 @@
 ---
 name: "client-compatibility"
-description: "Platform detection and adaptive spawning for CLI vs VS Code vs other surfaces"
+description: "Detect client surface (CLI vs VS Code) and apply adaptive spawning behavior for platform-specific tool availability. WHEN: \"detect client surface\", \"CLI vs VS Code\", \"adaptive spawning\", \"platform detection\", \"client compatibility\"."
 domain: "orchestration"
 confidence: "high"
 source: "extracted"

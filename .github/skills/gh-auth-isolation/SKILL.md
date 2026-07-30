@@ -1,6 +1,6 @@
 ---
 name: "gh-auth-isolation"
-description: "Safely manage multiple GitHub identities (EMU + personal) in agent workflows"
+description: "Safely manage multiple GitHub identities (EMU and personal) in agent workflows to prevent cross-account contamination. WHEN: \"multiple GitHub accounts\", \"EMU account\", \"gh auth isolation\", \"personal vs work GitHub\", \"GitHub identity switch\"."
 domain: "security, github-integration, authentication, multi-account"
 confidence: "high"
 source: "earned (production usage across 50+ sessions with EMU corp + personal GitHub accounts)"

@@ -1,6 +1,8 @@
+---
+# yamllint disable rule:line-length
 name: Add Issues to Project
 
-on:
+"on":
   issues:
     types: [opened, reopened]
 
