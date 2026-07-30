@@ -1,6 +1,6 @@
 ---
 name: "git-workflow"
-description: "Squad branching model: dev -> preview -> main promotion flow"
+description: "Apply Squad's branching model — dev to preview to main promotion flow — for consistent branch naming and PR workflow. WHEN: \"branching model\", \"create branch\", \"squad git flow\", \"dev to main\", \"PR workflow\"."
 domain: "version-control"
 confidence: "high"
 source: "team-decision"

@@ -1,13 +1,15 @@
+---
+# yamllint disable rule:line-length
 name: Squad Docs — Build & Deploy
 # dotnet project — configure documentation build commands below
 
-on:
+"on":
   workflow_dispatch:
   push:
     branches: [preview]
     paths:
-      - 'docs/**'
-      - '.github/workflows/squad-docs.yml'
+      - "docs/**"
+      - ".github/workflows/squad-docs.yml"
 
 permissions:
   contents: read

@@ -1,6 +1,6 @@
 ---
 name: "squad-help"
-description: "How to actually use Squad — Squad is a custom Copilot agent (invoked via the task tool with agent_type='Squad'), not a skill. This file explains the right invocation paths for setting up a team, listing squad commands, and initializing Squad in a new project."
+description: "Explain how to use Squad — invoked via the task tool with agent_type='Squad', not as a skill. Covers invocation paths, setup, commands, and init. WHEN: \"how to use squad\", \"squad setup\", \"invoke squad\", \"squad agent help\", \"squad not working\"."
 allowedTools: []
 confidence: high
 domain: squad-onboarding

@@ -1,3 +1,5 @@
+---
+# yamllint disable rule:line-length
 # Step 2 of the Milestone Review → Release/Blog ceremony.
 # Fires when Ralph labels a "Milestone Review" issue with:
 #   - "release-candidate" → triggers squad-milestone-release.yml + Bilbo release brief
@@ -126,7 +128,7 @@ jobs:
           - Write the post to \`docs/blog/${PUBLISH_DATE}-${SLUG}.md\`
           - Update \`docs/blog/index.md\` to add the new post at the top of the Recent Posts table
           - Follow existing post style (see \`docs/blog/2026-04-04-release-v0-7-0.md\`)
-          - Open a PR targeting \`main\` when complete
+          - Open a PR targeting \`dev\` when complete
           - Close both this issue and the review issue (#${REVIEW_ISSUE_NUMBER}) in the PR description"
 
           gh issue create \

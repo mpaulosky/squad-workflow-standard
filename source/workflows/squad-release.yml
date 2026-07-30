@@ -1,7 +1,8 @@
+---
 name: Squad Release
-# Keeps the current main-push release flow, but validates the real solution first.
+# Keeps the current main-push release flow with real solution validation.
 
-on:
+"on":
   push:
     branches: [main]
     paths-ignore:
@@ -56,12 +57,15 @@ jobs:
       - name: Check if tag already exists
         id: check_tag
         run: |
-          if git rev-parse "refs/tags/${{ steps.version.outputs.tag }}" >/dev/null 2>&1; then
+          tag_ref="refs/tags/${{ steps.version.outputs.tag }}"
+          if git rev-parse "$tag_ref" >/dev/null 2>&1; then
             echo "exists=true" >> "$GITHUB_OUTPUT"
-            echo "⏭️ Tag ${{ steps.version.outputs.tag }} already exists — skipping release."
+            echo "⏭️ Tag ${{ steps.version.outputs.tag }} already exists"
+            echo "⏭️ Skipping release."
           else
             echo "exists=false" >> "$GITHUB_OUTPUT"
-            echo "🆕 Tag ${{ steps.version.outputs.tag }} does not exist — creating release."
+            echo "🆕 Tag ${{ steps.version.outputs.tag }} does not exist"
+            echo "🆕 Creating release."
           fi
 
       - name: Discover solution file
@@ -72,7 +76,8 @@ jobs:
             echo "::error::No *.slnx file found at the repository root."
             exit 1
           elif [[ $count -gt 1 ]]; then
-            echo "::error::Multiple *.slnx files found at the repository root: ${matches[*]}"
+            echo "::error::Multiple *.slnx files found at the repository root"
+            echo "::error::${matches[*]}"
             exit 1
           fi
           echo "SOLUTION_FILE=${matches[0]}" >> "$GITHUB_ENV"
@@ -84,7 +89,9 @@ jobs:
 
       - name: Build solution
         if: steps.check_tag.outputs.exists == 'false'
-        run: dotnet build "$SOLUTION_FILE" --configuration Release --no-restore
+        run: >-
+          dotnet build "$SOLUTION_FILE" --configuration Release
+          --no-restore
 
       - name: Run fast release validation tests
         if: steps.check_tag.outputs.exists == 'false'
@@ -112,7 +119,8 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag -a "${{ steps.version.outputs.tag }}" -m "Release ${{ steps.version.outputs.tag }}"
+          git tag -a "${{ steps.version.outputs.tag }}" \
+            -m "Release ${{ steps.version.outputs.tag }}"
           git push origin "${{ steps.version.outputs.tag }}"
 
       - name: Create GitHub Release
@@ -131,4 +139,5 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release view "${{ steps.version.outputs.tag }}"
-          echo "✅ Release ${{ steps.version.outputs.tag }} created and verified."
+          echo "✅ Release ${{ steps.version.outputs.tag }} created"
+          echo "✅ Release verification complete"

@@ -63,6 +63,11 @@ fi
 WORKFLOW_STANDARD="$SOURCE_REPO/source/.squad/workflows/git-gh-process-standard.md"
 WORKFLOW_BASELINE_MANIFEST="$SOURCE_REPO/source/.squad/workflows/workflow-baseline-manifest.txt"
 HOOK_BASELINE_MANIFEST="$SOURCE_REPO/source/.squad/workflows/hook-baseline-manifest.txt"
+SKILL_MANIFEST="$SOURCE_REPO/source/.squad/workflows/skill-manifest.txt"
+INSTRUCTION_MANIFEST="$SOURCE_REPO/source/.squad/workflows/instruction-manifest.txt"
+PROMPT_MANIFEST="$SOURCE_REPO/source/.squad/workflows/prompt-manifest.txt"
+AGENT_MANIFEST="$SOURCE_REPO/source/.squad/workflows/agent-manifest.txt"
+SQUAD_SKILL_MANIFEST="$SOURCE_REPO/source/.squad/workflows/squad-skill-manifest.txt"
 
 if [[ ! -f "$WORKFLOW_STANDARD" ]]; then
   echo "ERROR: Canonical workflow standard not found: $WORKFLOW_STANDARD"
@@ -265,6 +270,111 @@ if [[ -f "$HOOK_BASELINE_MANIFEST" ]]; then
     fi
   done < "$HOOK_BASELINE_MANIFEST"
 fi
+
+# --- Check directory-based manifest (skills, squad-skills) ---
+check_directory_manifest() {
+  local manifest="$1"
+  local source_root="$2"
+  local target_root="$3"
+  local label="$4"
+
+  [[ ! -f "$manifest" ]] && return
+
+  while IFS= read -r entry || [[ -n "$entry" ]]; do
+    entry="$(printf '%s' "$entry" | tr -d '\r')"
+    [[ -z "$entry" || "${entry:0:1}" == "#" ]] && continue
+
+    local source_dir="$source_root/$entry"
+    local target_dir="$target_root/$entry"
+
+    if [[ ! -d "$source_dir" ]]; then
+      HAS_FAILURE=1
+      echo "ADAPTER CHECK FAILED: missing canonical $label directory $source_dir"
+      continue
+    fi
+
+    while IFS= read -r -d '' source_file; do
+      local relative="${source_file#"$source_dir/"}"
+      local target_file="$target_dir/$relative"
+
+      if [[ ! -f "$target_file" ]]; then
+        HAS_FAILURE=1
+        echo "ADAPTER CHECK FAILED: missing $label $entry/$relative"
+        continue
+      fi
+
+      if ! cmp -s "$source_file" "$target_file"; then
+        HAS_FAILURE=1
+        echo "ADAPTER CHECK FAILED: $label drift for $entry/$relative"
+      fi
+    done < <(find "$source_dir" -type f -print0)
+  done < "$manifest"
+}
+
+# --- Check file-based manifest (instructions, prompts, agents) ---
+check_file_manifest() {
+  local manifest="$1"
+  local source_root="$2"
+  local target_root="$3"
+  local label="$4"
+
+  [[ ! -f "$manifest" ]] && return
+
+  while IFS= read -r entry || [[ -n "$entry" ]]; do
+    entry="$(printf '%s' "$entry" | tr -d '\r')"
+    [[ -z "$entry" || "${entry:0:1}" == "#" ]] && continue
+
+    local source_file="$source_root/$entry"
+    local target_file="$target_root/$entry"
+
+    if [[ ! -f "$source_file" ]]; then
+      HAS_FAILURE=1
+      echo "ADAPTER CHECK FAILED: missing canonical $label $entry"
+      continue
+    fi
+
+    if [[ ! -f "$target_file" ]]; then
+      HAS_FAILURE=1
+      echo "ADAPTER CHECK FAILED: missing $label $entry"
+      continue
+    fi
+
+    if ! cmp -s "$source_file" "$target_file"; then
+      HAS_FAILURE=1
+      echo "ADAPTER CHECK FAILED: $label drift for $entry"
+    fi
+  done < "$manifest"
+}
+
+check_directory_manifest \
+  "$SKILL_MANIFEST" \
+  "$SOURCE_REPO/.github/skills" \
+  "$TARGET_REPO/.github/skills" \
+  "skill"
+
+check_file_manifest \
+  "$INSTRUCTION_MANIFEST" \
+  "$SOURCE_REPO/.github/instructions" \
+  "$TARGET_REPO/.github/instructions" \
+  "instruction"
+
+check_file_manifest \
+  "$PROMPT_MANIFEST" \
+  "$SOURCE_REPO/.github/prompts" \
+  "$TARGET_REPO/.github/prompts" \
+  "prompt"
+
+check_file_manifest \
+  "$AGENT_MANIFEST" \
+  "$SOURCE_REPO/.github/agents" \
+  "$TARGET_REPO/.github/agents" \
+  "agent"
+
+check_directory_manifest \
+  "$SQUAD_SKILL_MANIFEST" \
+  "$SOURCE_REPO/source/.squad/skills" \
+  "$TARGET_REPO/.squad/skills" \
+  "squad-skill"
 
 if [[ "$HAS_FAILURE" -eq 0 ]]; then
   echo "STATUS: OK (version and hard-gate adapters in sync)"

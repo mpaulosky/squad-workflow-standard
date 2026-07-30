@@ -1,6 +1,6 @@
 ---
 name: tailwind-migration
-description: "Migrate a Blazor project from Bootstrap to Tailwind CSS with light/dark themes using red, blue, green, and yellow color palettes. Replaces side navigation with a top menu bar. Applies modern styling throughout all pages and layout components. Use when: converting Bootstrap to Tailwind, adding dark mode, theming Blazor app, updating navigation layout, modernizing UI."
+description: "Migrate a Blazor project from Bootstrap to Tailwind CSS with light/dark themes and modern color palettes, replacing side nav with a top menu bar. WHEN: \"converting Bootstrap to Tailwind\", \"adding dark mode\", \"theming Blazor app\", \"updating navigation layout\", \"modernizing UI\"."
 ---
 
 # Tailwind CSS Migration — Bootstrap → Tailwind + Themes

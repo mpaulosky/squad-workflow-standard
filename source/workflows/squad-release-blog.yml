@@ -1,8 +1,10 @@
+---
+# yamllint disable rule:line-length
 # Creates a blog brief issue for Bilbo whenever a GitHub Release is published.
 # Mirrors milestone-blog.yml but fires on release events instead of milestone close.
 name: Release Blog Brief
 
-on:
+"on":
   release:
     types: [published]
 

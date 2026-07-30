@@ -1,6 +1,8 @@
+---
+# yamllint disable rule:line-length
 name: Dependabot Auto-Merge
 
-on:
+"on":
   pull_request_target:
     types: [opened, reopened, synchronize, ready_for_review]
     branches: [dev]

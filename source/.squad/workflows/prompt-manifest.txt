@@ -1,0 +1,19 @@
+# Centrally managed .github/prompts/ baseline.
+# One filename per line. The sync tool copies each named file from this
+# repo's .github/prompts/ into the target repo's .github/prompts/,
+# overwriting if content differs.
+
+build-repair.prompt.md
+copyright-header-update-prompt.md
+create-readme.prompt.md
+csharp-docs.prompt.md
+csharp-xunit.prompt.md
+dotnet-best-practices.prompt.md
+editorconfig.prompt.md
+playwright-explore-website.prompt.md
+structured-autonomy-generate.prompt.md
+structured-autonomy-implement.prompt.md
+structured-autonomy-plan.prompt.md
+structured-autonomy.md
+xunit-integration.prompt.md
+xunit.prompt.md
