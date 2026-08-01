@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using FluentAssertions;
 
-namespace SquadWorkflowStandard.Tests;
+namespace Unit.Tests;
 
 internal sealed record CommandResult(int ExitCode, string StdOut, string StdErr)
 {

@@ -1,7 +1,7 @@
 using FluentAssertions;
 using GitGhStandardCli.Models;
 
-namespace SquadWorkflowStandard.Tests;
+namespace Unit.Tests;
 
 public sealed class SynchronizationValidationContractTests
 {

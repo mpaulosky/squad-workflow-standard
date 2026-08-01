@@ -4,7 +4,7 @@ using GitGhStandardCli.Commands;
 using GitGhStandardCli.Models;
 using GitGhStandardCli.Services;
 
-namespace SquadWorkflowStandard.Tests;
+namespace Unit.Tests;
 
 public sealed class CommandCoverageTests
 {
