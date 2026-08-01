@@ -20,12 +20,13 @@ permissions:
         type: string
         default: ""
   push:
-    branches:
-      - dev
+    branches-ignore:
+      - preview
       - main
   pull_request:
-    branches:
-      - "**"
+    branches-ignore:
+      - preview
+      - main
   workflow_dispatch:
     inputs:
       project_name:
