@@ -199,7 +199,7 @@ jobs:
 
       - name: Run skill routing harness tests
         run: |
-          test_project="tests/SquadWorkflowStandard.Tests/SquadWorkflowStandard.Tests.csproj"
+          test_project="tests/Unit.Tests/Unit.Tests.csproj"
           dotnet test \
             "$test_project" \
             --filter "FullyQualifiedName~SkillRoutingFrontmatterTests" \
