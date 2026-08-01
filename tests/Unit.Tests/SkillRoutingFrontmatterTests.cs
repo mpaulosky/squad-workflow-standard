@@ -5,7 +5,7 @@ namespace Unit.Tests;
 
 public sealed class SkillRoutingFrontmatterTests
 {
-	private static readonly string SkillsRoot = Path.Combine(RepositoryPaths.Root, ".squad", "skills");
+	private static readonly string SkillsRoot = Path.Combine(RepositoryPaths.Root, "source", ".squad", "skills");
 
 	[Fact]
 	public void AllSquadSkills_ShouldHaveDescriptionWithWhenAndInvokes()
