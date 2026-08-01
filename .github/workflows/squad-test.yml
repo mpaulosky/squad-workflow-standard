@@ -19,13 +19,8 @@ permissions:
         required: false
         type: string
         default: ""
-  push:
-    branches:
-      - dev
-      - main
   pull_request:
-    branches:
-      - "**"
+    branches-ignore: [main, preview]
   workflow_dispatch:
     inputs:
       project_name:
@@ -107,7 +102,7 @@ jobs:
 
       - name: Build solution
         run: >-
-          dotnet build ${{ env.SOLUTION_FILE }} --configuration Release
+          dotnet build "$SOLUTION_FILE" --configuration Release
           --no-restore
 
       - name: Cache build artifacts
