@@ -20,12 +20,13 @@ permissions:
         type: string
         default: ""
   push:
-    branches:
-      - dev
+    branches-ignore:
+      - preview
       - main
   pull_request:
-    branches:
-      - "**"
+    branches-ignore:
+      - preview
+      - main
   workflow_dispatch:
     inputs:
       project_name:
@@ -107,7 +108,7 @@ jobs:
 
       - name: Build solution
         run: >-
-          dotnet build ${{ env.SOLUTION_FILE }} --configuration Release
+          dotnet build "$SOLUTION_FILE" --configuration Release
           --no-restore
 
       - name: Cache build artifacts
@@ -198,7 +199,7 @@ jobs:
 
       - name: Run skill routing harness tests
         run: |
-          test_project="tests/SquadWorkflowStandard.Tests/SquadWorkflowStandard.Tests.csproj"
+          test_project="tests/Unit.Tests/Unit.csproj"
           dotnet test \
             "$test_project" \
             --filter "FullyQualifiedName~SkillRoutingFrontmatterTests" \

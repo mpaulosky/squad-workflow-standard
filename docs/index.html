@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>squad-workflow-standard</title>
+	<meta name="description"
+		content="This project is a project to help standardize my projects, new and existing Squad supported projects. It provides a standard set of workflows and a team of agents that I can implement throughout my projects to help with standardization and automation.">
+	<style>
+		* {
+			margin: 0;
+			padding: 0;
+			box-sizing: border-box;
+		}
+
+		body {
+			font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+			line-height: 1.6;
+			color: #24292e;
+			background-color: #ffffff;
+			padding: 20px;
+		}
+
+		.container {
+			max-width: 960px;
+			margin: 0 auto;
+		}
+
+		h1 {
+			font-size: 2em;
+			margin: 0.67em 0;
+			color: #24292e;
+			border-bottom: 1px solid #e1e4e8;
+			padding-bottom: 0.3em;
+		}
+
+		h2 {
+			font-size: 1.5em;
+			margin-top: 24px;
+			margin-bottom: 16px;
+			color: #24292e;
+			border-bottom: 1px solid #e1e4e8;
+			padding-bottom: 0.3em;
+		}
+
+		h3 {
+			font-size: 1.25em;
+			margin-top: 24px;
+			margin-bottom: 16px;
+			color: #24292e;
+		}
+
+		h4 {
+			font-size: 1em;
+			margin-top: 24px;
+			margin-bottom: 16px;
+			color: #24292e;
+		}
+
+		p {
+			margin-bottom: 16px;
+		}
+
+		a {
+			color: #0366d6;
+			text-decoration: none;
+		}
+
+		a:hover {
+			text-decoration: underline;
+		}
+
+		ul,
+		ol {
+			margin-bottom: 16px;
+			padding-left: 2em;
+		}
+
+		li {
+			margin-bottom: 0.25em;
+		}
+
+		code {
+			background-color: #f6f8fa;
+			padding: 0.2em 0.4em;
+			margin: 0;
+			font-size: 85%;
+			border-radius: 3px;
+			font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+		}
+
+		pre {
+			background-color: #f6f8fa;
+			padding: 16px;
+			overflow: auto;
+			font-size: 85%;
+			line-height: 1.45;
+			border-radius: 3px;
+			margin-bottom: 16px;
+		}
+
+		pre code {
+			background-color: transparent;
+			padding: 0;
+			font-size: 100%;
+		}
+
+		table {
+			border-collapse: collapse;
+			width: 100%;
+			margin-bottom: 16px;
+		}
+
+		table th,
+		table td {
+			padding: 6px 13px;
+			border: 1px solid #d0d7de;
+		}
+
+		table th {
+			font-weight: 600;
+			background-color: #f6f8fa;
+		}
+
+		table tr:nth-child(2n) {
+			background-color: #f6f8fa;
+		}
+
+		hr {
+			height: 0.25em;
+			padding: 0;
+			margin: 24px 0;
+			background-color: #e1e4e8;
+			border: 0;
+		}
+
+		.badges {
+			margin: 16px 0;
+		}
+
+		.badges img {
+			margin-right: 4px;
+			margin-bottom: 4px;
+		}
+
+		.nav-links {
+			margin: 1em 0;
+			font-size: 1.1em;
+		}
+
+		strong {
+			font-weight: 600;
+		}
+
+		em {
+			font-style: italic;
+		}
+
+		blockquote {
+			border-left: 4px solid #e1e4e8;
+			padding: 0 1em;
+			color: #57606a;
+			margin: 16px 0;
+		}
+	</style>
+</head>
+
+<body>
+	<div class="container">
+		<h1>Squad Standardization Application</h1>
+
+		<p>This project is to help standardize, new and existing, Squad supported projects. It provides a
+		standard set of workflows and a team of agents that I can implement throughout my projects to help with standardization
+		and automation.</p>
+
+		<div class="badges">
+			<a href="https://dotnet.microsoft.com/en-us/download"><img
+					src="https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet" alt=".NET 10"></a>
+			<a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-green.svg" alt="MIT License"></a>
+			<a href="https://github.com/mpaulosky/squad-workflow-standard/actions/workflows/squad-ci.yml"><img
+					src="https://img.shields.io/badge/Tests-xUnit-blueviolet?logo=github" alt="xUnit Tests"></a>
+			<a href="https://github.com/mpaulosky/squad-workflow-standard/releases/latest"><img
+					src="https://img.shields.io/github/v/release/mpaulosky/squad-workflow-standard?logo=github&color=blue&label=Release"
+					alt="Latest Release"></a>
+		</div>
+
+		<div class="badges">
+			<a href="https://github.com/mpaulosky/squad-workflow-standard/actions/workflows/squad-ci.yml"><img
+					src="https://github.com/mpaulosky/squad-workflow-standard/actions/workflows/squad-ci.yml/badge.svg" alt="CI/CD"></a>
+			<a href="https://github.com/mpaulosky/squad-workflow-standard/actions/workflows/squad-test.yml"><img
+					src="https://github.com/mpaulosky/squad-workflow-standard/actions/workflows/squad-test.yml/badge.svg" alt="Test Suite"></a>
+		</div>
+
+		<div class="badges">
+			<a href="https://codecov.io/gh/mpaulosky/squad-workflow-standard"><img
+					src="https://codecov.io/gh/mpaulosky/squad-workflow-standard/branch/main/graph/badge.svg" alt="CodeCov Coverage"></a>
+			<a href="https://codecov.io/gh/mpaulosky/squad-workflow-standard/commits/main"><img
+					src="https://img.shields.io/badge/Coverage-Trend-blue?logo=codecov" alt="Coverage Trend"></a>
+			<a href="https://github.com/mpaulosky/squad-workflow-standard/actions/workflows/squad-test.yml"><img
+					src="https://img.shields.io/badge/Coverage%20Gate-%E2%89%A580%25-brightgreen?logo=codecov"
+					alt="Coverage Gate"></a>
+		</div>
+
+		<div class="badges">
+			<a href="https://github.com/mpaulosky/squad-workflow-standard/issues?q=is%3Aopen+is%3Aissue"><img
+					src="https://img.shields.io/github/issues/mpaulosky/squad-workflow-standard?color=0366d6" alt="Open Issues"></a>
+			<a href="https://github.com/mpaulosky/squad-workflow-standard/issues?q=is%3Aclosed+is%3Aissue"><img
+					src="https://img.shields.io/github/issues-closed/mpaulosky/squad-workflow-standard?color=6f42c1" alt="Closed Issues"></a>
+			<a href="https://github.com/mpaulosky/squad-workflow-standard/pulls?q=is%3Aopen+is%3Apr"><img
+					src="https://img.shields.io/github/issues-pr/mpaulosky/squad-workflow-standard?color=28a745" alt="Open PRs"></a>
+			<a href="https://github.com/mpaulosky/squad-workflow-standard/pulls?q=is%3Aclosed+is%3Apr"><img
+					src="https://img.shields.io/github/issues-pr-closed/mpaulosky/squad-workflow-standard?color=6f42c1" alt="Closed PRs"></a>
+		</div>
+
+		<blockquote>
+			<p>⚠️ <strong>Squad Team Standardization</strong> — This is a set of C#, bash, and pwsh scripts focused on standardizing my teams and workflows. This is so I have a similar process across my projects to work with change and GitHub. This is a one-size-fits-all process to follow, but it is a starting point for standardizing my
+				application and development practices.</p>
+		</blockquote>
+
+</body>
+
+</html>

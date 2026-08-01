@@ -45,7 +45,15 @@ else
   mapfile -t CHANGED_MD < <(git diff --name-only HEAD~1..HEAD -- '*.md' 2>/dev/null || true)
 fi
 
-if [[ ${#CHANGED_YAML[@]} -gt 0 ]]; then
+mapfile -t EXISTING_CHANGED_YAML < <(
+  for yaml_file in "${CHANGED_YAML[@]}"; do
+    if [[ -n "$yaml_file" && -e "$yaml_file" ]]; then
+      printf '%s\n' "$yaml_file"
+    fi
+  done
+)
+
+if [[ ${#EXISTING_CHANGED_YAML[@]} -gt 0 ]]; then
   echo -e "\n${CYAN}🧩 YAML lint on changed workflow files...${RESET}"
   YAML_CONFIG_FILE="$(mktemp)"
   cat > "$YAML_CONFIG_FILE" <<'EOF'
@@ -64,14 +72,14 @@ rules:
 EOF
 
   if command -v yamllint >/dev/null 2>&1; then
-    yamllint -c "$YAML_CONFIG_FILE" "${CHANGED_YAML[@]}"
+    yamllint -c "$YAML_CONFIG_FILE" "${EXISTING_CHANGED_YAML[@]}"
   elif command -v docker >/dev/null 2>&1; then
     docker run --rm \
       -v "$ROOT:/work" \
       -v "$YAML_CONFIG_FILE:/tmp/yamllint.yml:ro" \
       -w /work \
       cytopia/yamllint:latest \
-      -c /tmp/yamllint.yml "${CHANGED_YAML[@]}"
+      -c /tmp/yamllint.yml "${EXISTING_CHANGED_YAML[@]}"
   else
     echo -e "${RED}❌ yamllint is not available.${RESET}"
     rm -f "$YAML_CONFIG_FILE"
