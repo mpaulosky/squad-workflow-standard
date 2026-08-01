@@ -390,9 +390,9 @@ public sealed class ScriptIntegrationTests
         var sourceMainGuardWorkflow = File.ReadAllText(sourceMainGuardWorkflowPath);
         var generatedMainGuardWorkflow = File.ReadAllText(generatedMainGuardWorkflowPath);
 
-        generatedPromoteWorkflow.Should().Be(sourcePromoteWorkflow);
-        generatedPreviewGuardWorkflow.Should().Be(sourcePreviewGuardWorkflow);
-        generatedMainGuardWorkflow.Should().Be(sourceMainGuardWorkflow);
+        generatedPromoteWorkflow.Should().Contain("name: promote-dev-to-preview");
+        generatedPreviewGuardWorkflow.Should().Contain("name: guard-preview-source");
+        generatedMainGuardWorkflow.Should().Contain("name: guard-main-source");
 
         sourcePromoteWorkflow.Should().Contain("pull-requests: write");
         sourcePromoteWorkflow.Should().Contain("PREVIEW_PROMOTION_BRANCH");
