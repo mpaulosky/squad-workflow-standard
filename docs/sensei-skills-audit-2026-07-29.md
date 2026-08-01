@@ -72,7 +72,7 @@ Reviewed all skill files under .squad/skills and focused remediation on files th
 
 ## Harness Added
 
-- Test file: `tests/SquadWorkflowStandard.Tests/SkillRoutingFrontmatterTests.cs`
+- Test file: `tests/Unit.Tests/SkillRoutingFrontmatterTests.cs`
 - Verifies every `.squad/skills/*/SKILL.md` description includes `WHEN:` and `INVOKES:`
 - Verifies no description includes `DO NOT USE FOR:`
 - Verifies at least three quoted `WHEN` trigger phrases per skill
@@ -91,4 +91,4 @@ Reviewed all skill files under .squad/skills and focused remediation on files th
   - `source/workflows/squad-test.yml`
   - `.github/workflows/squad-test.yml`
 - Job command:
-  - `dotnet test tests/SquadWorkflowStandard.Tests/SquadWorkflowStandard.Tests.csproj --filter "FullyQualifiedName~SkillRoutingFrontmatterTests" --configuration Release`
+  - `dotnet test tests/Unit.Tests/Unit.Tests.csproj --filter "FullyQualifiedName~SkillRoutingFrontmatterTests" --configuration Release`
