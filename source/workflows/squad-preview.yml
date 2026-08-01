@@ -31,7 +31,7 @@ jobs:
         run: dotnet build squad-workflow-standard.slnx --configuration Release --no-restore --nologo
 
       - name: Run tests
-        run: dotnet test tests/Unit.Tests/Unit.Tests.csproj --configuration Release --no-build --nologo --verbosity normal
+        run: dotnet test tests/Unit.Tests/Unit.csproj --configuration Release --no-build --nologo --verbosity normal
 
       - name: Verify preview-branch workflow parity (normalized YAML)
         run: |
