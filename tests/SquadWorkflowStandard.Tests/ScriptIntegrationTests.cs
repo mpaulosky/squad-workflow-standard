@@ -351,6 +351,8 @@ public sealed class ScriptIntegrationTests
     }
 
     [Fact]
+<<<<<<< HEAD
+=======
     public void TestWorkflow_ShouldSkipPreviewAndMainBranchesForPushAndPullRequest()
     {
         var sourceWorkflowPath = Path.Combine(RepositoryPaths.Root, "source", "workflows", "squad-test.yml");
@@ -368,6 +370,7 @@ public sealed class ScriptIntegrationTests
     }
 
     [Fact]
+>>>>>>> origin/preview
     public void ProtectedPromotionWorkflows_ShouldUseProtectedPullRequestLegs()
     {
         var sourcePromoteWorkflowPath = Path.Combine(RepositoryPaths.Root, "source", "workflows",
