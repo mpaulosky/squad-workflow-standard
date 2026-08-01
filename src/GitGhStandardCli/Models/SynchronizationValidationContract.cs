@@ -142,18 +142,14 @@ public static class SynchronizationValidationContract
 
 		if (!evidence.CanonicalSourceExists || !evidence.CanonicalWorkflowExists)
 		{
-			return new SynchronizationValidationDecision(
-				SynchronizationValidationOutcome.CanonicalSourceUnavailable,
-				2,
-				normalizedEvidence);
+			return BuildDecision(evidence, normalizedEvidence,
+				SynchronizationValidationOutcome.CanonicalSourceUnavailable, 2);
 		}
 
 		if (!evidence.CanonicalVersionResolved)
 		{
-			return new SynchronizationValidationDecision(
-				SynchronizationValidationOutcome.CanonicalSourceUnavailable,
-				2,
-				normalizedEvidence);
+			return BuildDecision(evidence, normalizedEvidence,
+				SynchronizationValidationOutcome.CanonicalSourceUnavailable, 2);
 		}
 
 		if (!evidence.AncestryProofValid)
@@ -169,10 +165,7 @@ public static class SynchronizationValidationContract
 
 			normalizedEvidence.FailureMessages = failureMessages;
 			normalizedEvidence.DivergenceSeverity = "critical";
-			return new SynchronizationValidationDecision(
-				SynchronizationValidationOutcome.Blocked,
-				4,
-				normalizedEvidence);
+			return BuildDecision(evidence, normalizedEvidence, SynchronizationValidationOutcome.Blocked, 4);
 		}
 
 		if (!evidence.ScopeProofValid)
@@ -188,10 +181,7 @@ public static class SynchronizationValidationContract
 
 			normalizedEvidence.FailureMessages = failureMessages;
 			normalizedEvidence.DivergenceSeverity = "critical";
-			return new SynchronizationValidationDecision(
-				SynchronizationValidationOutcome.Blocked,
-				4,
-				normalizedEvidence);
+			return BuildDecision(evidence, normalizedEvidence, SynchronizationValidationOutcome.Blocked, 4);
 		}
 
 		if (!evidence.OwnershipPathSafetyValid)
@@ -207,10 +197,7 @@ public static class SynchronizationValidationContract
 
 			normalizedEvidence.FailureMessages = failureMessages;
 			normalizedEvidence.DivergenceSeverity = "critical";
-			return new SynchronizationValidationDecision(
-				SynchronizationValidationOutcome.Blocked,
-				4,
-				normalizedEvidence);
+			return BuildDecision(evidence, normalizedEvidence, SynchronizationValidationOutcome.Blocked, 4);
 		}
 
 		if (evidence.ChurnBlockThreshold > 0 && evidence.ChurnVolume > evidence.ChurnBlockThreshold)
@@ -225,10 +212,7 @@ public static class SynchronizationValidationContract
 
 			normalizedEvidence.FailureMessages = failureMessages;
 			normalizedEvidence.DivergenceSeverity = "critical";
-			return new SynchronizationValidationDecision(
-				SynchronizationValidationOutcome.Blocked,
-				4,
-				normalizedEvidence);
+			return BuildDecision(evidence, normalizedEvidence, SynchronizationValidationOutcome.Blocked, 4);
 		}
 
 		if (evidence.ChurnWarningThreshold > 0 && evidence.ChurnVolume > evidence.ChurnWarningThreshold)
@@ -244,10 +228,7 @@ public static class SynchronizationValidationContract
 			normalizedEvidence.FailureMessages = failureMessages;
 			normalizedEvidence.DivergenceSeverity = "warning";
 			normalizedEvidence.Fields["divergenceSeverity"] = "warning";
-			return new SynchronizationValidationDecision(
-				SynchronizationValidationOutcome.Ok,
-				0,
-				normalizedEvidence);
+			return BuildDecision(evidence, normalizedEvidence, SynchronizationValidationOutcome.Ok, 0);
 		}
 
 		if (evidence.OverrideActive)
@@ -263,10 +244,7 @@ public static class SynchronizationValidationContract
 
 				normalizedEvidence.FailureMessages = failureMessages;
 				normalizedEvidence.DivergenceSeverity = "critical";
-				return new SynchronizationValidationDecision(
-					SynchronizationValidationOutcome.Blocked,
-					4,
-					normalizedEvidence);
+				return BuildDecision(evidence, normalizedEvidence, SynchronizationValidationOutcome.Blocked, 4);
 			}
 
 			if (evidence.OverrideApprovalsRequired > evidence.OverrideApprovalsReceived)
@@ -281,10 +259,7 @@ public static class SynchronizationValidationContract
 
 				normalizedEvidence.FailureMessages = failureMessages;
 				normalizedEvidence.DivergenceSeverity = "critical";
-				return new SynchronizationValidationDecision(
-					SynchronizationValidationOutcome.Blocked,
-					4,
-					normalizedEvidence);
+				return BuildDecision(evidence, normalizedEvidence, SynchronizationValidationOutcome.Blocked, 4);
 			}
 
 			if (evidence.OverrideAutoMergeAllowed)
@@ -298,10 +273,7 @@ public static class SynchronizationValidationContract
 
 				normalizedEvidence.FailureMessages = failureMessages;
 				normalizedEvidence.DivergenceSeverity = "critical";
-				return new SynchronizationValidationDecision(
-					SynchronizationValidationOutcome.Blocked,
-					4,
-					normalizedEvidence);
+				return BuildDecision(evidence, normalizedEvidence, SynchronizationValidationOutcome.Blocked, 4);
 			}
 
 			if (string.IsNullOrWhiteSpace(evidence.OverrideExpiryUtc))
@@ -315,14 +287,24 @@ public static class SynchronizationValidationContract
 
 				normalizedEvidence.FailureMessages = failureMessages;
 				normalizedEvidence.DivergenceSeverity = "critical";
-				return new SynchronizationValidationDecision(
-					SynchronizationValidationOutcome.Blocked,
-					4,
-					normalizedEvidence);
+				return BuildDecision(evidence, normalizedEvidence, SynchronizationValidationOutcome.Blocked, 4);
 			}
 
-			if (DateTimeOffset.TryParse(evidence.OverrideExpiryUtc, out var expiryUtc) &&
-			    expiryUtc < DateTimeOffset.UtcNow)
+			if (!DateTimeOffset.TryParse(evidence.OverrideExpiryUtc, out var expiryUtc))
+			{
+				var failureMessage = "Override governance failed: override expiry is invalid";
+				var failureMessages = evidence.FailureMessages.ToList();
+				if (!failureMessages.Contains(failureMessage, StringComparer.Ordinal))
+				{
+					failureMessages.Add(failureMessage);
+				}
+
+				normalizedEvidence.FailureMessages = failureMessages;
+				normalizedEvidence.DivergenceSeverity = "critical";
+				return BuildDecision(evidence, normalizedEvidence, SynchronizationValidationOutcome.Blocked, 4);
+			}
+
+			if (expiryUtc < DateTimeOffset.UtcNow)
 			{
 				var failureMessage = "Override governance failed: override window has expired";
 				var failureMessages = evidence.FailureMessages.ToList();
@@ -333,42 +315,83 @@ public static class SynchronizationValidationContract
 
 				normalizedEvidence.FailureMessages = failureMessages;
 				normalizedEvidence.DivergenceSeverity = "critical";
-				return new SynchronizationValidationDecision(
-					SynchronizationValidationOutcome.Blocked,
-					4,
-					normalizedEvidence);
+				return BuildDecision(evidence, normalizedEvidence, SynchronizationValidationOutcome.Blocked, 4);
 			}
 		}
 
 		if (evidence.ObserveMode && (evidence.VersionDriftDetected || evidence.EnforcementFailuresDetected ||
 		                             evidence.FailureMessages.Count > 0))
 		{
-			return new SynchronizationValidationDecision(
-				SynchronizationValidationOutcome.Ok,
-				0,
-				normalizedEvidence);
+			return BuildDecision(evidence, normalizedEvidence, SynchronizationValidationOutcome.Ok, 0);
 		}
 
 		if (evidence.VersionDriftDetected)
 		{
-			return new SynchronizationValidationDecision(
-				SynchronizationValidationOutcome.VersionDrift,
-				3,
-				normalizedEvidence);
+			return BuildDecision(evidence, normalizedEvidence, SynchronizationValidationOutcome.VersionDrift, 3);
 		}
 
 		if (evidence.EnforcementFailuresDetected)
 		{
-			return new SynchronizationValidationDecision(
-				SynchronizationValidationOutcome.EnforcementFailure,
-				4,
-				normalizedEvidence);
+			return BuildDecision(evidence, normalizedEvidence, SynchronizationValidationOutcome.EnforcementFailure, 4);
 		}
 
-		return new SynchronizationValidationDecision(
-			SynchronizationValidationOutcome.Ok,
-			0,
-			normalizedEvidence);
+		return BuildDecision(evidence, normalizedEvidence, SynchronizationValidationOutcome.Ok, 0);
+	}
+
+	private static SynchronizationValidationDecision BuildDecision(
+		SynchronizationValidationEvidence evidence,
+		SynchronizationValidationEvidence normalizedEvidence,
+		SynchronizationValidationOutcome outcome,
+		int exitCode)
+	{
+		ApplyTelemetry(evidence, normalizedEvidence);
+		return new SynchronizationValidationDecision(outcome, exitCode, normalizedEvidence);
+	}
+
+	private static void ApplyTelemetry(
+		SynchronizationValidationEvidence evidence,
+		SynchronizationValidationEvidence normalizedEvidence)
+	{
+		var telemetryEvidence = new SynchronizationValidationEvidence
+		{
+			CanonicalSourceExists = evidence.CanonicalSourceExists,
+			CanonicalWorkflowExists = evidence.CanonicalWorkflowExists,
+			CanonicalVersionResolved = evidence.CanonicalVersionResolved,
+			CanonicalVersion = evidence.CanonicalVersion,
+			LocalVersion = evidence.LocalVersion,
+			VersionDriftDetected = evidence.VersionDriftDetected,
+			EnforcementFailuresDetected = evidence.EnforcementFailuresDetected,
+			ObserveMode = evidence.ObserveMode,
+			AncestryProofValid = evidence.AncestryProofValid,
+			AncestryProofFailureReason = evidence.AncestryProofFailureReason,
+			ScopeProofValid = evidence.ScopeProofValid,
+			ScopeProofFailureReason = evidence.ScopeProofFailureReason,
+			OwnershipPathSafetyValid = evidence.OwnershipPathSafetyValid,
+			OwnershipPathSafetyFailureReason = evidence.OwnershipPathSafetyFailureReason,
+			ChurnVolume = evidence.ChurnVolume,
+			ChurnWarningThreshold = evidence.ChurnWarningThreshold,
+			ChurnBlockThreshold = evidence.ChurnBlockThreshold,
+			OverrideActive = evidence.OverrideActive,
+			OverrideReason = evidence.OverrideReason,
+			OverrideApprovalsRequired = evidence.OverrideApprovalsRequired,
+			OverrideApprovalsReceived = evidence.OverrideApprovalsReceived,
+			OverrideExpiryUtc = evidence.OverrideExpiryUtc,
+			OverrideAutoMergeAllowed = evidence.OverrideAutoMergeAllowed,
+			DivergenceSeverity = evidence.DivergenceSeverity,
+			FailureMessages = normalizedEvidence.FailureMessages,
+			Fields = new Dictionary<string, object?>(evidence.Fields)
+		};
+
+		var warningCategories = BuildWarningCategories(telemetryEvidence);
+		var telemetryVolume = warningCategories.Count + normalizedEvidence.FailureMessages.Count;
+		var telemetryChurn = warningCategories.Count;
+		var telemetryWarningCategories = string.Join(",", warningCategories);
+		normalizedEvidence.DivergenceSeverity = BuildDivergenceSeverity(telemetryEvidence);
+		normalizedEvidence.Fields["divergenceSeverity"] = normalizedEvidence.DivergenceSeverity;
+		normalizedEvidence.Fields["telemetryVolume"] = telemetryVolume;
+		normalizedEvidence.Fields["telemetryChurn"] = telemetryChurn;
+		normalizedEvidence.Fields["telemetryWarningCategories"] = telemetryWarningCategories;
+		normalizedEvidence.Fields["telemetryFailureCategories"] = telemetryWarningCategories;
 	}
 
 	private static string BuildDivergenceSeverity(SynchronizationValidationEvidence evidence)
@@ -382,8 +405,8 @@ public static class SynchronizationValidationContract
 		                                evidence.OverrideApprovalsRequired > evidence.OverrideApprovalsReceived ||
 		                                evidence.OverrideAutoMergeAllowed ||
 		                                string.IsNullOrWhiteSpace(evidence.OverrideExpiryUtc) ||
-		                                (DateTimeOffset.TryParse(evidence.OverrideExpiryUtc, out var expiryUtc) &&
-		                                 expiryUtc < DateTimeOffset.UtcNow)))
+		                                !DateTimeOffset.TryParse(evidence.OverrideExpiryUtc, out var expiryUtc) ||
+		                                expiryUtc < DateTimeOffset.UtcNow))
 		{
 			return "critical";
 		}
@@ -444,8 +467,8 @@ public static class SynchronizationValidationContract
 		                                evidence.OverrideApprovalsRequired > evidence.OverrideApprovalsReceived ||
 		                                evidence.OverrideAutoMergeAllowed ||
 		                                string.IsNullOrWhiteSpace(evidence.OverrideExpiryUtc) ||
-		                                (DateTimeOffset.TryParse(evidence.OverrideExpiryUtc, out var expiryUtc) &&
-		                                 expiryUtc < DateTimeOffset.UtcNow)))
+		                                !DateTimeOffset.TryParse(evidence.OverrideExpiryUtc, out var expiryUtc) ||
+		                                expiryUtc < DateTimeOffset.UtcNow))
 		{
 			categories.Add("override-governance");
 		}
