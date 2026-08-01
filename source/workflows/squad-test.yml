@@ -19,8 +19,14 @@ permissions:
         required: false
         type: string
         default: ""
+  push:
+    branches-ignore:
+      - preview
+      - main
   pull_request:
-    branches-ignore: [main, preview]
+    branches-ignore:
+      - preview
+      - main
   workflow_dispatch:
     inputs:
       project_name:
