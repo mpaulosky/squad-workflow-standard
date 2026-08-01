@@ -285,6 +285,58 @@ public sealed class SynchronizationValidationContractTests
 	}
 
 	[Fact]
+	public void Evaluate_ShouldBlock_WhenOverrideExpiryIsMalformed()
+	{
+		var evidence = new SynchronizationValidationEvidence
+		{
+			CanonicalSourceExists = true,
+			CanonicalWorkflowExists = true,
+			CanonicalVersionResolved = true,
+			CanonicalVersion = "2.0.0",
+			LocalVersion = "1.9.0",
+			OverrideActive = true,
+			OverrideReason = "incident recovery",
+			OverrideApprovalsRequired = 2,
+			OverrideApprovalsReceived = 2,
+			OverrideExpiryUtc = "not-a-valid-date"
+		};
+
+		var decision = SynchronizationValidationContract.Evaluate(evidence);
+
+		decision.Outcome.Should().Be(SynchronizationValidationOutcome.Blocked);
+		decision.ExitCode.Should().Be(4);
+		decision.Evidence.DivergenceSeverity.Should().Be("critical");
+		decision.Evidence.FailureMessages.Should().ContainSingle().Which.Should()
+			.Be("Override governance failed: override expiry is invalid");
+	}
+
+	[Fact]
+	public void Evaluate_ShouldRecomputeTelemetryAfterAppendingFailureMessages()
+	{
+		var evidence = new SynchronizationValidationEvidence
+		{
+			CanonicalSourceExists = true,
+			CanonicalWorkflowExists = true,
+			CanonicalVersionResolved = true,
+			CanonicalVersion = "2.0.0",
+			LocalVersion = "1.9.0",
+			OverrideActive = true,
+			OverrideReason = string.Empty,
+			OverrideApprovalsRequired = 2,
+			OverrideApprovalsReceived = 2,
+			OverrideExpiryUtc = "2099-01-01T00:00:00Z"
+		};
+
+		var decision = SynchronizationValidationContract.Evaluate(evidence);
+
+		decision.Outcome.Should().Be(SynchronizationValidationOutcome.Blocked);
+		decision.ExitCode.Should().Be(4);
+		decision.Evidence.Fields["telemetryVolume"].Should().Be(2);
+		decision.Evidence.Fields["telemetryWarningCategories"].Should().Be("override-governance");
+		decision.Evidence.Fields["telemetryFailureCategories"].Should().Be("override-governance");
+	}
+
+	[Fact]
 	public void Evaluate_ShouldBlock_WhenOverrideHasExpired()
 	{
 		var evidence = new SynchronizationValidationEvidence
