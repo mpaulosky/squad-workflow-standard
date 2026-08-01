@@ -8,3 +8,7 @@
 
 build-repair
 git-workflow-standard
+merged-pr-guard
+pre-push-test-gate
+release-process
+sprint-planning

@@ -1,6 +1,0 @@
-# Centrally managed hook baseline.
-# One hook filename per line.
-
-pre-commit
-pre-push
-post-checkout
