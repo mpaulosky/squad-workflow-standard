@@ -1,6 +1,6 @@
 using FluentAssertions;
 
-namespace SquadWorkflowStandard.Tests;
+namespace Unit.Tests;
 
 public sealed class ScriptIntegrationTests
 {
@@ -184,6 +184,29 @@ public sealed class ScriptIntegrationTests
 
         result.ExitCode.Should().Be(4, result.CombinedOutput);
         result.StdOut.Should().Contain("ADAPTER CHECK FAILED: git core.hooksPath must be '.github/hooks'");
+        result.StdOut.Should().Contain("STATUS: ENFORCEMENT INCOMPLETE");
+    }
+
+    [Fact]
+    public void CheckScript_ShouldReportPromotionGuardFailures_WhenPreviewGuardIsMissing()
+    {
+        using var target = new TemporaryTargetRepository();
+
+        var syncScript = RepositoryPaths.SyncScriptPath;
+        var checkScript = RepositoryPaths.CheckScriptPath;
+        var repoRoot = RepositoryPaths.Root;
+        var canonicalVersion = RepositoryPaths.GetCanonicalVersion();
+        var previewGuardPath = Path.Combine(target.RootPath, ".github", "workflows", "squad-preview-guard.yml");
+
+        target.SeedRequiredAdapters(canonicalVersion);
+        ProcessRunner.Run("bash", [syncScript, target.RootPath, "--source-repo", repoRoot]).ExitCode.Should().Be(0);
+        File.Delete(previewGuardPath);
+
+        var result = ProcessRunner.Run("bash", [checkScript, target.RootPath, "--source-repo", repoRoot]);
+
+        result.ExitCode.Should().Be(4, result.CombinedOutput);
+        result.StdOut.Should().Contain("promotion guard workflow");
+        result.StdOut.Should().Contain("squad-preview-guard.yml");
         result.StdOut.Should().Contain("STATUS: ENFORCEMENT INCOMPLETE");
     }
 

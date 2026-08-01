@@ -178,6 +178,17 @@ assert_file_contains \
   "Standard version: \`${CANONICAL_VERSION}\`" \
   ".squad/skills/git-workflow-standard/SKILL.md must match canonical standard version"
 
+for workflow_path in \
+  "$TARGET_REPO/.github/workflows/squad-preview-guard.yml" \
+  "$TARGET_REPO/.github/workflows/squad-main-guard.yml" \
+  "$TARGET_REPO/.github/workflows/squad-main-to-dev-backmerge-guard.yml"; do
+  if [[ ! -f "$workflow_path" ]]; then
+    HAS_FAILURE=1
+    echo "ADAPTER CHECK FAILED: missing promotion guard workflow ${workflow_path#$TARGET_REPO/}"
+    echo "ADAPTER CHECK FAILED: promotion guard workflow ${workflow_path#$TARGET_REPO/} is required for preview/main source policy enforcement"
+  fi
+done
+
 CONFIGURED_HOOKS_PATH="$(git -C "$TARGET_REPO" config --get core.hooksPath 2>/dev/null || true)"
 NORMALIZED_HOOKS_PATH="${CONFIGURED_HOOKS_PATH#./}"
 if [[ -z "$CONFIGURED_HOOKS_PATH" ]]; then

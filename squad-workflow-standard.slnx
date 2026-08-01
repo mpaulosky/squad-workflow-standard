@@ -3,6 +3,6 @@
     <Project Path="src/GitGhStandardCli/GitGhStandardCli.csproj" />
   </Folder>
   <Folder Name="/tests/">
-    <Project Path="tests/SquadWorkflowStandard.Tests/SquadWorkflowStandard.Tests.csproj" />
+    <Project Path="tests/Unit.Tests/Unit.csproj" />
   </Folder>
 </Solution>

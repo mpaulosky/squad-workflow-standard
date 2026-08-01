@@ -5,6 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
+    <AssemblyName>Unit</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
@@ -17,6 +18,10 @@
 
   <ItemGroup>
     <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/GitGhStandardCli/GitGhStandardCli.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,7 +1,51 @@
 # squad-workflow-standard
 
-Canonical distribution repository for Squad augmentation assets.  
+Canonical distribution repository for Squad augmentation assets.
 This repo publishes the standard pack that other repositories sync after `git init` + `squad init`.
+
+[![.NET 10](https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
+[![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![xUnit Tests](https://img.shields.io/badge/Tests-xUnit-blueviolet?logo=github)](https://github.com/mpaulosky/squad-workflow-standard/actions/workflows/squad-ci.yml)
+[![Latest Release](https://img.shields.io/github/v/release/mpaulosky/squad-workflow-standard?logo=github&color=blue&label=Release)](https://github.com/mpaulosky/squad-workflow-standard/releases/latest)
+
+[![CI/CD](https://github.com/mpaulosky/squad-workflow-standard/actions/workflows/squad-ci.yml/badge.svg)](https://github.com/mpaulosky/squad-workflow-standard/actions/workflows/squad-ci.yml)
+[![Test Suite](https://github.com/mpaulosky/squad-workflow-standard/actions/workflows/squad-test.yml/badge.svg)](https://github.com/mpaulosky/squad-workflow-standard/actions/workflows/squad-test.yml)
+
+[![CodeCov Coverage](https://codecov.io/gh/mpaulosky/squad-workflow-standard/branch/main/graph/badge.svg)](https://codecov.io/gh/mpaulosky/squad-workflow-standard)
+[![Coverage Trend](https://img.shields.io/badge/Coverage-Trend-blue?logo=codecov)](https://codecov.io/gh/mpaulosky/squad-workflow-standard/commits/main)
+[![Coverage Gate](https://img.shields.io/badge/Coverage%20Gate-≥80%25-brightgreen?logo=codecov)](https://github.com/mpaulosky/squad-workflow-standard/actions/workflows/squad-test.yml)
+
+[![Open Issues](https://img.shields.io/github/issues/mpaulosky/squad-workflow-standard?color=0366d6)](https://github.com/mpaulosky/squad-workflow-standard/issues?q=is%3Aopen+is%3Aissue)
+[![Closed Issues](https://img.shields.io/github/issues-closed/mpaulosky/squad-workflow-standard?color=6f42c1)](https://github.com/mpaulosky/squad-workflow-standard/issues?q=is%3Aclosed+is%3Aissue)
+[![Open PRs](https://img.shields.io/github/issues-pr/mpaulosky/squad-workflow-standard?color=28a745)](https://github.com/mpaulosky/squad-workflow-standard/pulls?q=is%3Aopen+is%3Apr)
+[![Closed PRs](https://img.shields.io/github/issues-pr-closed/mpaulosky/squad-workflow-standard?color=6f42c1)](https://github.com/mpaulosky/squad-workflow-standard/pulls?q=is%3Aclosed+is%3Apr)
+
+## Documentation index
+
+- [Architecture overview](docs/ARCHITECTURE.md) — explains the repository layout, workflow policy sources, and the sync boundary between canonical assets and preserved local adapters.
+- [Contributing guide](docs/CONTRIBUTING.md) — describes the contribution workflow and expectations for updates to the standard.
+- [Workflow diagrams](docs/workflow-state-diagrams.md) — visualizes the branch and release flow for the canonical workflow standard.
+- [Release review blog index](docs/blogs/README.md) — links to the release review posts captured in this repository.
+
+## Release review blogs
+
+The release review posts in [docs/blogs](docs/blogs/README.md) summarize the rollout history of the workflow-standard and highlight the major changes in each release. Highlights include:
+
+- [Release Review: v0.0.1-38](docs/blogs/release-review-v0-0-1-38.md) — initial release baseline and workflow groundwork.
+- [Release Review: v0.0.1-43](docs/blogs/release-review-v0-0-1-43.md) — branch-aware guardrails and release verification tasks.
+- [Release Review: v0.0.1-44](docs/blogs/release-review-v0-0-1-44.md) — automation improvements for releases and project boards.
+- [Release Review: v0.0.1-58](docs/blogs/release-review-v0-0-1-58.md) — project board automation, cleanup, and guard fixes.
+- [Release Review: v0.0.1-65](docs/blogs/release-review-v0-0-1-65.md) — branch-aware guard fixes and syntax cleanup.
+- [Release Review: v0.0.1-67](docs/blogs/release-review-v0-0-1-67.md) — project board automation and auditing workflows.
+- [Release Review: v0.0.1-72](docs/blogs/release-review-v0-0-1-72.md) — dev-first PR enforcement and branch policy documentation.
+- [Release Review: v0.0.1-77](docs/blogs/release-review-v0-0-1-77.md) — main-to-dev back-merge workflow and hotfix cleanup.
+- [Release Review: v0.0.1-83](docs/blogs/release-review-v0-0-1-83.md) — removal of stale workflow state and policy updates.
+- [Release Review: v0.0.1-88](docs/blogs/release-review-v0-0-1-88.md) — dependabot auto-merge stability and setup-dotnet updates.
+- [Release Review: v0.0.1-101](docs/blogs/release-review-v0-0-1-101.md) — CI, documentation, and skills library updates.
+- [Release Review: v0.0.1-102](docs/blogs/release-review-v0-0-1-102.md) — preview-to-main promotion work.
+- [Release Review: v0.0.1-104](docs/blogs/release-review-v0-0-1-104.md) — promotion fix after a JavaScript syntax blocker.
+- [Release Review: v0.0.1-107](docs/blogs/release-review-v0-0-1-107.md) — hotfix for preview-to-main merge issues.
+- [Release Review: v0.0.1-108](docs/blogs/release-review-v0-0-1-108.md) — final promotion with a reconciled workflow baseline.
 
 ## Purpose
 
