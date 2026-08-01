@@ -141,7 +141,7 @@ squad-workflow-standard/
 │   ├── Models/                    # AssetCategory (record), SyncOptions, CheckResult
 │   └── Services/                  # ManifestReader, FileSync, PreservedPathGuard, DirectoryEnsurer
 ├── scripts/squad/                 # Bash/PS1 — independent fallback implementation
-└── tests/SquadWorkflowStandard.Tests/
+└── tests/Unit.Tests/
 ```
 
 ---
