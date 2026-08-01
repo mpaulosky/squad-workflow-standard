@@ -1,7 +1,7 @@
 # squad-workflow-standard
 
-Canonical distribution repository for Squad augmentation assets and workflow standards.
-This repo publishes the standard pack that other repositories sync after `git init` + `squad init`, along with the governance, documentation, and release-review material that explain how the standard evolves over time.
+Canonical distribution repository for Squad augmentation assets.
+This repo publishes the standard pack that other repositories sync after `git init` + `squad init`.
 
 [![.NET 10](https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
@@ -22,7 +22,6 @@ This repo publishes the standard pack that other repositories sync after `git in
 
 ## Documentation index
 
-- [Docs landing page](docs/index.html) — a concise overview of the repository purpose and the main documentation entry points.
 - [Architecture overview](docs/ARCHITECTURE.md) — explains the repository layout, workflow policy sources, and the sync boundary between canonical assets and preserved local adapters.
 - [Contributing guide](docs/CONTRIBUTING.md) — describes the contribution workflow and expectations for updates to the standard.
 - [Workflow diagrams](docs/workflow-state-diagrams.md) — visualizes the branch and release flow for the canonical workflow standard.

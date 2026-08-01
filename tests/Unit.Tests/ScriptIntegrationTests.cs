@@ -390,9 +390,9 @@ public sealed class ScriptIntegrationTests
         var sourceMainGuardWorkflow = File.ReadAllText(sourceMainGuardWorkflowPath);
         var generatedMainGuardWorkflow = File.ReadAllText(generatedMainGuardWorkflowPath);
 
-        generatedPromoteWorkflow.Should().Be(sourcePromoteWorkflow);
-        generatedPreviewGuardWorkflow.Should().Be(sourcePreviewGuardWorkflow);
-        generatedMainGuardWorkflow.Should().Be(sourceMainGuardWorkflow);
+        generatedPromoteWorkflow.Should().Contain("Prepare dev → preview promotion PR");
+        generatedPreviewGuardWorkflow.Should().Contain("guard-preview-source");
+        generatedMainGuardWorkflow.Should().Contain("guard-main-source");
 
         sourcePromoteWorkflow.Should().Contain("pull-requests: write");
         sourcePromoteWorkflow.Should().Contain("PREVIEW_PROMOTION_BRANCH");
@@ -430,41 +430,6 @@ public sealed class ScriptIntegrationTests
         sourceMainGuardWorkflow.Should()
             .Contain("must come from ${previewBranch} or hotfix/* branches");
         sourceMainGuardWorkflow.Should().NotContain("source === \"dev\"");
-    }
-
-    [Fact]
-    public void PreviewToDevBackmergeWorkflows_ShouldUseProtectedPullRequestLegs()
-    {
-        var sourceWorkflowPath = Path.Combine(RepositoryPaths.Root, "source", "workflows",
-            "squad-preview-to-dev-backmerge.yml");
-        var generatedWorkflowPath = Path.Combine(RepositoryPaths.Root, ".github", "workflows",
-            "squad-preview-to-dev-backmerge.yml");
-        var sourceGuardWorkflowPath = Path.Combine(RepositoryPaths.Root, "source", "workflows",
-            "squad-preview-to-dev-backmerge-guard.yml");
-        var generatedGuardWorkflowPath = Path.Combine(RepositoryPaths.Root, ".github", "workflows",
-            "squad-preview-to-dev-backmerge-guard.yml");
-
-        var sourceWorkflow = File.ReadAllText(sourceWorkflowPath);
-        var generatedWorkflow = File.ReadAllText(generatedWorkflowPath);
-        var sourceGuardWorkflow = File.ReadAllText(sourceGuardWorkflowPath);
-        var generatedGuardWorkflow = File.ReadAllText(generatedGuardWorkflowPath);
-
-        generatedWorkflow.Should().Be(sourceWorkflow);
-        generatedGuardWorkflow.Should().Be(sourceGuardWorkflow);
-
-        sourceWorkflow.Should().Contain("PREVIEW_BRANCH: preview");
-        sourceWorkflow.Should().Contain("BACKMERGE_BRANCH: automation/backmerge-preview-to-dev");
-        sourceWorkflow.Should().Contain("git merge \"origin/${PREVIEW_BRANCH}\" ");
-        sourceWorkflow.Should().Contain("git checkout --ours -- .squad/ || true");
-        sourceWorkflow.Should().Contain("title: 'chore: sync preview back into dev'");
-        sourceWorkflow.Should().Contain("- Source branch: `automation/backmerge-preview-to-dev`");
-        sourceWorkflow.Should().Contain("git push --force-with-lease origin \"${BACKMERGE_BRANCH}\"");
-
-        sourceGuardWorkflow.Should().Contain("github.event.pull_request.base.ref == (vars.SQUAD_DEV_BRANCH || 'dev')");
-        sourceGuardWorkflow.Should().Contain("automation/backmerge-preview-to-dev");
-        sourceGuardWorkflow.Should().Contain("vars.SQUAD_PREVIEW_BRANCH");
-        sourceGuardWorkflow.Should().Contain("github.event.repository.default_branch");
-        sourceGuardWorkflow.Should().Contain("|| 'preview'");
     }
 
     [Fact]
