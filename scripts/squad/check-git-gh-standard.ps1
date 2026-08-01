@@ -165,6 +165,19 @@ Assert-FileContains -File (Join-Path $targetRepo ".squad/templates/issue-lifecyc
 Assert-FileContains -File (Join-Path $targetRepo ".squad/templates/issue-lifecycle.md") -Expected 'Promotion rule: do not auto-open `dev` -> `main` after routine work pushes; promotion flows through a sanitized PR branch into `preview`, then a separate `preview` -> `main` release PR.' -Message ".squad/templates/issue-lifecycle.md must route promotion through protected preview before main"
 Assert-FileContains -File (Join-Path $targetRepo ".squad/skills/git-workflow-standard/SKILL.md") -Expected ('Standard version: `{0}`' -f $canonicalVersion) -Message ".squad/skills/git-workflow-standard/SKILL.md must match canonical standard version"
 
+foreach ($workflowRelativePath in @(
+    ".github/workflows/squad-preview-guard.yml",
+    ".github/workflows/squad-main-guard.yml",
+    ".github/workflows/squad-main-to-dev-backmerge-guard.yml"
+)) {
+    $workflowPath = Join-Path $targetRepo $workflowRelativePath
+    if (-not (Test-Path -LiteralPath $workflowPath -PathType Leaf)) {
+        $script:hasFailure = $true
+        Write-Host "ADAPTER CHECK FAILED: missing promotion guard workflow $workflowRelativePath"
+        Write-Host "ADAPTER CHECK FAILED: promotion guard workflow $workflowRelativePath is required for preview/main source policy enforcement"
+    }
+}
+
 $configuredHooksPath = (& git -C $targetRepo config --get core.hooksPath 2>$null)
 $normalizedHooksPath = $configuredHooksPath
 if ($normalizedHooksPath) {

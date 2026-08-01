@@ -13,30 +13,49 @@ internal static class CheckCommand
 
     public static int Run(string sourceRepo, string targetRepo)
     {
-        if (!Directory.Exists(sourceRepo))
+        var evidence = new SynchronizationValidationEvidence
+        {
+            CanonicalSourceExists = Directory.Exists(sourceRepo),
+            CanonicalWorkflowExists = false,
+            CanonicalVersionResolved = false,
+            CanonicalVersion = string.Empty,
+            LocalVersion = "missing",
+            VersionDriftDetected = false,
+            EnforcementFailuresDetected = false,
+            FailureMessages = []
+        };
+
+        if (!evidence.CanonicalSourceExists)
         {
             Console.Error.WriteLine($"Canonical source repository not found: {sourceRepo}");
-            return 2;
+            var sourceDecision = SynchronizationValidationContract.Evaluate(evidence);
+            return sourceDecision.ExitCode;
         }
 
         var workflowStandard = Path.Combine(sourceRepo, WorkflowStandardRelativePath);
-        if (!File.Exists(workflowStandard))
+        evidence.CanonicalWorkflowExists = File.Exists(workflowStandard);
+        if (!evidence.CanonicalWorkflowExists)
         {
             Console.Error.WriteLine($"Missing canonical file: {workflowStandard}");
-            return 2;
+            var workflowDecision = SynchronizationValidationContract.Evaluate(evidence);
+            return workflowDecision.ExitCode;
         }
 
         var canonicalVersion = SyncCommand.ReadCanonicalVersion(workflowStandard);
-        if (canonicalVersion == "unknown" || string.IsNullOrEmpty(canonicalVersion))
+        evidence.CanonicalVersionResolved = canonicalVersion != "unknown" && !string.IsNullOrEmpty(canonicalVersion);
+        evidence.CanonicalVersion = canonicalVersion;
+        if (!evidence.CanonicalVersionResolved)
         {
             Console.Error.WriteLine("ERROR: Canonical version not found.");
-            return 2;
+            var versionDecision = SynchronizationValidationContract.Evaluate(evidence);
+            return versionDecision.ExitCode;
         }
 
         var localVersionFile = Path.Combine(targetRepo, VersionStampRelativePath);
         var localVersion = File.Exists(localVersionFile)
             ? File.ReadAllText(localVersionFile).Trim()
             : "missing";
+        evidence.LocalVersion = localVersion;
 
         Console.WriteLine($"Canonical version: {canonicalVersion}");
         Console.WriteLine($"Local version:     {localVersion}");
@@ -52,8 +71,9 @@ internal static class CheckCommand
             Console.WriteLine("STATUS: DRIFT DETECTED");
             Console.WriteLine("Policy: detect-and-prompt before gated issue work.");
             Console.WriteLine("Choose one:");
-            Console.WriteLine($"  1) Update now: git-gh-standard-cli sync-git-gh-standard {targetRepo} --source {sourceRepo}");
-            Console.WriteLine( "  2) Defer: continue now, but rerun this check before next gated work");
+            Console.WriteLine(
+                $"  1) Update now: git-gh-standard-cli sync-git-gh-standard {targetRepo} --source {sourceRepo}");
+            Console.WriteLine("  2) Defer: continue now, but rerun this check before next gated work");
         }
 
         // File content drift check for all asset categories.
@@ -63,21 +83,33 @@ internal static class CheckCommand
         // Enforcement adapter checks.
         CheckAdapters(targetRepo, canonicalVersion, ref hasFailure);
 
+        // Promotion guard workflow checks.
+        CheckPromotionGuardWorkflows(targetRepo, ref hasFailure);
+
         // Git hooks path check.
         CheckHooksPath(targetRepo, ref hasFailure);
 
-        if (!hasFailure)
+        evidence.VersionDriftDetected = hasDrift;
+        evidence.EnforcementFailuresDetected = hasFailure;
+        evidence.FailureMessages = hasFailure
+            ? ["one or more validation checks failed"]
+            : [];
+
+        var validationDecision = SynchronizationValidationContract.Evaluate(evidence);
+
+        if (validationDecision.Outcome == SynchronizationValidationOutcome.Ok)
         {
             Console.WriteLine("STATUS: OK (version and hard-gate adapters in sync)");
-            return 0;
+            return validationDecision.ExitCode;
         }
 
         Console.WriteLine("STATUS: ENFORCEMENT INCOMPLETE");
         Console.WriteLine("Fix drift and adapter bindings, then rerun this check.");
-        Console.WriteLine($"Suggested action: git-gh-standard-cli sync-git-gh-standard {targetRepo} --source {sourceRepo}");
+        Console.WriteLine(
+            $"Suggested action: git-gh-standard-cli sync-git-gh-standard {targetRepo} --source {sourceRepo}");
         Console.WriteLine("Exit code map: 0=ok, 2=canonical missing, 3=drift, 4=adapter enforcement failure");
 
-        return hasDrift ? 3 : 4;
+        return validationDecision.ExitCode;
     }
 
     private static void CheckCoreFiles(string sourceRepo, string targetRepo, ref bool hasFailure)
@@ -85,11 +117,11 @@ internal static class CheckCommand
         var corePairs = new[]
         {
             (Src: Path.Combine("source", ".squad", "workflows", "git-gh-process-standard.md"),
-             Tgt: Path.Combine(".squad", "workflows", "git-gh-process-standard.md")),
+                Tgt: Path.Combine(".squad", "workflows", "git-gh-process-standard.md")),
             (Src: Path.Combine("source", ".squad", "workflows", "README.md"),
-             Tgt: Path.Combine(".squad", "workflows", "README.md")),
+                Tgt: Path.Combine(".squad", "workflows", "README.md")),
             (Src: Path.Combine("source", ".squad", "skills", "git-workflow-standard", "SKILL.md"),
-             Tgt: Path.Combine(".squad", "skills", "git-workflow-standard", "SKILL.md")),
+                Tgt: Path.Combine(".squad", "skills", "git-workflow-standard", "SKILL.md")),
         };
 
         foreach (var (srcRel, tgtRel) in corePairs)
@@ -234,6 +266,32 @@ internal static class CheckCommand
         }
     }
 
+    private static void CheckPromotionGuardWorkflows(string targetRepo, ref bool hasFailure)
+    {
+        var requiredWorkflows = new[]
+        {
+            (Name: "preview promotion guard",
+                RelativePath: Path.Combine(".github", "workflows", "squad-preview-guard.yml")),
+            (Name: "main release guard", RelativePath: Path.Combine(".github", "workflows", "squad-main-guard.yml")),
+            (Name: "back-merge guard",
+                RelativePath: Path.Combine(".github", "workflows", "squad-main-to-dev-backmerge-guard.yml"))
+        };
+
+        foreach (var workflow in requiredWorkflows)
+        {
+            var targetPath = Path.Combine(targetRepo, workflow.RelativePath);
+            if (!File.Exists(targetPath))
+            {
+                hasFailure = true;
+                Console.WriteLine($"ADAPTER CHECK FAILED: missing {workflow.Name} workflow {workflow.RelativePath}");
+                Console.WriteLine(
+                    $"ADAPTER CHECK FAILED: promotion guard workflow {workflow.RelativePath} must be present to enforce preview/main source policy");
+                Console.WriteLine(
+                    $"ADAPTER CHECK FAILED: promotion guard workflow {workflow.RelativePath} is required for preview/main source policy enforcement");
+            }
+        }
+    }
+
     private static void CheckHooksPath(string targetRepo, ref bool hasFailure)
     {
         try
@@ -264,7 +322,8 @@ internal static class CheckCommand
                      && !normalized.Equals("github/hooks", StringComparison.OrdinalIgnoreCase))
             {
                 hasFailure = true;
-                Console.WriteLine($"ADAPTER CHECK FAILED: git core.hooksPath must be '.github/hooks' (found: {output})");
+                Console.WriteLine(
+                    $"ADAPTER CHECK FAILED: git core.hooksPath must be '.github/hooks' (found: {output})");
             }
         }
         catch (Exception ex)
@@ -290,7 +349,8 @@ internal static class CheckCommand
         }
     }
 
-    private static IEnumerable<(string RelativePath, string Required, string FailMessage)> GetAdapterChecks(string canonicalVersion)
+    private static IEnumerable<(string RelativePath, string Required, string FailMessage)> GetAdapterChecks(
+        string canonicalVersion)
     {
         return
         [
