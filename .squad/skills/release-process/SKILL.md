@@ -1,5 +1,4 @@
 ---
-<<<<<<< HEAD
 name: "release-process"
 description: '**WORKFLOW SKILL** - Coordinate MyBlog releases from dev promotion through main merge, tagging, and hotfix backports. WHEN: "prepare MyBlog release PR", "tag release on main", "hotfix backport to dev". INVOKES: gh PR/release commands, git tagging/backport flow, MyBlog release playbook.'
 domain: "release-workflow"
@@ -52,12 +51,3 @@ A release task should leave behind one of these outcomes:
 - `.github/workflows/hotfix-backport-reminder.yml`
 - `.squad/skills/release-process-base/SKILL.md` (quarantined; do not inject for
   normal MyBlog work)
-=======
-name: release-process
-description: "Prepare MyBlog release PR by validating the release branch and checking the release checklist. WHEN: \"prepare MyBlog release PR\", \"release checklist\", \"release validation\" INVOKES: \"release-process\", \"run release-process\", \"release-process skill\""
----
-
-# Release process
-
-Prepare the release branch and verify the release checklist before publishing.
->>>>>>> origin/preview

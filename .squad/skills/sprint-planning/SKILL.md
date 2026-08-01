@@ -1,5 +1,4 @@
 ---
-<<<<<<< HEAD
 name: "sprint-planning"
 description: '**WORKFLOW SKILL** - Convert plan.md work into sprint milestones, issues, board state, and worktrees. WHEN: "plan to sprint breakdown", "create sprint milestones and issues", "setup sprint worktrees". INVOKES: gh api, gh issue create, gh project, git worktree orchestration.'
 domain: "planning, sprint, github-projects, worktrees"
@@ -139,12 +138,3 @@ git branch -d sprint/{N}-{slug}
 - ❌ **Deleting worktree** before sprint PR merges
 - ❌ **Releasing from a sprint branch** — only release from `dev` → `main`
 - ❌ **Skipping worktree** — always work inside `../MyBlog-sprint-{N}/` for isolation
-=======
-name: sprint-planning
-description: "Plan to sprint breakdown by turning priorities into concrete work items and checkpoints. WHEN: \"plan to sprint breakdown\", \"sprint planning\", \"work breakdown\" INVOKES: \"sprint-planning\", \"plan sprint\", \"sprint-planning skill\""
----
-
-# Sprint planning
-
-Break work into manageable tasks with clear checkpoints and ownership.
->>>>>>> origin/preview

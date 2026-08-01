@@ -1,19 +1,13 @@
 ---
-<<<<<<< HEAD
 name: "git-workflow-standard"
 description: 'Canonical issue-to-branch/worktree-to-PR git + gh workflow with hard gates. WHEN: "standard branch flow", "worktree flow", "open PR to dev". INVOKES: git checkout/switch/worktree, gh pr create, cleanup scripts.'
 domain: "version-control"
 confidence: "high"
 source: "team-decision"
-=======
-name: git-workflow-standard
-description: "Standard branch flow and promotion guardrails for the workflow-standard repository. WHEN: \"standard branch flow\", \"branch promotion\", \"protected branch\" INVOKES: \"git-workflow-standard\", \"git workflow standard\", \"workflow standard skill\""
->>>>>>> origin/preview
 ---
 
 # Git workflow standard
 
-<<<<<<< HEAD
 ## Context
 
 Use this as the authoritative execution pattern for issue-driven work.
@@ -92,6 +86,3 @@ bash scripts/squad/cleanup-squad-branches.sh --repo {owner/repo}
 # Apply local + remote cleanup (including linked worktree cleanup)
 bash scripts/squad/cleanup-squad-branches.sh --repo {owner/repo} --apply --delete-remote
 ```
-=======
-Follow the standard branch flow and protected-branch promotion rules.
->>>>>>> origin/preview

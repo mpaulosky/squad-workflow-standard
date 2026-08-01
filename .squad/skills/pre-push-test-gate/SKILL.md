@@ -1,6 +1,5 @@
 ---
 name: pre-push-test-gate
-<<<<<<< HEAD
 confidence: high
 description: '**WORKFLOW SKILL** - Enforce pre-push build, test, and lint gates before any branch push. WHEN: "before git push", "pre-push gate failed", "local tests must pass". INVOKES: build-repair prompt, dotnet test/build commands, markdown lint checks.'
 ---
@@ -94,11 +93,3 @@ fi
 | `DateTime` equality failure in `*.Empty` tests | `Empty` property calls `DateTime.UtcNow` each time — two calls produce different values   | Assert individual fields, not whole-record equality          |
 | Unexpected trailing `_` in slug tests          | `GenerateSlug` appends `_` when string ends with punctuation AND has internal punctuation | Verify actual output against implementation before asserting |
 | Record equality fails on nested DTO            | Nested DTO `Empty` also uses `UtcNow` — same root cause                                   | Flatten assertions to field-level                            |
-=======
-description: "Before git push, validate the shared workflow standard and run the full local test suite. WHEN: \"before git push\", \"push validation\", \"pre-push gate\" INVOKES: \"pre-push-test-gate\", \"run pre-push-test-gate\", \"pre-push-test-gate skill\""
----
-
-# Pre-push test gate
-
-Run the local validation suite and make sure it passes before pushing.
->>>>>>> origin/preview

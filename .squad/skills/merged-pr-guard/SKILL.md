@@ -1,6 +1,5 @@
 ---
 name: merged-pr-guard
-<<<<<<< HEAD
 description: '**WORKFLOW SKILL** - Prevent commits to stale squad branches by checking merged PR state first. WHEN: "commit blocked by merged PR", "stale squad branch commit", "branch already merged". INVOKES: git branch inspection, gh pr list status checks.'
 confidence: high
 ---
@@ -50,11 +49,3 @@ git commit -F "$COMMIT_MSG_FILE"
 
 - Session where Scribe committed `.squad/` changes to `squad/unit-tests-split` after PR #95 was merged — commit stranded on a re-created branch instead of flowing to `main`
 - Established as a standing process rule after PR #95/PR #96 session
-=======
-description: "Avoid stale squad branch commit drift by checking whether the related PR is already merged. WHEN: \"stale squad branch commit\", \"merged PR guard\", \"branch guard\" INVOKES: \"merged-pr-guard\", \"run merged-pr-guard\", \"merged-pr-guard skill\""
----
-
-# Merged PR guard
-
-If the related PR is already merged, switch to the correct base branch before continuing work.
->>>>>>> origin/preview
