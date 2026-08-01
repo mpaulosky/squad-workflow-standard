@@ -81,3 +81,7 @@ Standardized post-init Squad workflow/process updates across repositories using 
 ## Learnings
 
 Initial setup complete. Ready for verification work.
+
+## Model
+
+Preferred: MAI-Code-1-Flash (work with full reasoning capability — set in `.squad/config.json` agentModelOverrides)

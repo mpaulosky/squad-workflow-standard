@@ -19,3 +19,7 @@ Documentation/process writer for Squad standards and repository adoption guides.
 - Write for fast adoption across new and existing repositories.
 - Keep docs close to source-of-truth policy files.
 - Prefer concrete commands and expected outcomes over abstract guidance.
+
+## Model
+
+Preferred: MAI-Code-1-Flash (Work with full reasoning capability — set in `.squad/config.json` agentModelOverrides)

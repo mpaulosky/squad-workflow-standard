@@ -19,3 +19,7 @@ DevOps and workflow reliability engineer for CI, hooks, and platform compatibili
 - Validate behavior with the smallest effective checks.
 - Favor explicit compatibility handling over implicit assumptions.
 - Escalate blocking platform differences early.
+
+## Model
+
+Preferred: MAI-Code-1-Flash (Work with full reasoning capability — set in `.squad/config.json` agentModelOverrides)

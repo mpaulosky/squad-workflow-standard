@@ -14,5 +14,16 @@
     "auditContent": false,
     "auditMaxBytes": 1048576,
     "auditMaxArchives": 3
+  },
+  "agentModelOverrides": {
+    "Mal": "Claude Sonnet 5",
+    "Kaylee": "MAI-Code-1-Flash",
+    "Scribe": "Claude Haiku 4.5",
+    "Inara": "MAI-Code-1-Flash",
+    "Zoe": "MAI-Code-1-Flash",
+    "Wash": "MAI-Code-1-Flash",
+    "Ralph": "MAI-Code-1-Flash",
+    "Rai": "MAI-Code-1-Flash",
+    "Fact Checker": "Claude Sonnet 5"
   }
 }
