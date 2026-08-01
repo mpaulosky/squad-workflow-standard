@@ -26,9 +26,10 @@ if [[ "$CURRENT_BRANCH" == "main" || "$CURRENT_BRANCH" == "preview" || "$CURRENT
   exit 1
 fi
 
-if ! [[ "$CURRENT_BRANCH" =~ ^(squad|sprint)/[0-9]+-[a-z0-9-]+$ ]]; then
+if ! [[ "$CURRENT_BRANCH" =~ ^(squad|sprint)/[0-9]+-[a-z0-9-]+$ ]] && \
+   ! [[ "$CURRENT_BRANCH" =~ ^automation/.+$ ]]; then
   echo -e "${RED}❌ Branch name '${CURRENT_BRANCH}' does not match naming convention.${RESET}"
-  echo -e "   Expected: ${YELLOW}squad/{issue-number}-{kebab-slug}${RESET} or ${YELLOW}sprint/{n}-{kebab-slug}${RESET}"
+  echo -e "   Expected: ${YELLOW}squad/{issue-number}-{kebab-slug}${RESET}, ${YELLOW}sprint/{n}-{kebab-slug}${RESET}, or ${YELLOW}automation/{branch-name}${RESET}"
   exit 1
 fi
 
