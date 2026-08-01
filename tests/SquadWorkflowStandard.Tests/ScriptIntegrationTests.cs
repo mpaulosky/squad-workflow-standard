@@ -351,6 +351,26 @@ public sealed class ScriptIntegrationTests
     }
 
     [Fact]
+<<<<<<< HEAD
+=======
+    public void TestWorkflow_ShouldSkipPreviewAndMainBranchesForPushAndPullRequest()
+    {
+        var sourceWorkflowPath = Path.Combine(RepositoryPaths.Root, "source", "workflows", "squad-test.yml");
+        var generatedWorkflowPath = Path.Combine(RepositoryPaths.Root, ".github", "workflows", "squad-test.yml");
+
+        var sourceWorkflow = File.ReadAllText(sourceWorkflowPath);
+        var generatedWorkflow = File.ReadAllText(generatedWorkflowPath);
+
+        generatedWorkflow.Should().Be(sourceWorkflow);
+        sourceWorkflow.Should().Contain("push:");
+        sourceWorkflow.Should().Contain("branches-ignore:");
+        sourceWorkflow.Should().Contain("- preview");
+        sourceWorkflow.Should().Contain("- main");
+        sourceWorkflow.Should().Contain("pull_request:");
+    }
+
+    [Fact]
+>>>>>>> origin/preview
     public void ProtectedPromotionWorkflows_ShouldUseProtectedPullRequestLegs()
     {
         var sourcePromoteWorkflowPath = Path.Combine(RepositoryPaths.Root, "source", "workflows",
