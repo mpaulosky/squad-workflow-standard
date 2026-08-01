@@ -197,7 +197,7 @@ git checkout -b squad/{issue}-{slug}
 gh pr create \
   --base sprint/{N}-{slug} \
   --title "feat(scope): description (#issue)" \
-  --body "Closes #{issue-number}" \
+  --body "Related issue: #{issue-number}" \
   --assignee @me
 ```
 
@@ -214,8 +214,8 @@ but the base branch is `sprint/{N}-{slug}` instead of `dev`.
 - PR closed without merge → issue returns to **In Sprint**
 - PR merged into a sprint branch or `dev` → issue moves to **Done**
 
-The PR body must include `Closes #{issue-number}` (or `Fixes`/`Resolves`) for the
-automation to find and update the linked issue. No manual board moves are needed.
+The PR body should include an issue reference such as `Related issue: #{issue-number}` for the
+work PR. For the final `main`-target release PR, include a closing keyword such as `Closes #{issue-number}` so GitHub can close the issue when that PR merges. No manual board moves are needed.
 
 ---
 

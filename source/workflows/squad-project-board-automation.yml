@@ -160,6 +160,13 @@ jobs:
             };
 
             const moveLinkedIssues = async target => {
+              const shouldApplyIssueLinking = pr.base?.ref === 'main';
+
+              if (!shouldApplyIssueLinking) {
+                core.info(`PR #${pr.number}: base branch is ${pr.base?.ref ?? 'unknown'} — skipping issue link transitions`);
+                return;
+              }
+
               const issueNumbers = parseClosingIssueNumbers(pr.body);
 
               if (issueNumbers.length === 0) {

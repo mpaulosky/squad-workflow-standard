@@ -30,6 +30,7 @@ selection, PR flow, cleanup, and hard gates.
 - Release PRs to `main` open from `preview`
 - After each successful work-branch push, immediately open/update a PR to `dev`
 - Do not auto-open `dev` -> `preview` after routine work pushes; promotion PRs are separate
+- GitHub's `Closes/Fixes/Resolves` keywords only auto-close issues when the PR targets `main`; use them as a note on `dev`/`preview` PRs and rely on the release PR to close the issue
 - Preview-side automation must open or reuse an `automation/promote-preview` -> `preview` PR instead of pushing directly to `preview`
 - Main-side automation must open or reuse a `preview` -> `main` PR instead of pushing directly to `main`
 - Back-merge sync (`main` -> `dev`) is automated via `squad-main-to-dev-backmerge.yml`:
@@ -89,8 +90,10 @@ git push -u origin squad/{issue-number}-{kebab-slug}
 Immediately after push, open draft PR to `dev`:
 
 ```bash
-gh pr create --base dev --title "{title}" --body "Closes #{issue-number}" --draft
+gh pr create --base dev --title "{title}" --body "Related issue: #{issue-number}\n\n{description}" --draft
 ```
+
+Use `Closes/Fixes/Resolves` only on the final `preview -> main` release PR so GitHub can close the issue when that PR merges.
 
 Mark ready after checks pass:
 
@@ -134,8 +137,10 @@ Inside the worktree:
 ```bash
 cd ../{repo-name}-{issue-number}
 git push -u origin squad/{issue-number}-{kebab-slug}
-gh pr create --base dev --title "{title}" --body "Closes #{issue-number}" --draft
+gh pr create --base dev --title "{title}" --body "Related issue: #{issue-number}\n\n{description}" --draft
 ```
+
+Use `Closes/Fixes/Resolves` only on the final `preview -> main` release PR so GitHub can close the issue when that PR merges.
 
 Do not auto-open `dev` -> `preview` from this step; promotion stays on the
 separate sanitized `automation/promote-preview` -> `preview` path, followed by

@@ -48,8 +48,10 @@ git checkout dev
 git pull origin dev
 git checkout -b squad/{issue-number}-{kebab-slug}
 git push -u origin squad/{issue-number}-{kebab-slug}
-gh pr create --base dev --title "{title}" --body "Closes #{issue-number}" --draft
+gh pr create --base dev --title "{title}" --body "Related issue: #{issue-number}\n\n{description}" --draft
 ```
+
+Use `Closes/Fixes/Resolves` only on the final `preview -> main` release PR so GitHub can close the issue when that PR merges.
 
 ## Worktree Flow
 
@@ -60,8 +62,10 @@ git worktree add ../{repo-name}-{issue-number} \
   origin/dev
 cd ../{repo-name}-{issue-number}
 git push -u origin squad/{issue-number}-{kebab-slug}
-gh pr create --base dev --title "{title}" --body "Closes #{issue-number}" --draft
+gh pr create --base dev --title "{title}" --body "Related issue: #{issue-number}\n\n{description}" --draft
 ```
+
+Use `Closes/Fixes/Resolves` only on the final `preview -> main` release PR so GitHub can close the issue when that PR merges.
 
 Do not auto-open `dev` -> `preview` from this step; preview/main promotion PRs remain separate.
 

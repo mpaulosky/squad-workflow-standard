@@ -18,7 +18,7 @@ After pushing your branch (all pre-push gates passed):
 gh pr create \
   --base dev \
   --title "feat(scope): description (#issue)" \
-  --body "Closes #<issue-number>
+  --body "Related issue: #<issue-number>
 
 ## Changes
 - ...
@@ -55,7 +55,7 @@ Ralph MUST verify ALL of the following before spawning reviewers. Any failing ga
 
 | Gate                  | Command                                                           | Expected                                     |
 | --------------------- | ----------------------------------------------------------------- | -------------------------------------------- |
-| GitHub issue exists   | `gh pr view <N> --json body -q .body \| grep -E "Closes #[0-9]+"` | Contains `Closes #N`                         |
+| GitHub issue exists   | `gh pr view <N> --json body -q .body \| grep -E "Related issue: #[0-9]+|Closes #[0-9]+|Fixes #[0-9]+|Resolves #[0-9]+"` | Contains an issue reference such as `Related issue: #N` or `Closes #N` |
 | CI fully green        | `gh pr checks <N> --watch --interval 5`                           | All checks passing (including coverage gate) |
 | Coverage gate passing | Check CI run logs for `The total line coverage is below`          | No coverage error in logs                    |
 | No conflicts          | `gh pr view <N> --json mergeable -q .mergeable`                   | `MERGEABLE`                                  |
@@ -63,7 +63,7 @@ Ralph MUST verify ALL of the following before spawning reviewers. Any failing ga
 | Branch is `squad/*`   | `gh pr view <N> --json headRefName -q .headRefName`               | Starts with `squad/`                         |
 | Tests authored        | PR diff includes test file additions/modifications                | Gimli coverage present                       |
 
-> **If `Closes #N` is missing**, the PR was opened without a GitHub issue. Ralph must STOP, create the issue, link it in the PR body, assign it to the correct milestone and Project #4, then re-run this gate.
+> **If no issue reference is present**, the PR was opened without a GitHub issue. Ralph must STOP, create the issue, link it in the PR body, assign it to the correct milestone and Project #4, then re-run this gate.
 >
 > **If coverage gate is failing** (CI red on coverage, not test logic), DO NOT spawn reviewers. Route to Gimli (issue #68 pattern) to add Domain tests. The PR is not review-ready until CI is fully green including coverage.
 
@@ -187,7 +187,7 @@ echo "✅ Orphan branch cleanup complete."
 
 ## Anti-Patterns
 
-- ❌ **Opening a PR without a `Closes #N` link** — Every PR must reference a GitHub issue
+- ❌ **Opening a PR without any issue reference** — Every PR must reference a GitHub issue, using a link such as `Related issue: #N` for work PRs and a closing keyword only on the final `main`-target release PR
 - ❌ **Requesting review while CI is failing** — Wait for green first
 - ❌ **PR author fixing their own rejected code** — Lockout enforced per rejection protocol
 - ❌ **Merge commit instead of squash** — Use `--squash` for clean history
