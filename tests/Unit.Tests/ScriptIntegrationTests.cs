@@ -433,6 +433,41 @@ public sealed class ScriptIntegrationTests
     }
 
     [Fact]
+    public void PreviewToDevBackmergeWorkflows_ShouldUseProtectedPullRequestLegs()
+    {
+        var sourceWorkflowPath = Path.Combine(RepositoryPaths.Root, "source", "workflows",
+            "squad-preview-to-dev-backmerge.yml");
+        var generatedWorkflowPath = Path.Combine(RepositoryPaths.Root, ".github", "workflows",
+            "squad-preview-to-dev-backmerge.yml");
+        var sourceGuardWorkflowPath = Path.Combine(RepositoryPaths.Root, "source", "workflows",
+            "squad-preview-to-dev-backmerge-guard.yml");
+        var generatedGuardWorkflowPath = Path.Combine(RepositoryPaths.Root, ".github", "workflows",
+            "squad-preview-to-dev-backmerge-guard.yml");
+
+        var sourceWorkflow = File.ReadAllText(sourceWorkflowPath);
+        var generatedWorkflow = File.ReadAllText(generatedWorkflowPath);
+        var sourceGuardWorkflow = File.ReadAllText(sourceGuardWorkflowPath);
+        var generatedGuardWorkflow = File.ReadAllText(generatedGuardWorkflowPath);
+
+        generatedWorkflow.Should().Be(sourceWorkflow);
+        generatedGuardWorkflow.Should().Be(sourceGuardWorkflow);
+
+        sourceWorkflow.Should().Contain("PREVIEW_BRANCH: preview");
+        sourceWorkflow.Should().Contain("BACKMERGE_BRANCH: automation/backmerge-preview-to-dev");
+        sourceWorkflow.Should().Contain("git merge \"origin/${PREVIEW_BRANCH}\" ");
+        sourceWorkflow.Should().Contain("git checkout --ours -- .squad/ || true");
+        sourceWorkflow.Should().Contain("title: 'chore: sync preview back into dev'");
+        sourceWorkflow.Should().Contain("- Source branch: `automation/backmerge-preview-to-dev`");
+        sourceWorkflow.Should().Contain("git push --force-with-lease origin \"${BACKMERGE_BRANCH}\"");
+
+        sourceGuardWorkflow.Should().Contain("github.event.pull_request.base.ref == (vars.SQUAD_DEV_BRANCH || 'dev')");
+        sourceGuardWorkflow.Should().Contain("automation/backmerge-preview-to-dev");
+        sourceGuardWorkflow.Should().Contain("vars.SQUAD_PREVIEW_BRANCH");
+        sourceGuardWorkflow.Should().Contain("github.event.repository.default_branch");
+        sourceGuardWorkflow.Should().Contain("|| 'preview'");
+    }
+
+    [Fact]
     public void BranchCleanupWorkflow_ShouldBeSourceSyncedAndSupportDispatchAndSchedule()
     {
         var sourceWorkflowPath =

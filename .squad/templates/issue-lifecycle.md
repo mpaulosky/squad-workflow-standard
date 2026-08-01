@@ -191,10 +191,12 @@ git push -u origin squad/{issue-number}-{slug}
 **Immediate next step (same workflow pass):**
 ```bash
 gh pr create --title "{title}" \
-  --body "Closes #{issue-number}\n\n{description}" \
+  --body "Related issue: #{issue-number}\n\n{description}" \
   --head squad/{issue-number}-{slug} \
   --base dev
 ```
+
+For the final `preview -> main` release PR, include a closing keyword such as `Closes #{issue-number}` so GitHub can close the issue when that PR merges.
 
 ### 4. PR Creation
 
@@ -212,10 +214,12 @@ gh pr create --title "{title}" \
 **GitHub:**
 ```bash
 gh pr create --title "{title}" \
-  --body "Closes #{issue-number}\n\n{description}" \
+  --body "Related issue: #{issue-number}\n\n{description}" \
   --head squad/{issue-number}-{slug} \
   --base dev
 ```
+
+For the final `preview -> main` release PR, include a closing keyword such as `Closes #{issue-number}` so GitHub can close the issue when that PR merges.
 
 **Azure DevOps:**
 ```bash
@@ -227,7 +231,7 @@ az repos pr create --title "{title}" \
 
 **PR description template:**
 ```markdown
-Closes #{issue-number}
+Related issue: #{issue-number}
 
 ## Summary
 {what changed}
@@ -295,7 +299,7 @@ az repos pr update --id {pr-id} --status completed --delete-source-branch true
 ```
 
 **Post-merge actions:**
-1. Issue automatically closes (if "Closes #{number}" is in PR description)
+1. Issue closes automatically only when the merged PR targets `main` and includes a closing keyword such as "Closes #{number}" in the PR description
 2. Feature branch is deleted
 3. Squad board state transitions to `done`
 4. Worktree cleanup (if a worktree was used)
@@ -346,8 +350,9 @@ When spawning an agent to work on an issue, include this context block:
 2. Push branch
 3. Open PR using:
    ```
-   gh pr create --title "{title}" --body "Closes #{number}\n\n{description}" --head squad/{issue-number}-{slug} --base dev
+   gh pr create --title "{title}" --body "Related issue: #{number}\n\n{description}" --head squad/{issue-number}-{slug} --base dev
    ```
+   For the final `preview -> main` release PR, switch to a closing keyword such as `Closes #{number}`.
 4. Report PR URL to coordinator
 ```
 

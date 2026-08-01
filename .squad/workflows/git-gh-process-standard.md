@@ -89,8 +89,10 @@ git push -u origin squad/{issue-number}-{kebab-slug}
 Immediately after push, open draft PR to `dev`:
 
 ```bash
-gh pr create --base dev --title "{title}" --body "Closes #{issue-number}" --draft
+gh pr create --base dev --title "{title}" --body "Related issue: #{issue-number}\n\n{description}" --draft
 ```
+
+Use `Closes/Fixes/Resolves` only on the final `preview -> main` release PR so GitHub can close the issue when that PR merges.
 
 Mark ready after checks pass:
 
@@ -134,8 +136,10 @@ Inside the worktree:
 ```bash
 cd ../{repo-name}-{issue-number}
 git push -u origin squad/{issue-number}-{kebab-slug}
-gh pr create --base dev --title "{title}" --body "Closes #{issue-number}" --draft
+gh pr create --base dev --title "{title}" --body "Related issue: #{issue-number}\n\n{description}" --draft
 ```
+
+Use `Closes/Fixes/Resolves` only on the final `preview -> main` release PR so GitHub can close the issue when that PR merges.
 
 Do not auto-open `dev` -> `preview` from this step; promotion stays on the
 separate sanitized `automation/promote-preview` -> `preview` path, followed by

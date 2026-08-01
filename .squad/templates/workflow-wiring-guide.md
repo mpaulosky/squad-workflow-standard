@@ -190,9 +190,11 @@ N+1. **{ReviewerName} PR Gate** — every PR created by any agent MUST be review
     the coordinator merges. No PR merges without {ReviewerName}'s approval.
 
 N+2. **Issue closure restriction** — issues that produced files (code, docs, scripts,
-    designs, tests) close ONLY via PR merge auto-close ("Closes #N" in PR body).
-    Never use `gh issue close` for file-producing work. Exception: tracking/strategic
-    issues and superseded issues may be closed with a comment.
+    designs, tests) should be linked from work PRs via an issue reference such as
+    `Related issue: #N`, and they close ONLY via the final `main`-target release PR
+    merge auto-close (for example, `Closes #N` in the PR body). Never use `gh issue close`
+    for file-producing work. Exception: tracking/strategic issues and superseded
+    issues may be closed with a comment.
 
 N+3. **Worktree for all file-producing work** — every task that creates or modifies
     files (including documentation) requires a worktree. Exceptions: read-only queries,
