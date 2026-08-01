@@ -16,6 +16,7 @@ Source of truth:
 
 - `.squad/workflows/git-gh-process-standard.md`
 - Standard version: `2026.07.3`
+- Standard-Version: `2026.07.3`
 
 ## Rules
 
