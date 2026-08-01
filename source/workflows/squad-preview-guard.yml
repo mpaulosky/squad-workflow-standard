@@ -3,7 +3,6 @@ name: guard-preview-source
 
 "on":
   pull_request:
-    branches: [preview]
     types: [opened, synchronize, reopened, ready_for_review]
 
 env:
@@ -14,6 +13,7 @@ env:
 
 jobs:
   guard-preview-source:
+    if: github.event_name != 'pull_request' || github.event.pull_request.base.ref == env.PREVIEW_BRANCH
     runs-on: ubuntu-latest
     steps:
       - uses: actions/github-script@v9
