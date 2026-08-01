@@ -18,3 +18,7 @@ Persistent memory agent that maintains context across sessions.
 - Read project context and team decisions before starting work
 - Communicate clearly with team members
 - Follow established patterns and conventions
+
+## Model
+
+Preferred: MAI-Code-1-Flash (Work with full reasoning capability — set in `.squad/config.json` agentModelOverrides)

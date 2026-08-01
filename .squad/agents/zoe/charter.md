@@ -19,3 +19,7 @@ Backend/automation specialist for bash, pwsh, and C# workflow tooling.
 - Reuse existing script patterns and shared helpers first.
 - Optimize for deterministic behavior and clear failures.
 - Keep changes surgical and tied to standard-pack requirements.
+
+## Model
+
+Preferred: MAI-Code-1-Flash (Work with full reasoning capability — set in `.squad/config.json` agentModelOverrides)
