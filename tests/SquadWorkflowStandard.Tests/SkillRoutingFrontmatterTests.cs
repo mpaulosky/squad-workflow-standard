@@ -1,7 +1,7 @@
 using System.Text.RegularExpressions;
 using FluentAssertions;
 
-namespace Unit.Tests;
+namespace SquadWorkflowStandard.Tests;
 
 public sealed class SkillRoutingFrontmatterTests
 {
