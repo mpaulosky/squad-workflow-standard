@@ -76,6 +76,55 @@ public sealed class ScriptIntegrationTests
     }
 
     [Fact]
+    public void PrePushHook_ShouldIgnoreMissingYamlFilesInChangedSet()
+    {
+        using var target = new TemporaryTargetRepository();
+
+        ProcessRunner.Run("git", ["config", "user.email", "test@example.com"], target.RootPath).ExitCode.Should().Be(0);
+        ProcessRunner.Run("git", ["config", "user.name", "Test User"], target.RootPath).ExitCode.Should().Be(0);
+
+        File.WriteAllText(Path.Combine(target.RootPath, "workflow.yml"), "name: test\n");
+        ProcessRunner.Run("git", ["add", "workflow.yml"], target.RootPath).ExitCode.Should().Be(0);
+        ProcessRunner.Run("git", ["commit", "-m", "add workflow"], target.RootPath).ExitCode.Should().Be(0);
+
+        File.Delete(Path.Combine(target.RootPath, "workflow.yml"));
+        ProcessRunner.Run("git", ["add", "-A"], target.RootPath).ExitCode.Should().Be(0);
+        ProcessRunner.Run("git", ["commit", "-m", "delete workflow"], target.RootPath).ExitCode.Should().Be(0);
+        ProcessRunner.Run("git", ["checkout", "-b", "hotfix/missing-yaml"], target.RootPath).ExitCode.Should().Be(0);
+
+        var hookSourcePath = Path.Combine(RepositoryPaths.Root, ".github", "hooks", "pre-push");
+        var targetHookPath = Path.Combine(target.RootPath, ".github", "hooks", "pre-push");
+        Directory.CreateDirectory(Path.Combine(target.RootPath, ".github", "hooks"));
+        File.Copy(hookSourcePath, targetHookPath);
+        ProcessRunner.Run("chmod", ["+x", targetHookPath]).ExitCode.Should().Be(0);
+
+        var dotnetStubDir = Path.Combine(Path.GetTempPath(), $"hook-dotnet-stub-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(dotnetStubDir);
+        var dotnetStubPath = Path.Combine(dotnetStubDir, "dotnet");
+        File.WriteAllText(dotnetStubPath, "#!/usr/bin/env bash\nexit 0\n");
+        ProcessRunner.Run("chmod", ["+x", dotnetStubPath]).ExitCode.Should().Be(0);
+
+        var originalPath = Environment.GetEnvironmentVariable("PATH");
+        Environment.SetEnvironmentVariable("PATH", $"{dotnetStubDir}{Path.PathSeparator}{originalPath}");
+
+        try
+        {
+            var result = ProcessRunner.Run(
+                "bash",
+                [targetHookPath],
+                target.RootPath,
+                "refs/heads/hotfix/missing-yaml\n");
+
+            result.ExitCode.Should().Be(0, result.CombinedOutput);
+            result.CombinedOutput.Should().Contain("All gates passed");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("PATH", originalPath);
+        }
+    }
+
+    [Fact]
     public void SyncScript_ShouldCopyCanonicalAssetsWorkflowsAndHooks()
     {
         using var target = new TemporaryTargetRepository();
