@@ -10,13 +10,18 @@ internal sealed record CommandResult(int ExitCode, string StdOut, string StdErr)
 
 internal static class ProcessRunner
 {
-    public static CommandResult Run(string fileName, IEnumerable<string> args, string? workingDirectory = null)
+    public static CommandResult Run(
+        string fileName,
+        IEnumerable<string> args,
+        string? workingDirectory = null,
+        string? standardInput = null)
     {
         var psi = new ProcessStartInfo
         {
             FileName = fileName,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
+            RedirectStandardInput = standardInput is not null,
             UseShellExecute = false
         };
 
@@ -32,6 +37,12 @@ internal static class ProcessRunner
 
         using var process = Process.Start(psi);
         process.Should().NotBeNull($"Process should start: {fileName}");
+
+        if (standardInput is not null)
+        {
+            process!.StandardInput.Write(standardInput);
+            process.StandardInput.Close();
+        }
 
         var standardOutput = process!.StandardOutput.ReadToEnd();
         var standardError = process.StandardError.ReadToEnd();
