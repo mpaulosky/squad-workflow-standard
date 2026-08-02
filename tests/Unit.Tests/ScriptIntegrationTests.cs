@@ -35,6 +35,47 @@ public sealed class ScriptIntegrationTests
     }
 
     [Fact]
+    public void PrePushHook_ShouldAllowHotfixBranchesForReleaseFlows()
+    {
+        using var target = new TemporaryTargetRepository();
+
+        var hookSourcePath = Path.Combine(RepositoryPaths.Root, ".github", "hooks", "pre-push");
+        var targetHookPath = Path.Combine(target.RootPath, ".github", "hooks", "pre-push");
+        Directory.CreateDirectory(Path.Combine(target.RootPath, ".github", "hooks"));
+
+        File.Copy(hookSourcePath, targetHookPath);
+        ProcessRunner.Run("chmod", ["+x", targetHookPath]).ExitCode.Should().Be(0);
+
+        var dotnetStubDir = Path.Combine(Path.GetTempPath(), $"hook-dotnet-stub-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(dotnetStubDir);
+        var dotnetStubPath = Path.Combine(dotnetStubDir, "dotnet");
+        File.WriteAllText(dotnetStubPath, "#!/usr/bin/env bash\nexit 0\n");
+        ProcessRunner.Run("chmod", ["+x", dotnetStubPath]).ExitCode.Should().Be(0);
+
+        var originalPath = Environment.GetEnvironmentVariable("PATH");
+        Environment.SetEnvironmentVariable("PATH", $"{dotnetStubDir}{Path.PathSeparator}{originalPath}");
+
+        try
+        {
+            ProcessRunner.Run("git", ["checkout", "-b", "hotfix/preview-main-reconcile"], target.RootPath)
+                .ExitCode.Should().Be(0);
+
+            var result = ProcessRunner.Run(
+                "bash",
+                [targetHookPath],
+                target.RootPath,
+                "refs/heads/hotfix/preview-main-reconcile\n");
+
+            result.ExitCode.Should().Be(0, result.CombinedOutput);
+            result.CombinedOutput.Should().Contain("All gates passed");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("PATH", originalPath);
+        }
+    }
+
+    [Fact]
     public void SyncScript_ShouldCopyCanonicalAssetsWorkflowsAndHooks()
     {
         using var target = new TemporaryTargetRepository();
