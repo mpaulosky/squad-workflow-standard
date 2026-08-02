@@ -117,7 +117,7 @@ source/.squad/skills/
 .github/prompts/                   ← source of truth for prompt distribution
 .github/agents/                    ← source of truth for agent distribution
 
-source/workflows/                  ← canonical workflow YAML source
+.github/workflows/                ← canonical workflow YAML source
 source/hooks/                      ← canonical hook source
 
 scripts/squad/

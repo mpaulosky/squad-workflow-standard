@@ -32,8 +32,8 @@ This repository is a distribution and governance layer for the Squad workflow st
 
 The repository is organized around a small set of authoritative assets under the source tree:
 
-- [source/workflows](../source/workflows) contains the canonical workflow YAML templates.
-- [source/hooks](../source/hooks) contains the canonical Git hooks.
+- [.github/workflows](../.github/workflows) contains the canonical workflow YAML templates.
+- [.github/hooks](../.github/hooks) contains the canonical Git hooks.
 - [source/.squad/workflows](../source/.squad/workflows) contains policy documents and manifest definitions that drive synchronization behavior.
 - [source/.squad/skills](../source/.squad/skills) contains the canonical Squad skills used by the standard.
 

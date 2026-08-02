@@ -64,7 +64,7 @@ public sealed class ScriptIntegrationTests
 
         foreach (var workflowFile in workflowEntries)
         {
-            var sourceWorkflow = Path.Combine(repoRoot, "source", "workflows", workflowFile);
+            var sourceWorkflow = Path.Combine(repoRoot, ".github", "workflows", workflowFile);
             var targetWorkflow = Path.Combine(target.RootPath, ".github", "workflows", workflowFile);
 
             File.Exists(targetWorkflow).Should().BeTrue($"workflow should be copied: {workflowFile}");
@@ -73,7 +73,7 @@ public sealed class ScriptIntegrationTests
 
         foreach (var hookFile in hookEntries)
         {
-            var sourceHook = Path.Combine(repoRoot, "source", "hooks", hookFile);
+            var sourceHook = Path.Combine(repoRoot, ".github", "hooks", hookFile);
             var targetHook = Path.Combine(target.RootPath, ".github", "hooks", hookFile);
 
             File.Exists(targetHook).Should().BeTrue($"hook should be copied: {hookFile}");
