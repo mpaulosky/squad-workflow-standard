@@ -1,6 +1,6 @@
 ---
 name: release-process
-description: "Step-by-step release checklist for Squad — prevents release regressions. WHEN: \"prepare MyBlog release PR\", \"release-process\", \"run release-process\". INVOKES: release validation, version checks, publish steps."
+description: 'Step-by-step release checklist for Squad — prevents release regressions. WHEN: "prepare MyBlog release PR", "release-process", "run release-process". INVOKES: release validation, version checks, publish steps.'
 domain: release-management
 confidence: high
 ---
