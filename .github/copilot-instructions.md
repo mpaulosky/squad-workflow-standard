@@ -42,10 +42,10 @@ standard pack that gets copied into other squad repositories.
    - `source/.squad/workflows/README.md`
    - `source/.squad/skills/git-workflow-standard/SKILL.md`
 2. `source/.squad/workflows/workflow-baseline-manifest.txt` defines which
-   `source/workflows/*.yml` files are centrally managed and must be synced
+   `.github/workflows/*.yml` files are centrally managed and must be synced
    to target repos at `.github/workflows/`.
 3. `source/.squad/workflows/hook-baseline-manifest.txt` defines which
-   `source/hooks/*` files are centrally managed and must be synced to target
+   `.github/hooks/*` files are centrally managed and must be synced to target
    repos at `.github/hooks/`.
 4. `scripts/squad/sync-git-gh-standard.sh` copies canonical
    files/workflows/hooks into a target repo and writes

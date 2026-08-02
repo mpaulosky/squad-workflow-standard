@@ -4,15 +4,8 @@ name: Squad CI
 # (`dev` and `main` in the standard model).
 
 "on":
-  push:
-    branches-ignore: [main]
-    paths-ignore:
-      - "docs/**"
-      - "**/*.md"
-      - ".squad/**"
 
   pull_request:
-    branches: [main, "**"]
     types: [opened, synchronize, reopened, ready_for_review]
     paths-ignore:
       - "docs/**"

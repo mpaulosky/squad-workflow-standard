@@ -7,12 +7,6 @@ name: guard-main-source
     branches: [main]
     types: [opened, synchronize, reopened, ready_for_review]
 
-env:
-  PREVIEW_BRANCH: ${{ vars.SQUAD_PREVIEW_BRANCH || 'preview' }}
-  MAIN_BRANCH: >-
-    ${{ vars.SQUAD_MAIN_BRANCH ||
-    github.event.repository.default_branch || 'main' }}
-
 jobs:
   guard-main-source:
     runs-on: ubuntu-latest
@@ -25,8 +19,8 @@ jobs:
               return;
             }
 
-            const mainBranch = process.env.MAIN_BRANCH;
-            const previewBranch = process.env.PREVIEW_BRANCH;
+            const mainBranch = "main";
+            const previewBranch = "preview";
             const target = context.payload.pull_request.base.ref;
             if (target !== mainBranch) {
               core.info(

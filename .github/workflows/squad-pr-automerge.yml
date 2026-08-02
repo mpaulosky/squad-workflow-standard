@@ -4,7 +4,7 @@ name: Squad PR Auto-Merge
 "on":
   pull_request:
     types: [opened, ready_for_review, reopened, edited, synchronize]
-    branches: [dev]
+    branches: [dev, main, preview]
 
 permissions:
   contents: write

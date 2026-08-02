@@ -3,17 +3,19 @@ name: guard-preview-source
 
 "on":
   pull_request:
-    branches: [preview]
     types: [opened, synchronize, reopened, ready_for_review]
 
 env:
-  PREVIEW_BRANCH: ${{ vars.SQUAD_PREVIEW_BRANCH || 'preview' }}
+  PREVIEW_BRANCH: preview
   PREVIEW_PROMOTION_BRANCH: >-
     ${{ vars.SQUAD_PREVIEW_PROMOTION_BRANCH ||
     'automation/promote-preview' }}
 
 jobs:
   guard-preview-source:
+    if: >-
+      ${{ github.event_name != 'pull_request' ||
+      github.event.pull_request.base.ref == 'preview' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/github-script@v9

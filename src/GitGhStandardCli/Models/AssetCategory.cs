@@ -12,17 +12,17 @@ internal sealed record AssetCategory(
     bool EntriesAreDirectories = false,
     bool MakeFilesExecutable = false)
 {
-    /// <summary>GitHub workflow files synced from source/workflows → .github/workflows/</summary>
+    /// <summary>GitHub workflow files synced from .github/workflows → .github/workflows/</summary>
     public static readonly AssetCategory Workflows = new(
         Name: "Workflows",
-        SourceRoot: Path.Combine("source", "workflows"),
+        SourceRoot: Path.Combine(".github", "workflows"),
         TargetRoot: Path.Combine(".github", "workflows"),
         ManifestFile: Path.Combine("source", ".squad", "workflows", "workflow-baseline-manifest.txt"));
 
-    /// <summary>Git hook files synced from source/hooks → .github/hooks/  (made +x after copy)</summary>
+    /// <summary>Git hook files synced from .github/hooks → .github/hooks/ (made +x after copy)</summary>
     public static readonly AssetCategory Hooks = new(
         Name: "Hooks",
-        SourceRoot: Path.Combine("source", "hooks"),
+        SourceRoot: Path.Combine(".github", "hooks"),
         TargetRoot: Path.Combine(".github", "hooks"),
         ManifestFile: Path.Combine("source", ".squad", "workflows", "hook-baseline-manifest.txt"),
         MakeFilesExecutable: true);
