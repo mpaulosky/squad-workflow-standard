@@ -1,6 +1,6 @@
 ---
 name: build-repair
-description: "Iterative build repair process for the IssueManager .NET solution. Run this before any push or when build/tests are broken. WHEN: \"build-repair\", \"run build-repair\", \"build-repair skill\". INVOKES: \"build-repair\"."
+description: "Iterative build repair process for the IssueManager .NET solution. Run this before any push or when build is broken. WHEN: \"build-repair\", \"run build-repair\", \"build-repair skill\". INVOKES: \"build-repair\"."
 confidence: high
 ---
 
