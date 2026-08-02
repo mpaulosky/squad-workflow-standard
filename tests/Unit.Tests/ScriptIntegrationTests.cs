@@ -257,14 +257,14 @@ public sealed class ScriptIntegrationTests
     }
 
     [Fact]
-    public void PreviewGuardWorkflow_ShouldUseEnvBranchExpression()
+    public void PreviewGuardWorkflow_ShouldUseLiteralPreviewBranchExpression()
     {
         var previewGuardPath = Path.Combine(RepositoryPaths.Root, ".github", "workflows", "squad-preview-guard.yml");
         var previewGuard = File.ReadAllText(previewGuardPath);
 
-        previewGuard.Should().Contain("PREVIEW_BRANCH: ${{ vars.SQUAD_PREVIEW_BRANCH || 'preview' }}");
-        previewGuard.Should().Contain("github.event.pull_request.base.ref == env.PREVIEW_BRANCH");
-        previewGuard.Should().NotContain("== ${PREVIEW_BRANCH}");
+        previewGuard.Should().Contain("PREVIEW_BRANCH: preview");
+        previewGuard.Should().Contain("github.event.pull_request.base.ref == 'preview'");
+        previewGuard.Should().NotContain("vars.SQUAD_PREVIEW_BRANCH");
     }
 
     [Fact]
@@ -279,14 +279,14 @@ public sealed class ScriptIntegrationTests
         var generatedWorkflow = File.ReadAllText(generatedWorkflowPath);
 
         generatedWorkflow.Should().Be(sourceWorkflow);
-        sourceWorkflow.Should().Contain("github.event.pull_request.base.ref == (vars.SQUAD_DEV_BRANCH || 'dev')");
+        sourceWorkflow.Should().Contain("github.event.pull_request.base.ref == 'dev'");
         sourceWorkflow.Should().Contain("startsWith(");
         sourceWorkflow.Should().Contain("github.event.pull_request.head.ref,");
         sourceWorkflow.Should().Contain("automation/backmerge-main-to-dev");
-        sourceWorkflow.Should().Contain("vars.SQUAD_MAIN_BRANCH");
-        sourceWorkflow.Should().Contain("github.event.repository.default_branch");
-        sourceWorkflow.Should().Contain("|| 'main'");
-        sourceWorkflow.Should().NotContain("github.event.pull_request.head.ref == 'main'");
+        sourceWorkflow.Should().Contain("'main'");
+        sourceWorkflow.Should().Contain("Back-merge PR from main to dev must not modify .squad/.");
+        sourceWorkflow.Should().NotContain("vars.SQUAD_DEV_BRANCH");
+        sourceWorkflow.Should().NotContain("vars.SQUAD_MAIN_BRANCH");
     }
 
     [Fact]
@@ -371,11 +371,12 @@ public sealed class ScriptIntegrationTests
         var generatedWorkflow = File.ReadAllText(generatedWorkflowPath);
 
         generatedWorkflow.Should().Be(sourceWorkflow);
-        sourceWorkflow.Should().Contain("push:");
+        sourceWorkflow.Should().Contain("workflow_call:");
+        sourceWorkflow.Should().Contain("pull_request:");
         sourceWorkflow.Should().Contain("branches-ignore:");
         sourceWorkflow.Should().Contain("- preview");
         sourceWorkflow.Should().Contain("- main");
-        sourceWorkflow.Should().Contain("pull_request:");
+        sourceWorkflow.Should().NotContain("push:");
     }
 
     [Fact]
@@ -411,7 +412,7 @@ public sealed class ScriptIntegrationTests
             .Contain("git switch -C \"${PREVIEW_PROMOTION_BRANCH}\" \"origin/${PREVIEW_BRANCH}\"");
         sourcePromoteWorkflow.Should().Contain("git push --force-with-lease origin \"${PREVIEW_PROMOTION_BRANCH}\"");
         sourcePromoteWorkflow.Should().Contain("Create or reuse sanitized dev → preview promotion PR");
-        sourcePromoteWorkflow.Should().Contain("const devBranch = process.env.DEV_BRANCH;");
+        sourcePromoteWorkflow.Should().Contain("const previewBranch = process.env.PREVIEW_BRANCH;");
         sourcePromoteWorkflow.Should().Contain("basehead: `${previewBranch}...${promotionBranch}`");
         sourcePromoteWorkflow.Should().Contain("base: previewBranch");
         sourcePromoteWorkflow.Should().Contain("head: promotionBranch");
@@ -436,7 +437,8 @@ public sealed class ScriptIntegrationTests
         sourcePreviewGuardWorkflow.Should().Contain("must come from ${promotionBranch}");
         sourcePreviewGuardWorkflow.Should().NotContain("source === \"dev\"");
 
-        sourceMainGuardWorkflow.Should().Contain("const previewBranch = process.env.PREVIEW_BRANCH;");
+        sourceMainGuardWorkflow.Should().Contain("const mainBranch = \"main\";");
+        sourceMainGuardWorkflow.Should().Contain("const previewBranch = \"preview\";");
         sourceMainGuardWorkflow.Should().Contain("source === previewBranch || source.startsWith(\"hotfix/\")");
         sourceMainGuardWorkflow.Should()
             .Contain("must come from ${previewBranch} or hotfix/* branches");
@@ -465,17 +467,17 @@ public sealed class ScriptIntegrationTests
 
         sourceWorkflow.Should().Contain("PREVIEW_BRANCH: preview");
         sourceWorkflow.Should().Contain("BACKMERGE_BRANCH: automation/backmerge-preview-to-dev");
-        sourceWorkflow.Should().Contain("git merge \"origin/${PREVIEW_BRANCH}\" ");
+        sourceWorkflow.Should().Contain("git merge \"origin/${PREVIEW_BRANCH}\"");
         sourceWorkflow.Should().Contain("git checkout --ours -- .squad/ || true");
         sourceWorkflow.Should().Contain("title: 'chore: sync preview back into dev'");
         sourceWorkflow.Should().Contain("- Source branch: `automation/backmerge-preview-to-dev`");
         sourceWorkflow.Should().Contain("git push --force-with-lease origin \"${BACKMERGE_BRANCH}\"");
 
-        sourceGuardWorkflow.Should().Contain("github.event.pull_request.base.ref == (vars.SQUAD_DEV_BRANCH || 'dev')");
+        sourceGuardWorkflow.Should().Contain("github.event.pull_request.base.ref == 'dev'");
         sourceGuardWorkflow.Should().Contain("automation/backmerge-preview-to-dev");
-        sourceGuardWorkflow.Should().Contain("vars.SQUAD_PREVIEW_BRANCH");
-        sourceGuardWorkflow.Should().Contain("github.event.repository.default_branch");
-        sourceGuardWorkflow.Should().Contain("|| 'preview'");
+        sourceGuardWorkflow.Should().Contain("github.event.pull_request.head.ref");
+        sourceGuardWorkflow.Should().Contain("startsWith(");
+        sourceGuardWorkflow.Should().Contain("|| github.event.pull_request.head.ref == 'preview'");
     }
 
     [Fact]
