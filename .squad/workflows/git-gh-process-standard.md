@@ -30,6 +30,7 @@ selection, PR flow, cleanup, and hard gates.
 - Release PRs to `main` open from `preview`
 - After each successful work-branch push, immediately open/update a PR to `dev`
 - Do not auto-open `dev` -> `preview` after routine work pushes; promotion PRs are separate
+- GitHub's `Closes/Fixes/Resolves` keywords only auto-close issues when the PR targets `main`; use them as a note on `dev`/`preview` PRs and rely on the release PR to close the issue
 - Preview-side automation must open or reuse an `automation/promote-preview` -> `preview` PR instead of pushing directly to `preview`
 - Main-side automation must open or reuse a `preview` -> `main` PR instead of pushing directly to `main`
 - Back-merge sync (`main` -> `dev`) is automated via `squad-main-to-dev-backmerge.yml`:
