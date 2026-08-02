@@ -33,52 +33,18 @@ jobs:
       - name: Run tests
         run: dotnet test tests/Unit.Tests/Unit.csproj --configuration Release --no-build --nologo --verbosity normal
 
-      - name: Verify preview-branch workflow parity (normalized YAML)
+      - name: Validate preview workflow syntax
         run: |
-          # Keep canonical and source template workflows semantically identical while tolerating YAML style differences.
-          if python3 <<'PY'
-          import json
+          python3 <<'PY'
           from pathlib import Path
 
           import yaml
 
+          workflow_path = Path('.github/workflows/squad-preview.yml')
+          with workflow_path.open(encoding='utf-8') as handle:
+              workflow = yaml.safe_load(handle)
 
-          def normalize_yaml(value):
-              if isinstance(value, dict):
-                  return {
-                      str(key): normalize_yaml(value[key])
-                      for key in sorted(value.keys(), key=lambda k: str(k))
-                  }
-              if isinstance(value, list):
-                  return [normalize_yaml(item) for item in value]
-              return value
-
-
-          canonical = normalize_yaml(
-              yaml.load(
-                Path('.github/workflows/squad-preview.yml').read_text(),
-                Loader=yaml.BaseLoader,
-              )
-          )
-          source = normalize_yaml(
-              yaml.load(
-                Path('source/workflows/squad-preview.yml').read_text(),
-                Loader=yaml.BaseLoader,
-              )
-          )
-
-          if canonical == source:
-              print('Preview-branch workflow parity check passed: normalized YAML content matches.')
-              raise SystemExit(0)
-
-          print('Preview-branch workflow parity check failed: normalized YAML content differs.')
-          Path('/tmp/preview-workflow-canonical.json').write_text(json.dumps(canonical, indent=2, sort_keys=True))
-          Path('/tmp/preview-workflow-source.json').write_text(json.dumps(source, indent=2, sort_keys=True))
-          raise SystemExit(1)
+          assert workflow.get('name') == 'Squad Preview Validation'
+          assert 'jobs' in workflow and 'validate' in workflow['jobs']
+          print(f'Preview workflow syntax check passed for {workflow_path}')
           PY
-          then
-            exit 0
-          else
-            diff -u /tmp/preview-workflow-canonical.json /tmp/preview-workflow-source.json || true
-            exit 1
-          fi

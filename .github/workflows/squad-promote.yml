@@ -2,7 +2,17 @@
 # yamllint disable rule:line-length
 name: Squad Promote
 
+permissions:
+  contents: write
+  pull-requests: write
+
 "on":
+  pull_request:
+    branches: [preview, main]
+    paths-ignore:
+      - .squad/**
+    types: [opened, synchronize, reopened, ready_for_review]
+
   workflow_dispatch:
     inputs:
       dry_run:
@@ -12,15 +22,11 @@ name: Squad Promote
         type: choice
         options: ["false", "true"]
 
-permissions:
-  contents: write
-  pull-requests: write
-
 env:
-  DEV_BRANCH: ${{ vars.SQUAD_DEV_BRANCH || 'dev' }}
-  PREVIEW_BRANCH: ${{ vars.SQUAD_PREVIEW_BRANCH || 'preview' }}
-  PREVIEW_PROMOTION_BRANCH: ${{ vars.SQUAD_PREVIEW_PROMOTION_BRANCH || 'automation/promote-preview' }}
-  MAIN_BRANCH: ${{ vars.SQUAD_MAIN_BRANCH || github.event.repository.default_branch || 'main' }}
+  DEV_BRANCH: dev
+  PREVIEW_BRANCH: preview
+  PREVIEW_PROMOTION_BRANCH: automation/promote-preview
+  MAIN_BRANCH: main
   FORBIDDEN_PATH_POLICY_FILE: .github/workflows/forbidden-path-policy.json
   # Use a PAT when available so bot-opened PRs trigger CI checks automatically.
   # GITHUB_TOKEN suppresses pull_request events on its own PRs (GitHub loop guard).
