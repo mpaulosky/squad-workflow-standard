@@ -1,6 +1,6 @@
 ---
 name: sprint-planning
-description: "Plan sprint work and break it into manageable tasks. WHEN: \"plan to sprint breakdown\", \"sprint planning\", \"plan sprint\". INVOKES: prioritization, task breakdown, owner assignment."
+description: 'Plan sprint work and break it into manageable tasks. WHEN: "plan to sprint breakdown", "sprint planning", "plan sprint". INVOKES: prioritization, task breakdown, owner assignment.'
 confidence: high
 ---
 
