@@ -26,6 +26,13 @@ public sealed class CommandCoverageTests
 	}
 
 	[Fact]
+	public void WorkflowsAssetCategory_ShouldUseGithubWorkflowsAsCanonicalSource()
+	{
+		AssetCategory.Workflows.SourceRoot.Should().Be(Path.Combine(".github", "workflows"));
+		AssetCategory.Workflows.TargetRoot.Should().Be(Path.Combine(".github", "workflows"));
+	}
+
+	[Fact]
 	public void CheckCommand_ShouldReturnEnforcementFailure_WhenAdaptersAreMissing()
 	{
 		using var target = new TemporaryTargetRepository();

@@ -64,7 +64,7 @@ public sealed class ScriptIntegrationTests
 
         foreach (var workflowFile in workflowEntries)
         {
-            var sourceWorkflow = Path.Combine(repoRoot, "source", "workflows", workflowFile);
+            var sourceWorkflow = Path.Combine(repoRoot, ".github", "workflows", workflowFile);
             var targetWorkflow = Path.Combine(target.RootPath, ".github", "workflows", workflowFile);
 
             File.Exists(targetWorkflow).Should().BeTrue($"workflow should be copied: {workflowFile}");
@@ -73,7 +73,7 @@ public sealed class ScriptIntegrationTests
 
         foreach (var hookFile in hookEntries)
         {
-            var sourceHook = Path.Combine(repoRoot, "source", "hooks", hookFile);
+            var sourceHook = Path.Combine(repoRoot, ".github", "hooks", hookFile);
             var targetHook = Path.Combine(target.RootPath, ".github", "hooks", hookFile);
 
             File.Exists(targetHook).Should().BeTrue($"hook should be copied: {hookFile}");
@@ -235,7 +235,7 @@ public sealed class ScriptIntegrationTests
     [Fact]
     public void SquadPathsGuardWorkflow_ShouldBeBranchAwareForMainProtectionAndDevRetention()
     {
-        var sourceWorkflowPath = Path.Combine(RepositoryPaths.Root, "source", "workflows", "squad-paths-guard.yml");
+        var sourceWorkflowPath = Path.Combine(RepositoryPaths.Root, ".github", "workflows", "squad-paths-guard.yml");
         var generatedWorkflowPath = Path.Combine(RepositoryPaths.Root, ".github", "workflows", "squad-paths-guard.yml");
 
         var sourceWorkflow = File.ReadAllText(sourceWorkflowPath);
@@ -257,10 +257,21 @@ public sealed class ScriptIntegrationTests
     }
 
     [Fact]
+    public void PreviewGuardWorkflow_ShouldUseEnvBranchExpression()
+    {
+        var previewGuardPath = Path.Combine(RepositoryPaths.Root, ".github", "workflows", "squad-preview-guard.yml");
+        var previewGuard = File.ReadAllText(previewGuardPath);
+
+        previewGuard.Should().Contain("PREVIEW_BRANCH: ${{ vars.SQUAD_PREVIEW_BRANCH || 'preview' }}");
+        previewGuard.Should().Contain("github.event.pull_request.base.ref == env.PREVIEW_BRANCH");
+        previewGuard.Should().NotContain("== ${PREVIEW_BRANCH}");
+    }
+
+    [Fact]
     public void BackmergeGuardWorkflow_ShouldTargetAutomationHeadBranchWithMainFallback()
     {
         var sourceWorkflowPath =
-            Path.Combine(RepositoryPaths.Root, "source", "workflows", "squad-main-to-dev-backmerge-guard.yml");
+            Path.Combine(RepositoryPaths.Root, ".github", "workflows", "squad-main-to-dev-backmerge-guard.yml");
         var generatedWorkflowPath =
             Path.Combine(RepositoryPaths.Root, ".github", "workflows", "squad-main-to-dev-backmerge-guard.yml");
 
@@ -282,10 +293,10 @@ public sealed class ScriptIntegrationTests
     public void ProtectedDevBranchWorkflows_ShouldUsePullRequestsInsteadOfDirectPushes()
     {
         var sourceBlogWorkflowPath =
-            Path.Combine(RepositoryPaths.Root, "source", "workflows", "squad-blog-readme-sync.yml");
+            Path.Combine(RepositoryPaths.Root, ".github", "workflows", "squad-blog-readme-sync.yml");
         var generatedBlogWorkflowPath =
             Path.Combine(RepositoryPaths.Root, ".github", "workflows", "squad-blog-readme-sync.yml");
-        var sourceHotfixWorkflowPath = Path.Combine(RepositoryPaths.Root, "source", "workflows",
+        var sourceHotfixWorkflowPath = Path.Combine(RepositoryPaths.Root, ".github", "workflows",
             "squad-hotfix-backport-reminder.yml");
         var generatedHotfixWorkflowPath = Path.Combine(RepositoryPaths.Root, ".github", "workflows",
             "squad-hotfix-backport-reminder.yml");
@@ -328,7 +339,7 @@ public sealed class ScriptIntegrationTests
     [Fact]
     public void ProtectedMainReadmeSyncWorkflow_ShouldUsePullRequestInsteadOfDirectPush()
     {
-        var sourceWorkflowPath = Path.Combine(RepositoryPaths.Root, "source", "workflows", "squad-sync-readme.yml");
+        var sourceWorkflowPath = Path.Combine(RepositoryPaths.Root, ".github", "workflows", "squad-sync-readme.yml");
         var generatedWorkflowPath =
             Path.Combine(RepositoryPaths.Root, ".github", "workflows", "squad-sync-readme.yml");
 
@@ -353,7 +364,7 @@ public sealed class ScriptIntegrationTests
     [Fact]
     public void TestWorkflow_ShouldSkipPreviewAndMainBranchesForPushAndPullRequest()
     {
-        var sourceWorkflowPath = Path.Combine(RepositoryPaths.Root, "source", "workflows", "squad-test.yml");
+        var sourceWorkflowPath = Path.Combine(RepositoryPaths.Root, ".github", "workflows", "squad-test.yml");
         var generatedWorkflowPath = Path.Combine(RepositoryPaths.Root, ".github", "workflows", "squad-test.yml");
 
         var sourceWorkflow = File.ReadAllText(sourceWorkflowPath);
@@ -370,15 +381,15 @@ public sealed class ScriptIntegrationTests
     [Fact]
     public void ProtectedPromotionWorkflows_ShouldUseProtectedPullRequestLegs()
     {
-        var sourcePromoteWorkflowPath = Path.Combine(RepositoryPaths.Root, "source", "workflows",
+        var sourcePromoteWorkflowPath = Path.Combine(RepositoryPaths.Root, ".github", "workflows",
             "squad-promote.yml");
         var generatedPromoteWorkflowPath = Path.Combine(RepositoryPaths.Root, ".github", "workflows",
             "squad-promote.yml");
-        var sourcePreviewGuardWorkflowPath = Path.Combine(RepositoryPaths.Root, "source", "workflows",
+        var sourcePreviewGuardWorkflowPath = Path.Combine(RepositoryPaths.Root, ".github", "workflows",
             "squad-preview-guard.yml");
         var generatedPreviewGuardWorkflowPath = Path.Combine(RepositoryPaths.Root, ".github", "workflows",
             "squad-preview-guard.yml");
-        var sourceMainGuardWorkflowPath = Path.Combine(RepositoryPaths.Root, "source", "workflows",
+        var sourceMainGuardWorkflowPath = Path.Combine(RepositoryPaths.Root, ".github", "workflows",
             "squad-main-guard.yml");
         var generatedMainGuardWorkflowPath = Path.Combine(RepositoryPaths.Root, ".github", "workflows",
             "squad-main-guard.yml");
@@ -435,11 +446,11 @@ public sealed class ScriptIntegrationTests
     [Fact]
     public void PreviewToDevBackmergeWorkflows_ShouldUseProtectedPullRequestLegs()
     {
-        var sourceWorkflowPath = Path.Combine(RepositoryPaths.Root, "source", "workflows",
+        var sourceWorkflowPath = Path.Combine(RepositoryPaths.Root, ".github", "workflows",
             "squad-preview-to-dev-backmerge.yml");
         var generatedWorkflowPath = Path.Combine(RepositoryPaths.Root, ".github", "workflows",
             "squad-preview-to-dev-backmerge.yml");
-        var sourceGuardWorkflowPath = Path.Combine(RepositoryPaths.Root, "source", "workflows",
+        var sourceGuardWorkflowPath = Path.Combine(RepositoryPaths.Root, ".github", "workflows",
             "squad-preview-to-dev-backmerge-guard.yml");
         var generatedGuardWorkflowPath = Path.Combine(RepositoryPaths.Root, ".github", "workflows",
             "squad-preview-to-dev-backmerge-guard.yml");
@@ -471,7 +482,7 @@ public sealed class ScriptIntegrationTests
     public void BranchCleanupWorkflow_ShouldBeSourceSyncedAndSupportDispatchAndSchedule()
     {
         var sourceWorkflowPath =
-            Path.Combine(RepositoryPaths.Root, "source", "workflows", "squad-branch-worktree-cleanup.yml");
+            Path.Combine(RepositoryPaths.Root, ".github", "workflows", "squad-branch-worktree-cleanup.yml");
         var generatedWorkflowPath =
             Path.Combine(RepositoryPaths.Root, ".github", "workflows", "squad-branch-worktree-cleanup.yml");
 
