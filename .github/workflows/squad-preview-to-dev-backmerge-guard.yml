@@ -12,15 +12,14 @@ permissions:
 
 jobs:
   protect-squad-dir:
-    name: Block .squad changes in main -> dev back-merge PRs
-    # Trusted source only: automation back-merge prefix or main fallback.
+    name: Block .squad changes in preview -> dev back-merge PRs
     if: >-
       ${{ github.event.pull_request.base.ref == 'dev' && (
         startsWith(
           github.event.pull_request.head.ref,
-          'automation/backmerge-main-to-dev'
+          'automation/backmerge-preview-to-dev'
         )
-        || github.event.pull_request.head.ref == 'main'
+        || github.event.pull_request.head.ref == 'preview'
       ) }}
     runs-on: ubuntu-latest
     steps:
@@ -41,7 +40,7 @@ jobs:
 
             if (squadChanges.length > 0) {
               core.setFailed([
-                'Back-merge PR from main to dev must not modify .squad/.',
+                'Back-merge PR from preview to dev must not modify .squad/.',
                 'Keep dev-owned squad state intact.',
                 'Resolve by excluding these paths:',
                 ...squadChanges.map(name => `- ${name}`)
@@ -50,5 +49,5 @@ jobs:
             }
 
             core.info(
-              'No .squad changes detected in main -> dev back-merge PR.'
+              'No .squad changes detected in preview -> dev back-merge PR.'
             );

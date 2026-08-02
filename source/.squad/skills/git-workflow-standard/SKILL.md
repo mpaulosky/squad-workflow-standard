@@ -16,7 +16,6 @@ Source of truth:
 
 - `.squad/workflows/git-gh-process-standard.md`
 - Standard version: `2026.07.3`
-- Standard-Version: `2026.07.3`
 
 ## Rules
 
@@ -28,9 +27,10 @@ Source of truth:
 6. Feature/work branches PR to `dev`; `dev` promotes to `preview` via the sanctioned promotion branch; `preview` opens PRs to `main`.
 7. After pushing a work branch, immediately open/update PR to `dev`.
 8. Do not auto-open `dev` -> `preview` after routine work pushes; promotion PRs are separate.
-9. Back-merge sync from `main` to `dev` must be handled by `squad-main-to-dev-backmerge.yml` (create/reuse PR, no-op when in sync).
-10. Back-merge PRs from `main` to `dev` must not modify `.squad/`; enforce with `squad-main-to-dev-backmerge-guard.yml`.
-11. GitHub protections/rulesets must enforce the same model:
+9. GitHub's `Closes/Fixes/Resolves` issue links only auto-close issues when the PR targets `main`; treat `Closes #N` on `dev`/`preview` PRs as a linkage note only and do not rely on them for closure.
+10. Back-merge sync from `main` to `dev` must be handled by `squad-main-to-dev-backmerge.yml` (create/reuse PR, no-op when in sync).
+11. Back-merge PRs from `main` to `dev` must not modify `.squad/`; enforce with `squad-main-to-dev-backmerge-guard.yml`.
+12. GitHub protections/rulesets must enforce the same model:
 
 - `dev`, `preview`, and `main` require PRs + checks + approvals
 - `preview` accepts PRs from `automation/promote-preview` only (plus required `squad-preview-guard`)
@@ -49,8 +49,10 @@ git checkout dev
 git pull origin dev
 git checkout -b squad/{issue-number}-{kebab-slug}
 git push -u origin squad/{issue-number}-{kebab-slug}
-gh pr create --base dev --title "{title}" --body "Closes #{issue-number}" --draft
+gh pr create --base dev --title "{title}" --body "Related issue: #{issue-number}\n\n{description}" --draft
 ```
+
+Use `Closes/Fixes/Resolves` only on the final `preview -> main` release PR so GitHub can close the issue when that PR merges.
 
 ## Worktree Flow
 
@@ -61,8 +63,10 @@ git worktree add ../{repo-name}-{issue-number} \
   origin/dev
 cd ../{repo-name}-{issue-number}
 git push -u origin squad/{issue-number}-{kebab-slug}
-gh pr create --base dev --title "{title}" --body "Closes #{issue-number}" --draft
+gh pr create --base dev --title "{title}" --body "Related issue: #{issue-number}\n\n{description}" --draft
 ```
+
+Use `Closes/Fixes/Resolves` only on the final `preview -> main` release PR so GitHub can close the issue when that PR merges.
 
 Do not auto-open `dev` -> `preview` from this step; preview/main promotion PRs remain separate.
 

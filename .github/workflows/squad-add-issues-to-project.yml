@@ -28,7 +28,7 @@ jobs:
       - name: Add issue to MyBlog project board
         uses: actions/github-script@v9
         with:
-          github-token: ${{ secrets.GH_PROJECT_TOKEN }}
+          github-token: ${{ github.token }}
           script: |
             const issue = context.payload.issue;
 

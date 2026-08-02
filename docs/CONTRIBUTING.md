@@ -68,8 +68,8 @@ If you changed workflow YAML, run `yamllint` locally when available.
 
 Most repository changes land in one of these areas:
 
-- [source/workflows](../source/workflows) for canonical workflow YAML
-- [source/hooks](../source/hooks) for canonical hook scripts
+- [.github/workflows](../.github/workflows) for canonical workflow YAML
+- [.github/hooks](../.github/hooks) for canonical hook scripts
 - [source/.squad/workflows](../source/.squad/workflows) for policy and manifests
 - [scripts/squad](../scripts/squad) for sync and validation scripts
 - [src/GitGhStandardCli](../src/GitGhStandardCli) for the C# sync/check CLI
