@@ -41,8 +41,7 @@ git checkout -b sprint/3-release-automation
 ```
 
 The hook rejects pushes from `main`, `preview`, `dev`, and from branches that do
-not match `squad/{issue-number}-{kebab-slug}`, `sprint/{n}-{kebab-slug}`, or
-`hotfix/{kebab-slug}` for release-style hotfix flows.
+not match `squad/{issue-number}-{kebab-slug}` or `sprint/{n}-{kebab-slug}`.
 
 ## Local validation commands
 
