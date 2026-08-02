@@ -20,11 +20,6 @@ permissions:
         type: string
         default: ""
 
-  push:
-    branches-ignore:
-      - preview
-      - main
-
   pull_request:
     branches-ignore:
       - preview
