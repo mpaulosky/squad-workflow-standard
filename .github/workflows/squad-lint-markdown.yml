@@ -4,7 +4,13 @@ name: Lint Markdown
 
 "on":
   push:
+    branches-ignore:
+      - "main"
+      - "preview"
   pull_request:
+    branches-ignore:
+      - "main"
+      - "preview"
 
 permissions:
   contents: read

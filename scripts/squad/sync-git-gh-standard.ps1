@@ -71,7 +71,8 @@ for ($i = 0; $i -lt $args.Count; $i++) {
         default {
             if ([string]::IsNullOrWhiteSpace($targetRepo)) {
                 $targetRepo = $arg
-            } else {
+            }
+            else {
                 Write-Host "Unexpected argument: $arg"
                 Show-Usage
                 exit 1
@@ -130,7 +131,7 @@ if (Test-Path -LiteralPath $workflowBaselineManifest -PathType Leaf) {
             continue
         }
 
-        $sourceWorkflow = Join-Path $sourceRepo ("source/workflows/{0}" -f $workflowFile)
+        $sourceWorkflow = Join-Path $sourceRepo (".github/workflows/{0}" -f $workflowFile)
         $targetWorkflow = Join-Path $targetRepo (".github/workflows/{0}" -f $workflowFile)
         if (-not (Test-Path -LiteralPath $sourceWorkflow -PathType Leaf)) {
             Write-Host "Missing canonical workflow in source repo: $sourceWorkflow"
@@ -152,7 +153,7 @@ if (Test-Path -LiteralPath $hookBaselineManifest -PathType Leaf) {
             continue
         }
 
-        $sourceHook = Join-Path $sourceRepo ("source/hooks/{0}" -f $hookFile)
+        $sourceHook = Join-Path $sourceRepo (".github/hooks/{0}" -f $hookFile)
         $targetHook = Join-Path $targetRepo (".github/hooks/{0}" -f $hookFile)
         if (-not (Test-Path -LiteralPath $sourceHook -PathType Leaf)) {
             Write-Host "Missing canonical hook in source repo: $sourceHook"
