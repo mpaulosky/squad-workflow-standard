@@ -102,7 +102,7 @@ One of the five logical groups of files managed by the standard-pack:
 
 | Category | Source root (this repo) | Target root |
 |---|---|---|
-| Workflows | `source/workflows/` | `.github/workflows/` |
+| Workflows | `.github/workflows/` | `.github/workflows/` |
 | Hooks | `source/hooks/` | `.github/hooks/` |
 | Skills | `.github/skills/` | `.github/skills/` |
 | Instructions | `.github/instructions/` | `.github/instructions/` |

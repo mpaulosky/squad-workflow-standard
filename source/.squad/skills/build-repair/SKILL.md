@@ -30,7 +30,7 @@ Always follow that prompt. This skill provides supplementary context.
 - **Solution file:** `squad-workflow-standard.slnx` (repo root)
 - **Primary test project:** `tests/Unit.Tests`
 - **This repo is a standard-pack publisher:** validate sync/check scripts against
-  a concrete target repo when changing workflow-standard content.
+a concrete target repo when changing workflow-standard content.
 - **Zero warning tolerance:** treat warnings as errors before pushing.
 
 ### Common Failures and Fixes

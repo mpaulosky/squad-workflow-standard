@@ -137,7 +137,7 @@ if [[ -f "$WORKFLOW_BASELINE_MANIFEST" ]]; then
       continue
     fi
 
-    source_workflow="$SOURCE_REPO/source/workflows/$workflow_file"
+    source_workflow="$SOURCE_REPO/.github/workflows/$workflow_file"
     target_workflow="$TARGET_REPO/.github/workflows/$workflow_file"
 
     if [[ ! -f "$source_workflow" ]]; then
@@ -162,7 +162,7 @@ if [[ -f "$HOOK_BASELINE_MANIFEST" ]]; then
       continue
     fi
 
-    source_hook="$SOURCE_REPO/source/hooks/$hook_file"
+    source_hook="$SOURCE_REPO/.github/hooks/$hook_file"
     target_hook="$TARGET_REPO/.github/hooks/$hook_file"
 
     if [[ ! -f "$source_hook" ]]; then

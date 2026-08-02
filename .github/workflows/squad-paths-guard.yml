@@ -12,9 +12,9 @@ permissions:
   pull-requests: read
 
 env:
-  DEV_BRANCH: ${{ vars.SQUAD_DEV_BRANCH || 'dev' }}
-  PREVIEW_BRANCH: ${{ vars.SQUAD_PREVIEW_BRANCH || 'preview' }}
-  MAIN_BRANCH: ${{ vars.SQUAD_MAIN_BRANCH || github.event.repository.default_branch || 'main' }}
+  DEV_BRANCH: dev
+  PREVIEW_BRANCH: preview
+  MAIN_BRANCH: main
   FORBIDDEN_PATH_POLICY_FILE: .github/workflows/forbidden-path-policy.json
 
 jobs:

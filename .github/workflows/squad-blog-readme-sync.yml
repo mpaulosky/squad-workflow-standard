@@ -4,7 +4,7 @@ name: Blog → README Sync
 "on":
   push:
     branches: [main]
-    paths: ["docs/blog/index.md"]
+    paths: ["docs/blogs/README.md"]
   workflow_dispatch:
 
 permissions:
@@ -26,7 +26,7 @@ jobs:
           python3 - <<'PYEOF'
           import re
 
-          with open('docs/blog/index.md', 'r') as f:
+          with open('docs/blogs/README.md', 'r') as f:
               index = f.read()
 
           # Extract table rows after the header and separator

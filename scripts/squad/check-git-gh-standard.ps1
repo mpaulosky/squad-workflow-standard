@@ -166,10 +166,10 @@ Assert-FileContains -File (Join-Path $targetRepo ".squad/templates/issue-lifecyc
 Assert-FileContains -File (Join-Path $targetRepo ".squad/skills/git-workflow-standard/SKILL.md") -Expected ('Standard version: `{0}`' -f $canonicalVersion) -Message ".squad/skills/git-workflow-standard/SKILL.md must match canonical standard version"
 
 foreach ($workflowRelativePath in @(
-    ".github/workflows/squad-preview-guard.yml",
-    ".github/workflows/squad-main-guard.yml",
-    ".github/workflows/squad-main-to-dev-backmerge-guard.yml"
-)) {
+        ".github/workflows/squad-preview-guard.yml",
+        ".github/workflows/squad-main-guard.yml",
+        ".github/workflows/squad-main-to-dev-backmerge-guard.yml"
+    )) {
     $workflowPath = Join-Path $targetRepo $workflowRelativePath
     if (-not (Test-Path -LiteralPath $workflowPath -PathType Leaf)) {
         $script:hasFailure = $true
@@ -213,7 +213,7 @@ if (Test-Path -LiteralPath $workflowBaselineManifest -PathType Leaf) {
             continue
         }
 
-        $sourceWorkflow = Join-Path $sourceRepo ("source/workflows/{0}" -f $workflowFile)
+        $sourceWorkflow = Join-Path $sourceRepo (".github/workflows/{0}" -f $workflowFile)
         $targetWorkflow = Join-Path $targetRepo (".github/workflows/{0}" -f $workflowFile)
 
         if (-not (Test-Path -LiteralPath $sourceWorkflow -PathType Leaf)) {
@@ -252,7 +252,7 @@ if (Test-Path -LiteralPath $hookBaselineManifest -PathType Leaf) {
             continue
         }
 
-        $sourceHook = Join-Path $sourceRepo ("source/hooks/{0}" -f $hookFile)
+        $sourceHook = Join-Path $sourceRepo (".github/hooks/{0}" -f $hookFile)
         $targetHook = Join-Path $targetRepo (".github/hooks/{0}" -f $hookFile)
 
         if (-not (Test-Path -LiteralPath $sourceHook -PathType Leaf)) {

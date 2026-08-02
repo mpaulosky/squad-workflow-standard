@@ -1,0 +1,13 @@
+---
+name: build-repair
+description: "Iterative build repair process for the IssueManager .NET solution. Run this before any push or when build/tests are broken. WHEN: \"build-repair\", \"run build-repair\", \"build-repair skill\". INVOKES: \"build-repair\"."
+confidence: high
+---
+
+## Build Repair Skill
+
+1. Reproduce the failure locally.
+2. Read the failing output and isolate the root cause.
+3. Apply the minimal fix.
+4. Re-run the relevant build/test commands.
+5. Repeat until the failure is resolved.
