@@ -58,6 +58,8 @@ To enforce this branch model in GitHub, configure protections/rulesets for
    - In rulesets, limit allowed source branch pattern for `preview` to
      `automation/promote-preview` when your ruleset plan supports source-branch
      restrictions.
+   - `hotfix/*` branches are also permitted to target `preview` directly for
+     emergency fixes; document any `hotfix/*` exception alongside that ruleset.
 6. Restrict `main` merge source to `preview` for release PRs:
    - Keep `squad-main-guard.yml` enabled and required for `main`.
    - In rulesets, limit allowed source branch pattern for `main` to `preview`
