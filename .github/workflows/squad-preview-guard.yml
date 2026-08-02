@@ -38,9 +38,10 @@ jobs:
             }
 
             const source = context.payload.pull_request.head.ref;
-            if (source !== promotionBranch) {
+            const isValid = source === promotionBranch || source.startsWith("hotfix/");
+            if (!isValid) {
               core.setFailed(
-                `PRs to ${previewBranch} must come from ${promotionBranch}. `
+                `PRs to ${previewBranch} must come from ${promotionBranch} or hotfix/* branches. `
                 + `Current source: ${source}`
               );
             }

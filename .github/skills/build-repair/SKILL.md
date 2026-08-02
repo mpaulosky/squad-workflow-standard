@@ -1,6 +1,6 @@
 ---
 name: build-repair
-description: "Iterative build repair process for the IssueManager .NET solution. Run this before any push or when build is broken. The authoritative prompt is .github/prompts/build-repair.prompt.md. Use this skill to apply consistent, proven patterns and reduce regressions across related tasks. WHEN: \"build-repair\", \"run build-repair\", \"build-repair skill\"."
+description: "Iterative build repair process for the IssueManager .NET solution. Run this before any push or when build/tests are broken. The authoritative prompt is .github/prompts/build-repair.prompt.md. Use this skill to apply consistent, proven patterns and reduce regressions across related tasks. WHEN: \"build-repair\", \"run build-repair\", \"build-repair skill\"."
 confidence: high
 ---
 

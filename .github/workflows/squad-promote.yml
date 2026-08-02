@@ -55,8 +55,6 @@ jobs:
 
   dev-to-preview:
     name: Prepare dev → preview promotion PR
-    needs: changes
-    if: ${{ github.event_name == 'workflow_dispatch' || needs.changes.outputs.relevant == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -192,8 +190,7 @@ jobs:
 
   preview-to-main:
     name: Promote preview → main (release PR)
-    needs: [changes, dev-to-preview]
-    if: ${{ github.event_name == 'workflow_dispatch' || needs.changes.outputs.relevant == 'true' }}
+    needs: dev-to-preview
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
